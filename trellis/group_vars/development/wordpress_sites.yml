@@ -1,0 +1,21 @@
+# Created by trellis-cli v1.7.0
+# Documentation: https://docs.roots.io/trellis/master/wordpress-sites/
+
+wordpress_sites:
+  dinosauria.net:
+    site_hosts:
+    - canonical: dinosauria.test
+      redirects:
+      - www.dinosauria.test
+    local_path: ../site
+    site_title: The Dinosauria Network
+    admin_user: paleo
+    admin_email: contact@alexanderbell.info
+    initial_permalink_structure: /%year%/%postname%-%post_id%/
+    multisite:
+      enabled: false
+    ssl:
+      enabled: false
+      provider: self-signed
+    cache:
+      enabled: false
