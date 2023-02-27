@@ -1,0 +1,28 @@
+#masthead {
+	z-index: 100;
+	position: relative;
+}
+.banner {
+	min-height: 55px;
+	@include breakpoint(tablet) { border-bottom: 1px outset $body-bg; }
+}
+.brand {
+	padding: 12px 0;
+	text-align: center;
+	line-height: 1;
+	@include breakpoint(tablet) { padding: 16px 0; }
+
+	.site-title {
+		display: block;
+		font-size: 1.5em;
+		font-weight: normal;
+		text-shadow: 1px 1px #fefefe, -1px -1px #120f0d;
+		@include breakpoint(tablet) { font-size: 2.5em; }
+		@include breakpoint(desktop) { font-size: 3.57143em; }
+	}
+	.site-description {
+		margin: 0px;
+		font-size: 0.6875em;
+		@include breakpoint(tablet) { font-size: 1.285714em; }
+	}
+}

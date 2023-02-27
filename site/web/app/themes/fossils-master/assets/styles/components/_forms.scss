@@ -1,0 +1,41 @@
+.field, textarea {
+	background-color: $input-bg;
+	border-width: $input-border-width;
+	border-radius: $input-border-radius-large;
+	border-style: groove;
+	border-color: $input-border;
+	@include transition($transition);
+}
+.field {
+	padding: 0.5em 0 0.5em 0.714285714em;
+	&:hover {
+		background-color: #edece9;
+	}
+	&:focus {
+		background-color: #edece9;
+		border-color: #e3e2df;
+	}
+}
+input[type="submit"] {
+	padding: 0.5em 0.75em;
+	border-width: $input-border-width;
+	border-style: outset;
+	border-radius: $border-radius-large;
+	border-color: $input-border;
+	@include transition(all ease-in-out 0.3s);
+	&:hover {
+		border-style: groove;
+		background-color: $input-bg;
+	}
+	&:active {
+		border-style: inset;
+		background-color: #d3d2cf;
+	}
+	&:focus {
+		border-style: inset;
+		background-color: #d3d2cf;
+	}
+}
+.required {
+	color: #0aa801;
+}

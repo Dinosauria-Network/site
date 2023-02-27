@@ -1,0 +1,90 @@
+0000.008 () Opened log file at time: Thu, 09 Feb 2023 06:33:10 +0000 on http://dinosauria.test/wp
+0000.008 () UpdraftPlus WordPress backup plugin (https://updraftplus.com): 1.22.24 WP: 6.1.1 PHP: 8.0.27 (fpm-fcgi, Linux dinosauria 5.4.0-91-generic #102-Ubuntu SMP Fri Nov 5 16:31:28 UTC 2021 x86_64) MySQL: 10.6.12-MariaDB-1:10.6.12+maria~ubu2004 (max packet size=16777216) WPLANG: en_US Server: nginx/1.23.3 safe_mode: 0 max_execution_time: 900 memory_limit: 256M (used: 4.4M | 6M) multisite: N openssl: OpenSSL 1.1.1f  31 Mar 2020 mcrypt: N LANG:  ZipArchive::addFile: Y
+0000.009 () Free space on disk containing Updraft's temporary directory: 28427.9 MB
+0000.041 () Restore setup, now closing connection and starting restore over AJAX.
+0000.006 () Opened log file at time: Thu, 09 Feb 2023 06:33:11 +0000 on http://dinosauria.test/wp
+0000.006 () UpdraftPlus WordPress backup plugin (https://updraftplus.com): 1.22.24 WP: 6.1.1 PHP: 8.0.27 (fpm-fcgi, Linux dinosauria 5.4.0-91-generic #102-Ubuntu SMP Fri Nov 5 16:31:28 UTC 2021 x86_64) MySQL: 10.6.12-MariaDB-1:10.6.12+maria~ubu2004 (max packet size=16777216) WPLANG: en_US Server: nginx/1.23.3 safe_mode: 0 max_execution_time: 900 memory_limit: 256M (used: 3.9M | 6M) multisite: N openssl: OpenSSL 1.1.1f  31 Mar 2020 mcrypt: N LANG:  ZipArchive::addFile: Y
+0000.007 () Free space on disk containing Updraft's temporary directory: 28427.7 MB
+0000.009 () Ensuring WP_Filesystem is setup for a restore
+0000.015 () WP_Filesystem is setup and ready for a restore
+0000.026 () Restore job started. Entities to restore: db. Restore options: {"updraft_restorer_charset":"utf8mb3","include_unspecified_tables":false,"tables_to_restore":["wp_options","wp_users","wp_usermeta","wp_commentmeta","wp_comments","wp_links","wp_postmeta","wp_posts","wp_term_relationships","wp_term_taxonomy","wp_termmeta","wp_terms"],"tables_to_skip":[],"updraft_encryptionphrase":"","updraft_restorer_wpcore_includewpconfig":false,"updraft_incremental_restore_point":-1}
+0000.045 () PHP event: code E_WARNING: mkdir(): File exists (line 545, wp-admin/includes/class-wp-filesystem-direct.php)
+0000.067 () Will not delete any archives after unpacking them, because there was no cloud storage for this backup
+0000.078 () Entity: db
+0000.079 () restore_backup(backup_file=backup_2016-12-14-1502_Dinosauria_Network_1a190c69187e-db.gz, type=db, info=a:0:{}, last_one=1)
+0000.079 () Unpacking backup... (backup_2016-12-14-1502_Dinosauria_Network_1a190c69187e-db.gz, 3.3 Mb)
+0000.080 () PHP event: code E_WARNING: mkdir(): File exists (line 545, wp-admin/includes/class-wp-filesystem-direct.php)
+0000.102 () Database successfully unpacked
+0000.533 () Restoring the database (on a large site this can take a long time - if it times out (which can happen if your web hosting company has configured your hosting to limit resources) then you should use a different method, such as phpMyAdmin)...
+0000.535 () Using direct MySQL access; value of use_mysqli is: 1
+0000.538 () SQL compatibility mode is: NO_AUTO_VALUE_ON_ZERO,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+0000.626 () Tried to raise max_allowed_packet from 16 MB to 32 MB, but failed (Access denied; you need (at least one of) the SUPER privilege(s) for this operation, b:0;)
+0000.626 () Max packet size: 16 MB
+0000.626 () Entering maintenance mode
+0000.626 () Enabling Maintenance mode&#8230;
+0000.716 () Backup of: https://dinosauria.net/wp
+0000.732 () Site home: https://dinosauria.net
+0000.733 () Content URL: https://dinosauria.net/app
+0000.733 () Uploads URL: https://dinosauria.net/app/uploads
+0000.734 () Old table prefix: wp_
+0000.735 () Site information: multisite=0
+0000.736 () New table prefix: j6_
+0000.751 () Processing table (InnoDB): wp_options - will restore as: j6_options
+0001.493 () Atomic restore: dropping original table (wp_options)
+0001.502 () Atomic restore: renaming new table (j6_options) to final table name (wp_options)
+0001.508 () Restoring prior UD configuration (table: wp_options; keys: 101)
+0001.790 () Processing table (InnoDB): wp_users - will restore as: j6_users
+0001.817 () Atomic restore: dropping original table (wp_users)
+0001.827 () Atomic restore: renaming new table (j6_users) to final table name (wp_users)
+0001.834 () Processing table (InnoDB): wp_usermeta - will restore as: j6_usermeta
+0001.862 () Atomic restore: dropping original table (wp_usermeta)
+0001.871 () Atomic restore: renaming new table (j6_usermeta) to final table name (wp_usermeta)
+0001.879 () Processing table (InnoDB): wp_commentmeta - will restore as: j6_commentmeta
+0001.906 () Atomic restore: dropping original table (wp_commentmeta)
+0001.916 () Atomic restore: renaming new table (j6_commentmeta) to final table name (wp_commentmeta)
+0001.923 () Processing table (InnoDB): wp_comments - will restore as: j6_comments
+0001.959 () Atomic restore: dropping original table (wp_comments)
+0001.969 () Atomic restore: renaming new table (j6_comments) to final table name (wp_comments)
+0001.977 () Processing table (InnoDB): wp_links - will restore as: j6_links
+0002.063 () Atomic restore: dropping original table (wp_links)
+0002.071 () Atomic restore: renaming new table (j6_links) to final table name (wp_links)
+0002.076 () Processing table (InnoDB): wp_postmeta - will restore as: j6_postmeta
+0002.453 () Database queries processed: 50 in 1.91 seconds
+0002.943 () Atomic restore: dropping original table (wp_postmeta)
+0002.954 () Atomic restore: renaming new table (j6_postmeta) to final table name (wp_postmeta)
+0002.962 () Processing table (InnoDB): wp_posts - will restore as: j6_posts
+0003.637 () Atomic restore: dropping original table (wp_posts)
+0003.650 () Atomic restore: renaming new table (j6_posts) to final table name (wp_posts)
+0003.660 () Processing table (InnoDB): wp_term_relationships - will restore as: j6_term_relationships
+0003.803 () Atomic restore: dropping original table (wp_term_relationships)
+0003.809 () Atomic restore: renaming new table (j6_term_relationships) to final table name (wp_term_relationships)
+0003.817 () Processing table (InnoDB): wp_term_taxonomy - will restore as: j6_term_taxonomy
+0003.884 () Atomic restore: dropping original table (wp_term_taxonomy)
+0003.891 () Atomic restore: renaming new table (j6_term_taxonomy) to final table name (wp_term_taxonomy)
+0003.897 () Processing table (InnoDB): wp_termmeta - will restore as: j6_termmeta
+0003.915 () Atomic restore: dropping original table (wp_termmeta)
+0003.924 () Atomic restore: renaming new table (j6_termmeta) to final table name (wp_termmeta)
+0003.930 () Processing table (InnoDB): wp_terms - will restore as: j6_terms
+0003.975 () Database queries processed: 100 in 3.43 seconds
+0003.978 () Unlocking database and leaving maintenance mode
+0003.979 () Disabling Maintenance mode&#8230;
+0003.980 () Atomic restore: dropping original table (wp_terms)
+0003.988 () Atomic restore: renaming new table (j6_terms) to final table name (wp_terms)
+0003.996 () Finished: lines processed: 103 in 3.45 seconds
+0003.998 () Cleaning up rubbish...
+0004.115 () Plugin path polylang/polylang.php not found: de-activating.
+0004.115 () Plugin path debug-bar/debug-bar.php not found: de-activating.
+0004.116 () Plugin path genus-post-type/genus-post-type.php not found: de-activating.
+0004.116 () Plugin path google-analytics-for-wordpress/googleanalytics.php not found: de-activating.
+0004.116 () Plugin path link-manager/link-manager.php not found: de-activating.
+0004.117 () Plugin path onet-regenerate-thumbnails/onet-regen-thumbnails.php not found: de-activating.
+0004.117 () Plugin path rvg-optimize-database/rvg-optimize-database.php not found: de-activating.
+0004.118 () Plugin path sendgrid-email-delivery-simplified/wpsendgrid.php not found: de-activating.
+0004.118 () Plugin path soil/soil.php not found: de-activating.
+0004.119 () Plugin path ssh-sftp-updater-support/sftp.php not found: de-activating.
+0004.119 () Plugin path theme-check/theme-check.php not found: de-activating.
+0004.120 () Plugin path wp-smushit/wp-smush.php not found: de-activating.
+0004.120 () Plugin path wp-ultimate-csv-importer/index.php not found: de-activating.
+0004.177 () The current theme was not found; to prevent this stopping the site from loading, your theme has been reverted to the default theme
+0004.181 () Restore successful!
+0004.183 () Restore successful

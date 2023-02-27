@@ -1,0 +1,200 @@
+.content {
+	.hentry {
+		border-bottom: 2px groove $body-bg;
+		margin-top: 1em;
+		padding-bottom: 1em;
+	}
+}
+.js .content {
+    .grid {
+        padding-bottom: 104px;
+
+        .hentry {
+            width: 100%;
+	    @include breakpoint(tablet) {
+		width: 50%;
+	    }
+	    @include breakpoint(desktop) {
+		width: 42%;
+		&.first {
+		    width: 97%;
+		}
+		&.even {
+			width: 51%;
+		}
+	    }
+        }
+    }
+}
+.blog {
+    .content {
+	.grid {
+	    .hentry {
+	    @include breakpoint(desktop) {
+		padding: 1.5em 0;
+		border-width: 3px 0 0 0;
+		border-style: groove;
+		border-color: #e6e6cf;
+		margin: 0px 1.5%;
+		&.first {
+		    border-top: 0;
+		    .entry-header {
+		        width: 49%;
+		        padding: 1em 0 0;
+		        border-top: 3px groove #e6e6cf;
+		        text-align: center;
+		        .entry-meta {
+			    display: inline-block;
+			    padding: 1.166666667em;
+			    border-bottom: 2px solid #7f7f72;
+		        }
+		    }
+		}
+	    }
+	    }
+	}
+    }
+}
+
+.sticky {
+	position: relative;
+	header {
+
+		.sticky-post {
+			background-color: $gray-dark;
+            		background: rgba($gray-dark, 0.8);
+			color: $label-color;
+			font-weight: 700;
+			letter-spacing: 0.04em;
+			position: absolute;
+			top: 0px;
+			left: 0;
+			text-transform: uppercase;
+			line-height: 1.5;
+			padding: 0.4em 0.5em 0.1em;
+            		text-shadow: none;
+		}
+	}
+}
+.entry-content {
+	padding: 0 1.5%;
+	img {
+		margin: 0 0 0.5em 0;
+	}
+}
+.page-header {
+	padding: 0 1.5%;
+}
+.responsive-image {
+	width: 28%;
+
+	img {
+		width: 100%;
+		height: auto;
+		transition: 1s opacity ease
+
+		&:hover,
+		&:focus {
+			opacity: 0.618;
+		}
+	}
+	@include breakpoint(tablet) {
+		width: auto;
+	}
+}
+.comments-area {
+	padding: 0 1.5%;
+	padding-top: 2em;
+	margin-bottom: 2em;
+}
+.byline {
+    
+    img {
+        vertical-align: text-top;
+    }
+    @include breakpoint(tablet) {
+        display: inline;
+    }
+}
+time.updated {
+    color: #7F7C79;
+    
+    .extra {
+        display: none;
+        
+        @include breakpoint(desktop) {
+            display: inherit;
+        }
+    }
+    
+    a {
+        color: #46423B;
+    }
+}
+.entry-summary {
+	display: none;
+    
+    @include breakpoint(tablet) {
+        display: block;
+    }
+}
+.sep {
+	padding: 0 1em;
+}
+.tag-links {
+	text-transform: capitalize;
+	font-size: 12px;
+	font-size: 0.75rem;
+	display: block;
+	a {
+		padding: 2px 4px;
+		margin: 2px;
+		line-height: 1.333333333;
+		border: 1px solid #b8b6ad;
+		//Instead of the line below you could use @include border-radius($radius, $vertical-radius)
+		border-radius: $border-radius-small;
+		display: inline-block;
+		//Instead of the line below you could use @include box-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+		box-shadow: inset -1px -2px 3px 0 #b8b6ad, inset 1px 2px 3px 0 #f9f9f9;
+		&:hover {
+			color: #4f362a;
+			//Instead of the line below you could use @include box-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+			box-shadow: none;
+			text-decoration: none;
+		}
+		&:active {
+			position: relative;
+			top: 1;
+			left: 1;
+			text-decoration: none;
+			//Instead of the line below you could use @include box-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+			box-shadow: inset 1px 2px 3px 0 #b8b6ad, inset -1px -2px 3px 0 #f9f9f9;
+		}
+		&:focus {
+			text-decoration: none;
+			//Instead of the line below you could use @include box-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+			box-shadow: inset 1px 2px 3px 0 #b8b6ad, inset -1px -2px 3px 0 #f9f9f9;
+		}
+		&:after {
+			content: " >";
+			width: 16px;
+			height: 16px;
+			line-height: 16px;
+			margin-left: 4px;
+			padding-left: 1px;
+			display: inline-block;
+			color: $body-bg;
+			//Instead of the line below you could use @include text-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+			text-shadow: none;
+			font-weight: bold;
+			background-color: #6d492e;
+			//Instead of the line below you could use @include border-radius($radius, $vertical-radius)
+			border-radius: 8px;
+		}
+	}
+}
+footer {
+	padding: 2.428571429em 0 2px;
+	text-align: center;
+	clear: both;
+}

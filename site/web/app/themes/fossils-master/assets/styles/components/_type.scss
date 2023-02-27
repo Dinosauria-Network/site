@@ -1,0 +1,419 @@
+// Typography
+
+body, input, textarea {
+  font: $font-size-base $font-family-base;
+  font: 0.875rem $font-family-base;
+  line-height: $line-height-computed;
+  @include breakpoint(desktop) {
+      font-size: $font-size-large;
+      line-height: $line-height-computed-large;
+  }
+}
+body {
+	color: #120f0d;
+	//Instead of the line below you could use @include text-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+	text-shadow: 0px 1px 0px rgba(255,255,255,.7), 0px -1px 0px rgba(0,0,0,.15);
+}
+
+@mixin text-shadow($horizOffset, $vertOffset, $blur, $color) {
+    text-shadow: $horizOffset $vertOffset $blur $color;
+}
+
+textarea {
+	max-width: 98%;
+	&:hover {
+		background-color: #edece9;
+	}
+	&:focus {
+		background-color: #edece9;
+		border-color: #e3e2df;
+	}
+}
+p {
+	margin-bottom: 1.5em;
+}
+ul {
+	margin-bottom: 1.5em;
+	padding: 0 0 0 1.142857143em;
+}
+ol {
+	margin-bottom: 1.5em;
+	padding: 0 0 0 1.142857143em;
+}
+// List options
+
+// [converter] extracted from `.list-unstyled` for libsass compatibility
+@mixin list-unstyled {
+  padding-left: 0;
+  list-style: none;
+}
+// [converter] extracted as `@mixin list-unstyled` for libsass compatibility
+.list-unstyled {
+  @include list-unstyled;
+}
+
+
+// Inline turns list items into inline-block
+@mixin list-inline {
+  @include list-unstyled;
+  margin-left: -5px;
+
+  > li {
+    display: inline-block;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}
+dd {
+	margin-bottom: 1.5em;
+}
+pre {
+	margin-bottom: 1.5em;
+	font: 13px $font-family-monospace;
+	font: 0.8125rem $font-family-monospace;
+	line-height: $line-height-small;
+}
+code {
+	font: 13px $font-family-monospace;
+	font: 0.8125rem $font-family-monospace;
+	line-height: $line-height-small;
+}
+a {
+	&:link {
+		color: $link-color;
+		text-decoration: none;
+	}
+	&:hover {
+		color: $link-hover-color;
+		text-decoration: $link-hover-decoration;
+	}
+	&:active {
+		text-decoration: underline;
+	}
+	&:focus {
+		text-decoration: underline;
+	}
+	&:visited {
+		color: #46433b;
+	}
+}
+h1 {
+	line-height: 1;
+	font-size: 24px;
+	font-size: 1.5rem;
+	&.site-title {
+		margin: 0;
+		font-size: 21px;
+		font-size: 1.3125rem;
+		font-weight: normal;
+		//Instead of the line below you could use @include text-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+		text-shadow: 1px 1px #fefefe, -1px -1px #120f0d;
+	}
+	a:hover {
+		text-decoration: none;
+	}
+}
+h2 {
+	line-height: 1;
+	font-size: 17px;
+	font-size: 1.0625rem;
+}
+h3 {
+	line-height: 1;
+	font-size: 16px;
+	font-size: 1rem;
+	&.widget-title {
+		font-size: 0.875rem;
+		text-transform: uppercase;
+		line-height: 1.714285714;
+	}
+}
+.blog {
+	h2 {
+		font-size: 18px;
+		font-size: 1.125rem;
+	}
+	.entry-header {
+		padding: 0;
+		width: 100%;
+	}
+	.entry-content {
+		padding: 0;
+	}
+	.hentry {
+		*zoom: 1;
+		&:before {
+			content: " ";
+			display: table;
+		}
+		&:after {
+			content: " ";
+			display: table;
+			clear: both;
+		}
+	}
+	.summary-title {
+		margin: 0 0 0.5em 1.9%;
+        
+        @include breakpoint(tablet) {
+            margin-left: 0;
+        }
+	@include breakpoint(desktop) {
+	    font-size: 1.5em;
+	    font-weight: normal;
+	}
+	}
+	.odd {
+		.summary-title {
+		@include breakpoint(desktop) {
+			font-size: 1.27778em;
+			font-weight: bold;
+		}
+		}
+	}
+	.first {
+	    .summary-title {
+	    @include breakpoint(desktop) {
+			font-size: 2em;
+			margin: 0;
+	    }
+	    }
+	}
+	.fn {
+		font-size: 14px;
+		font-size: 0.875rem;
+	}
+	footer.entry-meta {
+		display: none;
+	}
+	.first div.post-image {
+		float: right;
+		width: 35%;
+		margin-right: 0;
+
+		@include breakpoint(desktop) {
+			width: 49%;
+			margin-left: 1%;
+		}
+	}
+}
+.search {
+	h2 {
+		font-size: 18px;
+		font-size: 1.125rem;
+	}
+	.entry-header {
+		padding: 0;
+		width: 100%;
+	}
+	.entry-content {
+		padding: 0;
+	}
+	.hentry {
+		*zoom: 1;
+		&:before {
+			content: " ";
+			display: table;
+		}
+		&:after {
+			content: " ";
+			display: table;
+			clear: both;
+		}
+	}
+	.summary-title {
+		margin: 0 0 0.5em 1.9%;
+        
+        @include breakpoint(tablet) {
+            margin-left: 0;
+        }
+	@include breakpoint(desktop) {
+	    font-size: 1.92857em;
+	    font-weight: normal;
+	}
+	}
+	.fn {
+		font-size: 14px;
+		font-size: 0.875rem;
+	}
+	footer.entry-meta {
+		display: none;
+	}
+}
+.archive {
+	h2 {
+		font-size: 18px;
+		font-size: 1.125rem;
+	}
+	.post {
+		padding: 0 0.5em 1em;
+	}
+	.entry-header {
+		padding: 0;
+		width: 100%;
+	}
+	.entry-content {
+		padding: 0;
+	}
+	.hentry {
+		*zoom: 1;
+		&:before {
+			content: " ";
+			display: table;
+		}
+		&:after {
+			content: " ";
+			display: table;
+			clear: both;
+		}
+	}
+	.summary-title {
+		margin: 0 0 0.5em 1.9%;
+        
+        @include breakpoint(tablet) {
+            margin-left: 0;
+        }
+	@include breakpoint(desktop) {
+	    font-size: 1.92857em;
+	    font-weight: normal;
+	}
+	}
+	.fn {
+		font-size: 14px;
+		font-size: 0.875rem;
+	}
+	footer.entry-meta {
+		display: none;
+	}
+}
+.author {
+    .first {
+	.entry-header {
+	@include breakpoint(desktop) {
+	    width: 49%;
+	    padding: 1em 0 0;
+	    border-top: 3px groove #e6e6cf;
+	    text-align: center;
+	    .entry-meta {
+		display: inline-block;
+		padding: 1.166666667em;
+		border-bottom: 2px solid #7f7f72;
+	    }
+	}
+	}
+	.summary-title {
+	@include breakpoint(desktop) {
+	    font-size: 2em;
+	    margin: 0;
+	}
+	}
+    }
+}
+h4 {
+	font-size: 15px;
+	font-size: 0.9375rem;
+}
+h5 {
+	font-size: 14px;
+	font-size: 0.875rem;
+}
+h6 {
+	font-size: 14px;
+	font-size: 0.875rem;
+}
+hgroup {
+	color: #46423b;
+	line-height: 1;
+	text-align: center;
+	padding: 12px 0;
+	a {
+		color: #46423b;
+		line-height: 1;
+		text-align: center;
+	}
+}
+blockquote {
+	&.left {
+		float: left;
+		margin-left: 0;
+		margin-right: 20px;
+		text-align: right;
+		width: 33%;
+	}
+	&.right {
+		float: right;
+		margin-left: 20px;
+		margin-right: 0;
+		text-align: left;
+		width: 33%;
+	}
+}
+.site-description {
+	margin: 0;
+	font-size: 11px;
+	font-size: 0.6875rem;
+}
+.entry-header {
+	padding: 0 1.5%;
+	.entry-meta {
+		line-height: 1.28571429;
+		padding: 0 1.9%;
+		font-size: 13px;
+		font-size: 0.8125rem;
+        
+        @include breakpoint(tablet) {
+            padding: 0;
+        }
+	}
+	span {
+	}
+	.sep {
+		display: none;
+        
+        @include breakpoint(tablet) {
+            display: inherit;
+        }
+	}
+}
+.site-footer {
+	background-color: #b8b6ad;
+	border-top: 2px inset #b8b6ad;
+	position: relative;
+	//Instead of the line below you could use @include text-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+	text-shadow: 1px 1px 0 #e7e6e3;
+	p {
+		font-size: 14px;
+		font-size: 0.875rem;
+	}
+	a {
+		font-weight: bold;
+		color: #120f0d;
+	}
+}
+#going-up {
+	position: absolute;
+	top: 0;
+	left: 1.5%;
+	&:before {
+		content: ' ';
+		display: block;
+		position: absolute;
+		top: -16px;
+		height: 0;
+		width: 0;
+		border-left: 12px solid transparent;
+		border-right: 12px solid transparent;
+		border-bottom: 16px solid #6f6e68;
+	}
+	&:after {
+		content: ' ';
+		display: block;
+		position: absolute;
+		top: -13px;
+		height: 0;
+		width: 0;
+		border-left: 12px solid transparent;
+		border-right: 12px solid transparent;
+		border-bottom: 16px solid #b8b6ad;
+	}
+}

@@ -1,0 +1,126 @@
+// WordPress Generated Classes
+// http://codex.wordpress.org/CSS#WordPress_Generated_Classes
+
+// Media alignment
+.alignnone {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: 100%;
+}
+.aligncenter {
+  display: block;
+  margin: ($line-height-computed / 2) auto;
+}
+.alignleft,
+.alignright {
+  margin-bottom: ($line-height-computed / 2);
+  display: inline;
+}
+.alignleft {
+  float: left;
+  margin-right: ($line-height-computed / 2);
+}
+.alignright {
+  float: right;
+  margin-left: ($line-height-computed / 2);
+}
+
+// Captions
+.wp-caption {
+  display: block;
+  padding: $thumbnail-padding;
+  margin-bottom: $line-height-computed;
+  line-height: $line-height-base;
+  background-color: $thumbnail-bg;
+  border: 1px solid $thumbnail-border;
+  border-radius: $thumbnail-border-radius;
+  @include transition(border .2s ease-in-out);
+
+  > img,
+  a > img {
+    @include img-responsive;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  // [converter] extracted a&:hover, a&:focus, a&.active to a.thumbnail:hover, a.thumbnail:focus, a.thumbnail.active
+
+  // Image captions
+  .caption {
+    padding: $thumbnail-caption-padding;
+    color: $thumbnail-caption-color;
+  }
+}
+
+// Add a hover state for linked versions only
+a.wp-caption:hover,
+a.wp-caption:focus,
+a.wp-caption.active {
+  border-color: $link-color;
+}
+.wp-caption-text {
+  padding: $thumbnail-caption-padding;
+}
+.gallery-caption {
+	margin: -0.5em 0 0 0;
+}
+
+// Post navigation
+.posts-navigation {
+    text-align: center;
+    padding: 1em 0 2.5em;
+    clear: both;
+    @include clearfix;
+}
+.js .posts-navigation {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+.nav-next, .nav-previous {
+    width: 40%;
+
+    a {
+	display: block;
+	padding: 1em 0px;
+	border-style: groove;
+	border-color: $pager-border;
+	transition: $transition;
+
+	&:hover {
+	    border-style: inset;
+	    background-color: #dddcd9;
+	    text-decoration: none;
+	}
+
+	&:focus,
+	&:active {
+	    border-style: inset;
+	    border-color: $pager-border;
+	    background-color: #D3D2CF;
+	}
+    }
+}
+.nav-next {
+    float: right;
+
+    a {
+	border-width: $pager-border-radius-next;
+	border-radius: 5px 0px 0px 5px;
+    }
+}
+.nav-previous {
+    float: left;
+
+    a {
+	border-width: $pager-border-radius-prev;
+	border-radius: 0px 5px 5px 0px;
+    }
+}
+
+// Text meant only for screen readers
+.screen-reader-text {
+  @extend .sr-only;
+  @extend .sr-only-focusable;
+}

@@ -1,0 +1,28 @@
+.nav {
+	position: relative;
+	margin: 20px 0;
+	ul {
+		margin: 0;
+		padding: 0;
+	}
+	li {
+		margin: 0 5px 10px 0;
+		padding: 0;
+		list-style: none;
+		display: inline-block;
+	}
+	a {
+		padding: 3px 12px;
+		text-decoration: none;
+		color: #999;
+		line-height: 100%;
+		&:hover {
+			color: #000;
+		}
+	}
+	.current a {
+		background: #999;
+		color: #fff;
+		border-radius: 5px;
+	}
+}

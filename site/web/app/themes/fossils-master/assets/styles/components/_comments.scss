@@ -1,0 +1,41 @@
+.comment-list {
+  @include list-unstyled;
+}
+.comment-list ol {
+  list-style: none;
+}
+.comment-form p {
+  @extend .form-group;
+}
+.comment-form input[type="text"],
+.comment-form input[type="email"],
+.comment-form input[type="url"],
+.comment-form textarea {
+  @extend .form-control;
+}
+.comment-form input[type="submit"] {
+  @extend .btn;
+  @extend .btn-primary;
+}
+.comments-title {
+	margin-top: 0;
+	margin-bottom: 1.416666667em;
+	font-size: 24px;
+	font-size: 1.5rem;
+	font-weight: 300;
+	line-height: 1.25;
+	text-align: center;
+}
+.commentlist {
+	padding: 0;
+	list-style: none;
+	li {
+		border: 2px groove #e7e6e3;
+		border-radius: $input-border-radius-large;
+		padding: 1em;
+	}
+}
+
+li.bypostauthor > div.comment-content {
+    background: #FFB;
+}

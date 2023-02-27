@@ -1,0 +1,32 @@
+.sidebar {
+	.widget {
+		ul {
+			list-style: outside none none;
+			margin-left: -3%;
+			margin-right: -3%;
+			padding: 0px;
+
+			li {
+				border-bottom: 2px groove $body-bg;
+				padding: 0px 3%;
+			}
+		}
+	}
+}
+
+.widget_archive {
+    ul {
+        @include clearfix;
+        
+        li{
+            width: 44%;
+            
+            &:nth-child(odd) {
+                float: left;
+            }
+            &:nth-child(even) {
+                float: right;
+            }
+        }
+    }
+}
