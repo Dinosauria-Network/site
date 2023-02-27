@@ -28,3 +28,5 @@ wp-cli.local.yml
 
 # OS
 .DS_Store
+
+web/app/updraft/*
