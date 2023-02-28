@@ -1,7 +1,0 @@
-0000.001 (1) Opened log file at time: Thu, 09 Feb 2023 06:45:04 +0000 on http://dinosauria.test/wp
-0000.014 (1) UpdraftPlus WordPress backup plugin (https://updraftplus.com): 1.22.24 WP: 6.1.1 PHP: 8.0.27 (cli, Linux dinosauria 5.4.0-91-generic #102-Ubuntu SMP Fri Nov 5 16:31:28 UTC 2021 x86_64) MySQL: 10.6.12-MariaDB-1:10.6.12+maria~ubu2004 (max packet size=16777216) WPLANG: en_US Server:  safe_mode: 0 max_execution_time: 900 memory_limit: -1 (used: 9.5M | 12M) multisite: N openssl: OpenSSL 1.1.1f  31 Mar 2020 mcrypt: N LANG: en_US.UTF-8 ZipArchive::addFile: Y
-0000.018 (1) Free space on disk containing Updraft's temporary directory: 29428 MB
-0000.025 (1) Requesting backup semaphore lock (1a190c69187e)
-0000.029 (1) [Debug] Lock option (updraft_lock_1a190c69187e, wp_options) was created in the database
-0000.030 (1) [Info] Lock (updraft_lock_1a190c69187e, wp_options) acquired after initialising the database
-0000.032 (1) This backup task (1a190c69187e) is either complete or began over 2 days ago: ending (1675925104.8287, ) (existing jobdata keys: )
