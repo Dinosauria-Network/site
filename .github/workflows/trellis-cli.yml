@@ -63,9 +63,9 @@ jobs:
         # the environment to deploy to (staging, production, etc)
         site_env: production
         # the WordPress site to deploy (name defined in wordpress_sites)
-        #site_name: # optional
+        site_name: dinosauria.net
         # Search the WordPress site by key == value
-        site_key: dinosauria.net
+        #site_key: # optional
         # Search the WordPress site by key == value
         #site_value: # optional
         # Path where site lives
