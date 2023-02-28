@@ -9,7 +9,7 @@ users:
     keys:
       - "{{ lookup('file', '~/.ssh/id_rsa.pub', errors='ignore') }}"
       - "{{ lookup('file', '~/.ssh/id_ed25519.pub', errors='ignore') }}"
-      # - https://github.com/username.keys
+      - https://github.com/pixelasticity.keys
   - name: "{{ admin_user }}"
     groups:
       - sudo
