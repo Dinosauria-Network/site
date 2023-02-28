@@ -65,7 +65,7 @@ jobs:
         # the WordPress site to deploy (name defined in wordpress_sites)
         #site_name: # optional
         # Search the WordPress site by key == value
-        #site_key: # optional
+        site_key: dinosauria.net
         # Search the WordPress site by key == value
         #site_value: # optional
         # Path where site lives
