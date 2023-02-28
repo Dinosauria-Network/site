@@ -48,3 +48,35 @@ jobs:
         trellis-directory: trellis
         # Version of Trellis CLI to install
         version: latest
+        
+    - name: Trellis Deploy
+      # You may pin to the exact commit or the version.
+      # uses: steenbergen-design/trellis-action@0dc485d7dcf4816dfa3a978650776b7428a3583a
+      uses: steenbergen-design/trellis-action@v1.0.2
+      with:
+        # galaxy role file containing a list of roles to be imported
+        #role_file: # optional, default is galaxy.yml
+        # ansible vault password
+        #vault_password: # optional
+        # ansible vault password file to use. Must be the same one in ansible.cfg(if applicable)
+        #vault_password_file: # optional, default is .vault_pass
+        # the environment to deploy to (staging, production, etc)
+        site_env: production
+        # the WordPress site to deploy (name defined in wordpress_sites)
+        #site_name: # optional
+        # Search the WordPress site by key == value
+        #site_key: # optional
+        # Search the WordPress site by key == value
+        #site_value: # optional
+        # Path where site lives
+        #site_path: # optional, default is ${{ github.workspace }}
+        # Path where trellis lives
+        #trellis_path: # optional, default is ${{ github.workspace }}/trellis
+        # Group vars where sites are defined.
+        #group_vars: # optional
+        # 
+        verbose: true
+        # Ansible strategy to use, supports mitogen.
+        #ansible_strategy: # optional, default is linear
+        # Yarn cache path, used for caching the cache.
+        #yarn_cache: # optional, default is ${{ github.workspace }}/.cache/yarn
