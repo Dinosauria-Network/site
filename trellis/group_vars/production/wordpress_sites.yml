@@ -18,6 +18,7 @@ wordpress_sites:
     ssl:
       enabled: true
       provider: letsencrypt
+      # hsts_preload: true
     cache:
       enabled: true
       duration: 30s
