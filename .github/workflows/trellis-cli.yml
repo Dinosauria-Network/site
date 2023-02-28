@@ -1,4 +1,4 @@
-name: PHP Composer
+name: trellis-cli & PHP Composer
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+      run: cd site && composer validate --strict
 
     - name: Cache Composer packages
       id: composer-cache
