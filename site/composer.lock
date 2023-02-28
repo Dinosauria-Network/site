@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1ab580d213de5833d233d6c09285dce9",
+    "content-hash": "f205a470f9bf12c6e80cea5ca25216f5",
     "packages": [
         {
             "name": "Dinosauria-Network/genus-post-type",
