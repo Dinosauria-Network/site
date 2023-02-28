@@ -7,8 +7,6 @@ wordpress_sites:
       - canonical: dinosauria.net
         redirects:
           - www.dinosauria.net
-          - dinosaurianetwork.com
-          - www.dinosaurianetwork.com
     local_path: ../site
     branch: master
     repo: git@github.com:Dinosauria-Network/site.git
