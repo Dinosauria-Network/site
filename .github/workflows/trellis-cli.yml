@@ -73,7 +73,7 @@ jobs:
         # Path where trellis lives
         #trellis_path: # optional, default is ${{ github.workspace }}/trellis
         # Group vars where sites are defined.
-        #group_vars: # optional
+        group_vars: ${{ github.workspace }}/trellis/group_vars/
         # 
         verbose: true
         # Ansible strategy to use, supports mitogen.
