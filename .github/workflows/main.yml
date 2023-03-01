@@ -19,12 +19,12 @@ jobs:
 
       - uses: webfactory/ssh-agent@v0.7.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           ssh-auth-sock: ${{ github.workspace }}/ssh-auth.sock
 
       # uses: steenbergen-design/trellis-action@0dc485d7dcf4816dfa3a978650776b7428a3583a
       - uses: steenbergen-design/trellis-action@v1.0.2
         with: 
-          vault_password: ${{ secrets.VAULT_PASS }}
+          # vault_password: ${{ secrets.VAULT_PASS }}
           site_env: production
           site_name: example.com
