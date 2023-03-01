@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f205a470f9bf12c6e80cea5ca25216f5",
+    "content-hash": "ba4a1da55bb18d580e7a7e39bc99abe0",
     "packages": [
         {
             "name": "Dinosauria-Network/genus-post-type",
@@ -1235,6 +1235,24 @@
                 }
             ],
             "time": "2022-10-16T01:01:54+00:00"
+        },
+        {
+            "name": "wpackagist-plugin/google-site-kit",
+            "version": "1.95.0",
+            "source": {
+                "type": "svn",
+                "url": "https://plugins.svn.wordpress.org/google-site-kit/",
+                "reference": "tags/1.95.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/plugin/google-site-kit.1.95.0.zip"
+            },
+            "require": {
+                "composer/installers": "^1.0 || ^2.0"
+            },
+            "type": "wordpress-plugin",
+            "homepage": "https://wordpress.org/plugins/google-site-kit/"
         },
         {
             "name": "wpackagist-theme/twentytwentythree",
