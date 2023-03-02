@@ -49,7 +49,7 @@
     "dinosauria-network/genus-post-type": "dev-master",
     "wpackagist-plugin/google-site-kit": "^1.95.0",
     "wpackagist-plugin/updraftplus": "^1.22",
-    "wpackagist-plugin/migrate-guru": "^4.85"
+    "wpackagist-plugin/wpvivid-backuprestore": "^0.9.83"
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "^3.7.1",

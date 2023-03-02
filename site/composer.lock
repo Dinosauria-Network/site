@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2b6f054e50f3aad65162d54314abbc5c",
+    "content-hash": "548929529f823c23759821c482063168",
     "packages": [
         {
             "name": "Dinosauria-Network/genus-post-type",
@@ -1255,24 +1255,6 @@
             "homepage": "https://wordpress.org/plugins/google-site-kit/"
         },
         {
-            "name": "wpackagist-plugin/migrate-guru",
-            "version": "4.85",
-            "source": {
-                "type": "svn",
-                "url": "https://plugins.svn.wordpress.org/migrate-guru/",
-                "reference": "tags/4.85"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://downloads.wordpress.org/plugin/migrate-guru.4.85.zip"
-            },
-            "require": {
-                "composer/installers": "^1.0 || ^2.0"
-            },
-            "type": "wordpress-plugin",
-            "homepage": "https://wordpress.org/plugins/migrate-guru/"
-        },
-        {
             "name": "wpackagist-plugin/updraftplus",
             "version": "1.22.24",
             "source": {
@@ -1289,6 +1271,24 @@
             },
             "type": "wordpress-plugin",
             "homepage": "https://wordpress.org/plugins/updraftplus/"
+        },
+        {
+            "name": "wpackagist-plugin/wpvivid-backuprestore",
+            "version": "0.9.83",
+            "source": {
+                "type": "svn",
+                "url": "https://plugins.svn.wordpress.org/wpvivid-backuprestore/",
+                "reference": "tags/0.9.83"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/plugin/wpvivid-backuprestore.0.9.83.zip"
+            },
+            "require": {
+                "composer/installers": "^1.0 || ^2.0"
+            },
+            "type": "wordpress-plugin",
+            "homepage": "https://wordpress.org/plugins/wpvivid-backuprestore/"
         },
         {
             "name": "wpackagist-theme/twentytwentythree",
