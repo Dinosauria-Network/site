@@ -48,7 +48,8 @@
     "roots/soil": "^4.1",
     "dinosauria-network/genus-post-type": "dev-master",
     "wpackagist-plugin/google-site-kit": "^1.95.0",
-    "wpackagist-plugin/updraftplus": "^1.22"
+    "wpackagist-plugin/updraftplus": "^1.22",
+    "wpackagist-plugin/wp-migrate-db": "^2.6"
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "^3.7.1",
