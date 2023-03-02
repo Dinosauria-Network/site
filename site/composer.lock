@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97e1689e5a969aea585b9649b1c9fde2",
+    "content-hash": "2b6f054e50f3aad65162d54314abbc5c",
     "packages": [
         {
             "name": "Dinosauria-Network/genus-post-type",
@@ -1237,24 +1237,6 @@
             "time": "2022-10-16T01:01:54+00:00"
         },
         {
-            "name": "wpackagist-plugin/duplicator",
-            "version": "1.5.2.1",
-            "source": {
-                "type": "svn",
-                "url": "https://plugins.svn.wordpress.org/duplicator/",
-                "reference": "tags/1.5.2.1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://downloads.wordpress.org/plugin/duplicator.1.5.2.1.zip"
-            },
-            "require": {
-                "composer/installers": "^1.0 || ^2.0"
-            },
-            "type": "wordpress-plugin",
-            "homepage": "https://wordpress.org/plugins/duplicator/"
-        },
-        {
             "name": "wpackagist-plugin/google-site-kit",
             "version": "1.95.0",
             "source": {
@@ -1271,6 +1253,24 @@
             },
             "type": "wordpress-plugin",
             "homepage": "https://wordpress.org/plugins/google-site-kit/"
+        },
+        {
+            "name": "wpackagist-plugin/migrate-guru",
+            "version": "4.85",
+            "source": {
+                "type": "svn",
+                "url": "https://plugins.svn.wordpress.org/migrate-guru/",
+                "reference": "tags/4.85"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/plugin/migrate-guru.4.85.zip"
+            },
+            "require": {
+                "composer/installers": "^1.0 || ^2.0"
+            },
+            "type": "wordpress-plugin",
+            "homepage": "https://wordpress.org/plugins/migrate-guru/"
         },
         {
             "name": "wpackagist-plugin/updraftplus",
