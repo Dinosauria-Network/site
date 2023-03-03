@@ -67,12 +67,18 @@
 			font-weight: 700;
 			letter-spacing: 0.04em;
 			position: absolute;
-			top: 0px;
-			left: 0;
+			top: 0;
+			right: 0;
 			text-transform: uppercase;
 			line-height: 1.5;
 			padding: 0.4em 0.5em 0.1em;
-            		text-shadow: none;
+            text-shadow: none;
+
+			@include breakpoint(desktop) {
+				top: -2px;
+				left: 0;
+				right: auto;
+			}
 		}
 	}
 }
