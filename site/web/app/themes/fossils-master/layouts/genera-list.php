@@ -14,7 +14,7 @@ get_template_part('templates/page', 'header'); ?>
 <style type="text/css">
 	.main #top {
 		height: calc(100vh - 12px - 115px);
-		width: calc(82vw - 25px);
+		width: calc(94vw - 12px);
 		display: table;
 		background: #120f0d url("../img/freeflyer.jpg") no-repeat scroll center bottom;
 		background-size: cover;
@@ -45,6 +45,7 @@ get_template_part('templates/page', 'header'); ?>
 		font-weight: normal;
 		text-shadow: none;
 		text-decoration: none;
+		font-variant-numeric: lining-nums;
 	}
 
 	#listing {
