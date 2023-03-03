@@ -62,7 +62,7 @@
 
 		.sticky-post {
 			background-color: $gray-dark;
-            		background: rgba($gray-dark, 0.8);
+            background: rgba($gray-dark, 0.8);
 			color: $label-color;
 			font-weight: 700;
 			letter-spacing: 0.04em;
@@ -91,7 +91,7 @@
 	img {
 		width: 100%;
 		height: auto;
-		transition: 1s opacity ease
+		transition: 1s opacity ease;
 
 		&:hover,
 		&:focus {
