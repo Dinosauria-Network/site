@@ -14,7 +14,7 @@
   </a>
 
   <a href="https://github.com/roots/trellis/actions">
-    <img alt="Build Status" src="https://img.shields.io/github/workflow/status/roots/trellis/ci?style=flat-square" />
+    <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/roots/trellis/ci.yml?branch=master&style=flat-square" />
   </a>
 
   <a href="https://twitter.com/rootswp">
@@ -39,7 +39,7 @@ However, the amount of effort needed to maintain and develop new features and pr
 <p align="center"><a href="https://github.com/sponsors/roots"><img height="32" src="https://img.shields.io/badge/sponsor%20roots-525ddc?logo=github&logoColor=ffffff&message=" alt="Sponsor Roots"></a></p>
 
 <div align="center">
-<a href="https://k-m.com/"><img src="https://cdn.roots.io/app/uploads/km-digital.svg" alt="KM Digital" width="148" height="111"></a> <a href="https://carrot.com/"><img src="https://cdn.roots.io/app/uploads/carrot.svg" alt="Carrot" width="148" height="111"></a> <a href="https://wordpress.com/"><img src="https://cdn.roots.io/app/uploads/wordpress.svg" alt="WordPress.com" width="148" height="111"></a> <a href="https://pantheon.io/"><img src="https://cdn.roots.io/app/uploads/pantheon.svg" alt="Pantheon" width="148" height="111"></a>
+<a href="https://k-m.com/"><img src="https://cdn.roots.io/app/uploads/km-digital.svg" alt="KM Digital" width="148" height="111"></a> <a href="https://carrot.com/"><img src="https://cdn.roots.io/app/uploads/carrot.svg" alt="Carrot" width="148" height="111"></a> <a href="https://wordpress.com/"><img src="https://cdn.roots.io/app/uploads/wordpress.svg" alt="WordPress.com" width="148" height="111"></a> <a href="https://pantheon.io/"><img src="https://cdn.roots.io/app/uploads/pantheon.svg" alt="Pantheon" width="148" height="111"></a> <a href="https://worksitesafety.ca/careers/"><img src="https://cdn.roots.io/app/uploads/worksite-safety.svg" alt="Worksite Safety" width="148" height="111"></a>
 </div>
 
 ## Overview
@@ -55,7 +55,7 @@ Ansible playbooks for setting up a LEMP stack for WordPress.
 
 Trellis will configure a server with the following and more:
 
-- Ubuntu 20.04 Focal LTS
+- Ubuntu 22.04 Jammy LTS
 - Nginx (with optional FastCGI micro-caching)
 - PHP 8.0
 - MariaDB (a drop-in MySQL replacement)
@@ -96,7 +96,7 @@ $ trellis up
 
 ## Remote server setup (staging/production)
 
-A base Ubuntu 18.04 (Bionic) or Ubuntu 20.04 (Focal LTS) server is required for setting up remote servers.
+A base Ubuntu 22.04 server (18.04 and 20.04 also supported) is required for setting up remote servers.
 
 1. Configure your WordPress sites in `group_vars/<environment>/wordpress_sites.yml` and in `group_vars/<environment>/vault.yml` (see the [Vault docs](https://docs.roots.io/trellis/master/vault/) for how to encrypt files containing passwords)
 2. Add your server IP/hostnames to `hosts/<environment>`
