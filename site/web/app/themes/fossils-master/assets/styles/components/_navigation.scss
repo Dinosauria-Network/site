@@ -26,3 +26,28 @@
 		border-radius: 5px;
 	}
 }
+
+nav[role="navigation] {
+	z-index: 200;
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+}
+
+.js {
+	.menu-all-pages-container {
+		@media screen and (max-width: 1279px) {
+			position: absolute;
+			top: 0;
+			height: 100%;
+			width: 80%;
+			background: $nav-bg;
+			box-shadow: inset -1.5em 0 1.5em -0.75em $shadow-color;
+
+			&:not(:target) {
+				z-index: 1;
+				height: 0;
+			}
+		}
+	}
+}

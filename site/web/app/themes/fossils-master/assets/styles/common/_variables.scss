@@ -7,8 +7,9 @@ $sidebar-sm-columns:    4;
 
 // Colors
 $brand-primary:         #4f362a;
+$brand-secondary:       #46423b;
 
-$gray-base:              #000 !default;
+$gray-base:              #120f0d !default;
 $gray-darker:            lighten($gray-base, 13.5%) !default; // #222
 $gray-dark:              lighten($gray-base, 20%) !default;   // #333
 $gray:                   lighten($gray-base, 33.5%) !default; // #555
@@ -38,6 +39,10 @@ $link-color:            $brand-primary !default;
 $link-hover-color:      lighten($brand-primary, 20%) !default;
 //** Link hover decoration.
 $link-hover-decoration: underline !default;
+//** Background color for `<nav>`.
+$nav-bg:                $brand-secondary;
+//** Box shadow color
+$shadow-color:          alpha($gray-base, 0.35);
 
 
 //== Typography
