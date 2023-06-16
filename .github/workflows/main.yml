@@ -26,3 +26,9 @@ jobs:
         ansible-vault-password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
     - name: Deploy
       run: trellis deploy production
+    - name: Bump version
+      uses: remorses/bump-version@js
+      with:
+        version_file: ./VERSION
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
