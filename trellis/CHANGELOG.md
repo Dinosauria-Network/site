@@ -1,3 +1,18 @@
+### 1.21.0: April 5th, 2023
+* Add optional PHP 8.2 support [#1485](https://github.com/roots/trellis/pull/1485)
+* Default to PHP 8.1 [#1484](https://github.com/roots/trellis/pull/1484)
+* Use appropriate mount_option for 'parallels' provider [#1481](https://github.com/roots/trellis/pull/1481)
+
+**Full Changelog**: https://github.com/roots/trellis/compare/v1.20.1...v1.21.0
+
+### 1.20.1: March 7th, 2023
+* Fix invalid arg error in ferm task [#1480](https://github.com/roots/trellis/pull/1480)
+* Fix `ansible_user` references for local provisioning [#1479](https://github.com/roots/trellis/pull/1479)
+* Fix HSTS header by trimming whitespace [#1478](https://github.com/roots/trellis/pull/1478)
+* Replace MailHog with Mailpit [#1474](https://github.com/roots/trellis/pull/1474)
+
+**Full Changelog**: https://github.com/roots/trellis/compare/v1.20.0...v1.20.1
+
 ### 1.20.0: February 12th, 2023
 * Set development web_user to ansible_user [#1464](https://github.com/roots/trellis/pull/1464)
 * Update boxes to Ubuntu 22.04 [#1461](https://github.com/roots/trellis/pull/1461)
