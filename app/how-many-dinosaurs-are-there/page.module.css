@@ -1,0 +1,58 @@
+.generaListPage { font-family: Georgia, "Times New Roman", serif; color: #120f0d; }
+.topHero { height: calc(100vh - 12px - 115px); width: calc(94vw - 12px); display: flex; align-items: center; justify-content: center; background: #120f0d url('/images/freeflyer.jpg') no-repeat scroll center bottom; background-size: cover; position: relative; border: 6px inset #e7e6e3; border-top-color: #c9c8c5; border-right-color: #f2f1ed; border-bottom-color: #f5f4f0; border-left-color: #cccbc8; text-align: center; overflow: hidden; }
+.generaListPage #top :global(.texture) { display: block; height: 100%; width: 100%; position: absolute; overflow: hidden; top: 0; left: 0; background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e7e6e3' fill-opacity='0.08' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E"); }
+.generaHeroH1 { font-size: 11rem; font-weight: 300; font-style: italic; color: #e7e6e3; font-variant-numeric: lining-nums; letter-spacing: -0.03em; line-height: 0.85; text-shadow: none; text-decoration: none; }
+.listing { padding: 22% 15%; line-height: 1; }
+.listing .countHeader { font-weight: 300; color: #120f0d; font-size: 2.125rem; font-style: italic; padding-bottom: 12px; margin: 0 0 2rem 0; }
+.listing a { text-decoration: none; }
+.listing ul { list-style: none; margin: 0; padding: 0; }
+.listing li { border-top: 2px groove #e7e6e3; padding: 44px 0; }
+.listing li:first-child { border-top: medium none; padding-top: 0; }
+.generaListPage .speciesName, .generaListPage .speciesDate { float: left; width: 100%; text-align: left; }
+.generaListPage .speciesName { padding-bottom: 20px; }
+.generaListPage .speciesName h3 { font-weight: 300; color: #120f0d; font-size: 2.125rem; font-style: italic; padding-bottom: 12px; margin: 0; }
+.generaListPage .speciesName h3 a { text-decoration: none; color: inherit; }
+.generaListPage .speciesName p { font-family: Georgia, serif; font-size: 1rem; color: #7f7c74; font-weight: bold; padding: 0; margin: 0; }
+:global(.era) { position: relative; width: 21px; height: 21px; background-size: 21px 63px; float: left; margin-right: 20px; box-shadow: 1px 1px 3px 1px #b8b6ad; background: url('/img/eras.jpg') no-repeat 0px 0px; }
+:global(.cretaceous) { background: url("/img/eras.jpg") no-repeat 0px 0px; background: linear-gradient(#7eff00, #7eff00 42.473118%, #7f7f7f 43%); }
+:global(.cretaceous::after) { content: ''; position: absolute; left: 50%; width: 50%; height: 42.5%; }
+:global(.late-cretaceous::after) { background: rgb(166,212,104); background: linear-gradient(180deg, rgb(166,212,104) 0%, rgb(166,212,104) 43%, rgba(128,128,128,0.67) 44%, rgba(128,128,128,0.67) 100%); }
+:global(.early-cretaceous::after) { background: rgb(126,205,116); background: linear-gradient(180deg, rgba(128,128,128,0.67) 0%, rgba(128,128,128,0.67) 43%, rgb(126,205,116) 44%, rgb(126,205,116) 100%); }
+:global(.middle-cretaceous::after) { content: ''; position: absolute; left: 50%; width: 50%; height: 42.5%; background: rgb(140,220,110); background: linear-gradient(180deg, rgba(128,128,128,0.67) 0%, rgba(128,128,128,0.67) 32%, rgb(140,220,110) 33%, rgb(140,220,110) 72%, rgba(128,128,128,0.67) 73%, rgba(128,128,128,0.67) 100%); }
+:global(.jurassic) { background: url("/img/eras.jpg") no-repeat -21px 0px; background: linear-gradient(#7f7f7f, #7f7f7f 42%, #0ff 43%, #0ff 72.795699%, #7f7f7f 72.795699%); }
+:global(.jurassic::after) { content: ''; position: absolute; width: 50%; height: 30.28571%; left: 50%; top: 42.5%; }
+:global(.late-jurassic::after) { background: rgb(151,227,250); background: linear-gradient(180deg, rgb(151,227,250) 0%, rgb(151,227,250) 32%, rgba(128,128,128,0.67) 33%, rgba(128,128,128,0.67) 100%); }
+:global(.middle-jurassic::after) { background: rgb(52,209,235); background: linear-gradient(180deg, rgba(128,128,128,0.67) 0%, rgba(128,128,128,0.67) 32%, rgb(52,209,235) 33%, rgb(52,209,235) 50%, rgba(128,128,128,0.67) 51%, rgba(128,128,128,0.67) 100%); }
+:global(.early-jurassic::after) { background: rgb(0,183,234); background: linear-gradient(180deg, rgba(128,128,128,0.67) 0%, rgba(128,128,128,0.67) 51%, rgb(0,183,234) 52%, rgb(0,183,234) 100%); }
+:global(.triassic) { background: url("/img/eras.jpg") no-repeat -42px 0px; background: linear-gradient(#7f7f7f, #7f7f7f 72.795699%, #7f00ff 72.795699%); }
+:global(.triassic::after) { content: ''; height: 27.2168%; width: 50%; position: absolute; left: 50%; top: 72.7832%; }
+:global(.late-triassic::after) { background: rgb(198,152,194); background: linear-gradient(180deg, rgb(198,152,194) 0%, rgb(198,152,194) 70.275%, rgba(128,128,128,0.67) 70.825%, rgba(128,128,128,0.67) 100%); }
+:global(.middle-triassic::after) { background: rgb(191,124,177); background: linear-gradient(180deg, rgba(128,128,128,0.67) 0%, rgba(128,128,128,0.67) 70.825%, rgb(191,124,177) 70.825%, rgb(191,124,177) 99.90708%, rgba(128,128,128,0.67) 99.90708%, rgba(128,128,128,0.67) 100%); }
+:global(.early-triassic::after) { background: rgb(173,87,154); background: linear-gradient(180deg, rgba(128,128,128,0.67) 0%, rgba(128,128,128,0.67) 99.90708%, rgb(173,87,154) 52%, rgb(173,87,154) 100%); }
+.generaListPage .speciesDate h4 { font-weight: 300; color: #120f0d; font-size: 1.375rem; display: inline; padding-right: 6px; padding-bottom: 6px; margin: 0; }
+.generaListPage .speciesDate h5 { font-family: Georgia, serif; font-size: 0.875rem; display: inline; color: #7f7c74; font-variant: small-caps; font-style: italic; padding-top: 3px; }
+@media screen and (min-width: 800px) {
+  .generaListPage .speciesName { width: 70%; }
+  .generaListPage .speciesDate { width: 30%; text-align: right; }
+  .generaListPage .speciesDate h4 { display: block; font-size: 2.5rem; }
+  .generaListPage .speciesDate h5 { display: block; margin-top: 4px; }
+}
+@media (max-width: 640px) {
+  .generaHeroH1 { font-size: 6rem; }
+  .listing { padding: 10% 5%; }
+  .generaListPage .speciesName h3 { font-size: 1.5rem; }
+  .generaListPage .speciesDate h4 { font-size: 1.2rem; }
+}
+@media (min-width: 640px) and (max-width: 959px) {
+  .generaHeroH1 { font-size: 8rem; }
+  .listing { padding: 15% 8%; }
+}
+.generaListPage .srOnly { position: absolute !important; clip: rect(1px, 1px, 1px, 1px); overflow: hidden; height: 1px; width: 1px; word-wrap: normal !important; word-break: keep-all; }
+.container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-decoration: none; }
+.generaListPage .topHero h2 { font-size: 11rem; font-weight: 300; font-style: italic; color: #e7e6e3; font-variant-numeric: lining-nums; letter-spacing: -0.03em; line-height: 0.85; text-shadow: none; text-decoration: none; text-align: center; margin: 0; }
+.generaListPage .topHero h2 span { display: inline; }
+.generaListPage #top :global(.texture) { display: block; height: 100%; width: 100%; position: absolute; overflow: hidden; top: 0; left: 0; background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e7e6e3' fill-opacity='0.08' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E"); }
+:global(.clearfix)::after { content: ""; display: table; clear: both; }
+
+.clearfix::after { content: ""; display: table; clear: both; }
+.firstItem { border-top: none; padding-top: 0; }
