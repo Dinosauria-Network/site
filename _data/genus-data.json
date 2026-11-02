@@ -4389,20 +4389,6 @@
         "post_type": "genus"
       },
       {
-        "post_name": "siamodraco",
-        "post_title": "Siamodraco",
-        "post_date": "2014",
-        "author": "Ulansky",
-        "taxonomy": [
-          {
-            "name": "Late Cretaceous",
-            "slug": "late-cretaceous",
-            "taxonomy": "geological_time"
-          }
-        ],
-        "post_type": "genus"
-      },
-      {
         "post_name": "sinopeltosaurus",
         "post_title": "Sinopeltosaurus",
         "post_date": "2014",
