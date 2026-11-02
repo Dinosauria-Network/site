@@ -213,8 +213,13 @@
 .site-footer .footer-title { font-size: 1.1rem; margin-bottom: 0.5rem; }
 .footer-nav li { list-style: none; margin-bottom: 0.3rem; }
 .footer-copy { text-align: center; font-size: 0.85rem; color: #d0cdc9; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #3d2b20; }
-.chronometric-chart table { border-collapse: collapse; width: 100%; border: 1px solid #333; }
+.chronometric-chart table { border-collapse: collapse; width: 100%; border: 1px solid #333; table-layout: fixed; }
 .chronometric-chart th, .chronometric-chart td { border: 1px solid #333; text-align: center; padding: 0.25rem 0.5rem; }
+.chronometric-chart td:first-child, .chronometric-chart th:first-child { width: 12%; }
+.chronometric-chart td:nth-child(2), .chronometric-chart th:nth-child(2) { width: 16%; }
+.chronometric-chart td:nth-child(3), .chronometric-chart th:nth-child(3) { width: 24%; }
+.chronometric-chart td:nth-child(4), .chronometric-chart th:nth-child(4) { width: 32%; }
+.chronometric-chart td:nth-child(5), .chronometric-chart th:nth-child(5) { width: 12%; }
 :focus-visible{outline:2px solid #333;outline-offset:2px}
 
 /* Layout wrapper (homepage/main content) */
