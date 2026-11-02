@@ -20,7 +20,7 @@ export default async function GeneraPage({
       <header className="page-header">
         <h1>Dinosaur Genera Database</h1>
         <p>
-          Browse {genera.length} dinosaur genus{" "}
+          Browse {genera.length} dinosaur genus
           {genera.length === 1 ? "" : "es"} organized by geological period.
         </p>
       </header>
