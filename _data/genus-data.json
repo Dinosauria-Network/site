@@ -2303,20 +2303,6 @@
         "post_type": "genus"
       },
       {
-        "post_name": "liaoningtitan",
-        "post_title": "Liaoningtitan",
-        "post_date": "2018",
-        "author": "Zhou et al.",
-        "taxonomy": [
-          {
-            "name": "Late Cretaceous",
-            "slug": "late-cretaceous",
-            "taxonomy": "geological_time"
-          }
-        ],
-        "post_type": "genus"
-      },
-      {
         "post_name": "lingwulong",
         "post_title": "Lingwulong",
         "post_date": "2018",
