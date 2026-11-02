@@ -379,7 +379,7 @@ export default function MesozoicPage() {
   // The Mesozoic spans from ~252.17 (base Triassic) to 66.0 (K-Pg).
   // For proportional height, scale duration to pixels: base unit = 4px per Myr
   const PALEOZOIC_BOUNDARY = 251.9;
-  const SCALE = 16; // px per million years
+  const SCALE = 22; // px per million years
 
   function getRowSpan(node: GeologicalNode): number {
     if (!node.contains?.length) {
@@ -393,6 +393,14 @@ export default function MesozoicPage() {
   }
 
   function buildTableRows(root: GeologicalNode): TableRow[] {
+    // Flat list of all ages in order — used to find the next age's end
+    const flatAges: GeologicalNode[] = [];
+    function collectAges(node: GeologicalNode) {
+      if (node.type === "age") flatAges.push(node);
+      node.contains?.forEach(collectAges);
+    }
+    collectAges(root);
+
     const totalRows = getRowSpan(root);
 
     const rows: TableRow[] = Array.from(
@@ -403,7 +411,8 @@ export default function MesozoicPage() {
     function traverse(
       node: GeologicalNode,
       depth: number,
-      startRow: number
+      startRow: number,
+      parentSiblings?: GeologicalNode[]
     ): void {
       if (depth >= COLUMN_COUNT) return;
 
@@ -420,22 +429,32 @@ export default function MesozoicPage() {
 
       let currentRow = startRow;
 
-      // The first age needs the end boundary of its parent epoch.
-      let previousEnd = node.end;
+      node.contains?.forEach((child, index, siblings) => {
+        let nextEnd: number | undefined = siblings[index + 1]?.end;
 
-      node.contains?.forEach(child => {
-        traverse(child, depth + 1, currentRow);
-
+        // Last age in an epoch: nextEnd should be first age of the next epoch
         if (child.type === "age" && child.end !== undefined) {
-          const height = getAgeHeight(previousEnd, child.end);
+          const flatIndex = flatAges.indexOf(child);
+          if (flatIndex >= 0 && flatIndex < flatAges.length - 1) {
+            nextEnd = flatAges[flatIndex + 1].end;
+          } else if (flatIndex === flatAges.length - 1) {
+            // Last age (Induan): subtract from Mesozoic base
+            nextEnd = 251.902;
+          }
+        }
 
+        if (nextEnd === undefined && node.end !== undefined) {
+          nextEnd = node.end;
+        }
+
+        traverse(child, depth + 1, currentRow, node.contains);
+
+        if (child.type === "age" && child.end !== undefined && nextEnd !== undefined) {
           const cell = rows[currentRow][depth + 1];
 
           if (cell !== null) {
-            cell.height = height;
+            cell.height = getAgeHeight(child.end, nextEnd);
           }
-
-          previousEnd = child.end;
         }
 
         currentRow += getRowSpan(child);
@@ -447,18 +466,11 @@ export default function MesozoicPage() {
     return rows;
   }
 
-  const PIXELS_PER_MILLION_YEARS = 12;
-
   function getAgeHeight(
-    previousEnd: number | undefined,
-    currentEnd: number | undefined
-  ): number | undefined {
-    if (previousEnd === undefined || currentEnd === undefined) {
-      return undefined;
-    }
-
-    return Math.abs(previousEnd - currentEnd) *
-      PIXELS_PER_MILLION_YEARS;
+    currentEnd: number,
+    nextEnd: number
+  ): number {
+    return Number(((nextEnd - currentEnd) * SCALE).toFixed(3));
   }
 
   const rows: any[] = buildTableRows(ages);
@@ -520,6 +532,7 @@ export default function MesozoicPage() {
                             rowSpan={cell.rowSpan}
                             style={{
                               backgroundColor: cell.bgColor || "#eee",
+                              color: cell.color || "#000",
                               border: "2px groove #ccc",
                               padding: "8px",
                               whiteSpace: "nowrap"
@@ -536,7 +549,7 @@ export default function MesozoicPage() {
               {/* Mesozoic lower boundary */}
               <tr style={{ backgroundColor: "#97c8a9" }}>
                 <td colSpan={4}>Paleozoic boundary</td>
-                <td>251.9</td>
+                <td>251.902 ± 0.024</td>
                 <td>{(PALEOZOIC_BOUNDARY - 66.0).toFixed(1)}</td>
               </tr>
             </tbody>
