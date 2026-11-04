@@ -273,6 +273,7 @@ const SOURCE_DOMAINS: Record<string, string> = {
   "San Francisco Chronicle": "sfchronicle.com",
   RedOrbit: "redorbit.com",
   "National Geographic News": "nationalgeographic.com",
+  PNAS: "pnas.org",
   "Fox News": "foxnews.com",
   "EurekAlert!": "eurekalert.org",
 };
