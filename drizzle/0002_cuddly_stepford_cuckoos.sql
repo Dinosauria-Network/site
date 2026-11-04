@@ -1,0 +1,1 @@
+ALTER TABLE "research_papers" ADD CONSTRAINT "papers_doi_unique" UNIQUE("doi");
