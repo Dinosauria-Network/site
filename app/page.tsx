@@ -1,4 +1,4 @@
-import { getPostsPaginated } from "@/lib/genus-data";
+import { getDBPosts } from "@/lib/db/home-stories";
 import Link from "next/link";
 import ArticleCard from "@/components/ArticleCard";
 import MasonryGrid from "@/components/MasonryGrid";
@@ -18,10 +18,10 @@ export default async function HomePage({
 }) {
   const sp = await searchParams;
   const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
-  const { posts, totalPages, currentPage } = getPostsPaginated(
-    page,
-    PER_PAGE
-  );
+    const dbResult = await getDBPosts(page, PER_PAGE);
+  const posts = dbResult.posts;
+  const totalPages = dbResult.totalPages;
+  const currentPage = dbResult.currentPage;
 
   return (
     <MasonryGrid>
