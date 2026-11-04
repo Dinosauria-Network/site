@@ -6,7 +6,7 @@ export async function getDBPosts(page: number, perPage: number) {
   const offset = (page - 1) * perPage;
   const papers = await db.select().from(researchPapers).limit(perPage).offset(offset).orderBy(desc(researchPapers.createdAt));
   const mapped = papers.map(p => ({
-    id: Number(p.id.split('-')[0]) || 0,
+    id: p.id,
     title: p.title || '',
     excerpt: p.abstract || '',
     date: p.publicationDate ? new Date(p.publicationDate).toISOString().split('T')[0] : '',

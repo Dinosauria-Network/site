@@ -52,7 +52,7 @@ export interface SiteMetadata {
 }
 
 export interface NewsPost {
-  id: number;
+  id: number | string;
   title: string;
   excerpt: string;
   date: string;
