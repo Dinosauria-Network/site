@@ -29,7 +29,7 @@ const run = async () => {
           publicationDate: parseDate(post.post_date || post.date || ''),
           journalName: 'ScienceDaily',
           peerReviewStatus: 'unknown',
-          metadata: { sourcePostId: post.id, sourceUrl: post.url || '', source: post.source },
+          metadata: { sourcePostId: post.id, sourceUrl: post.url || '', source: post.source || post.syndication_source || '', image: post.image || '' },
         }).onConflictDoNothing();
         kept++;
       } else {
