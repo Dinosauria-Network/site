@@ -42,23 +42,22 @@ export default function ArticleCard({ post, index }: ArticleCardProps) {
 
   return (
     <article className={articleClasses}>
-      <div className="post-image alignleft">
-        <a href={postHref} title={post.title}>
-          <picture className="responsive-image">
-            <source srcSet={`/images/news/${basename}-1024.jpg`} media="(min-width: 1024px)" />
-            <source srcSet={`/images/news/${basename}-640.jpg`} media="(min-width: 640px)" />
-            <source srcSet={`/images/news/${basename}-480.jpg`} media="(min-width: 480px)" />
-            <img
-              className="wp-post-image"
-              src={imgSrc}
-              alt={post.title}
-              loading="lazy"
-              width={1024}
-              height={633}
-            />
-          </picture>
-        </a>
-      </div>
+      <a className="responsive-image" href={postHref} title={post.title}>
+        <picture>
+          <source srcSet={`/images/news/${basename}-1024.jpg`} media="(min-width: 1024px)" />
+          <source srcSet={`/images/news/${basename}-640.jpg`} media="(min-width: 640px)" />
+          <source srcSet={`/images/news/${basename}-480.jpg`} media="(min-width: 480px)" />
+          <img
+            className="wp-post-image"
+            src={imgSrc}
+            alt={post.title}
+            loading="lazy"
+            width={1024}
+            height={633}
+          />
+        </picture>
+      </a>
+      
       <header className="entry-header">
         <h2 className="summary-title">
           <a href={postHref}>{post.title}</a>
