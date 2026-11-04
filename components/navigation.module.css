@@ -1,0 +1,13 @@
+.menu-toggle {
+    width: 3.571428571em;
+    height: 3.928571429em;
+}
+
+.main-navigation {
+    z-index: 200;
+    position: absolute;
+    overflow: hidden;
+    width: 100%;
+    background-color: #e7e6e3;
+    height: calc(100dvh - 54.63333px);
+}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import styles from "./navigation.module.css";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -19,10 +20,10 @@ export default function Navigation() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Main Navigation">
+    <nav className={styles['main-navigation']} aria-label="Main Navigation">
       <button
         type="button"
-        className="menu-toggle"
+        className={`${styles['menu-toggle']} menu-toggle`}
         aria-expanded={menuOpen}
         aria-controls="primary-menu"
         aria-label="Toggle navigation"
