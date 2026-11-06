@@ -52,6 +52,7 @@ export default function RootLayout({
         <footer className="site-footer" role="contentinfo">
           <Footer />
         </footer>
+        </ThemeProvider>
 
         <Script
           src="/js/imagesloaded.pkgd.min.js"
