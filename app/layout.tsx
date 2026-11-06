@@ -2,6 +2,7 @@ import { getSiteMetadata } from "@/lib/genus-data";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Script from "next/script";
+import { ThemeProvider } from "@/app/providers/ThemeProvider";
 import "@/app/styles/globals.scss";
 import SkipLink from "@/components/SkipLink";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="/css/main.css" />
       </head>
       <body className="home blog">
+        <ThemeProvider>
         <SkipLink />
         <header className="banner" role="banner">
           <div className="container">
