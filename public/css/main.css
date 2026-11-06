@@ -45,24 +45,6 @@
   border-radius: 5px;
 }
 
-.menu-toggle {
-  display: none;
-  flex-direction: column;
-  gap: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  margin-left: auto;
-}
-
-.menu-toggle span {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: #333;
-}
-
 /* ============ Buttons & Toolbars ============ */
 .btn {
   display: inline-block;
