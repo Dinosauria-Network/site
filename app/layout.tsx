@@ -2,6 +2,7 @@ import { getSiteMetadata } from "@/lib/genus-data";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Script from "next/script";
+import "@/app/styles/globals.scss";
 import SkipLink from "@/components/SkipLink";
 
 const site = getSiteMetadata();
