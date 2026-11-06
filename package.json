@@ -49,6 +49,7 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "sass": "^1.107.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
