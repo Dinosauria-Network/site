@@ -58,6 +58,22 @@ export default function Navigation() {
   const handleToggle = () => setMenuOpen(!menuOpen);
   const handleClose = () => setMenuOpen(false);
 
+  // Add 'hiding' class ONLY when the dialog starts closing
+  const handleDialogClose = () => {
+    const dialog = dialogRef.current;
+    if (dialog) {
+      dialog.classList.add(styles.hiding);
+    }
+  };
+
+  // Remove 'hiding' class after the closing animation completes
+  const handleTransitionEnd = () => {
+    const dialog = dialogRef.current;
+    if (dialog) {
+      dialog.classList.remove(styles.hiding);
+    }
+  };
+
   return (
     <nav className={styles["main-navigation"]} aria-label="Main Navigation">
       <button
@@ -77,13 +93,8 @@ export default function Navigation() {
         ref={dialogRef}
         className={`${styles.drawer} ${styles['drawer-end']}`}
         id="primary-menu"
-        onClose={handleClose}
-        onClick={(e) => {
-          // Clicking the backdrop (dialog itself, not content inside) closes the menu
-          if (e.target === e.currentTarget) {
-            handleClose();
-          }
-        }}
+        onClose={handleDialogClose}
+        onTransitionEnd={handleTransitionEnd}
       >
         <div className={styles["drawer-header"]}>
           <h5 className={styles["drawer-title"]} id="navbarDrawerLabel">Sections</h5>
@@ -94,8 +105,8 @@ export default function Navigation() {
             onClick={handleClose}
           ></button>
         </div>
-        <div className="menu-all-pages-container">
-          <ul className="nav">
+        <div className={styles["drawer-body"]}>
+          <ul className={`${styles.nav} ${styles['navbar-nav']}`}>
             {navItems.map((item) => (
               <li
                 key={item.href}
