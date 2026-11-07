@@ -1,3 +1,4 @@
+import React from "react";
 import { getSiteMetadata } from "@/lib/genus-data";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
