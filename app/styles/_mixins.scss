@@ -12,17 +12,17 @@ $active-theme-map: null !default;
 // Mixin to wrap component styles for maximum compatibility
 @mixin apply-theme {
   // Light Mode Scoped Styles
-  .theme-light {
-    $active-theme-map: $theme-light-map;
+  .theme-light & {
+    $active-theme-map: $theme-light-map !global;
     @content;
   }
 
   // Dark Mode Scoped Styles
-  .theme-dark {
-    $active-theme-map: $theme-dark-map;
+  .theme-dark & {
+    $active-theme-map: $theme-dark-map !global;
     @content;
   }
 
   // Reset active map
-  $active-theme-map: null;
+  $active-theme-map: null !global;
 }
