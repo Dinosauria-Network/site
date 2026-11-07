@@ -1,2 +1,28 @@
 @use "sass:map";
 @use "_colors.scss" as *;
+
+// Global current-theme reference
+$active-theme-map: null !default;
+
+// Mixin to fetch tokens safely inside themed-block
+@function theme-get($key) {
+  @return map.get($active-theme-map, $key);
+}
+
+// Mixin to wrap component styles for maximum compatibility
+@mixin apply-theme {
+  // Light Mode Scoped Styles
+  .theme-light {
+    $active-theme-map: $theme-light-map;
+    @content;
+  }
+
+  // Dark Mode Scoped Styles
+  .theme-dark {
+    $active-theme-map: $theme-dark-map;
+    @content;
+  }
+
+  // Reset active map
+  $active-theme-map: null;
+}
