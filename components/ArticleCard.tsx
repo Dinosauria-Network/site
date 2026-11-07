@@ -1,4 +1,5 @@
-import { NewsPost, getSourceFavicon, formatTimeAgo } from "@/lib/genus-data";
+import { NewsPost } from "@/lib/genus-data";
+import EntryMeta from "./EntryMeta";
 
 interface ArticleCardProps {
   post: NewsPost;
@@ -19,16 +20,6 @@ export default function ArticleCard({ post, index }: ArticleCardProps) {
   ]
     .filter(Boolean)
     .join(" ");
-
-  // Extract source domain safely
-  let sourceDomain = "";
-  try {
-    if (post.url && post.url.startsWith("http")) {
-      sourceDomain = new URL(post.url).hostname;
-    }
-  } catch {
-    sourceDomain = "";
-  }
 
   const postHref = `/news/${post.id}`;
 
@@ -63,38 +54,7 @@ export default function ArticleCard({ post, index }: ArticleCardProps) {
         <h2 className="summary-title">
           <a href={postHref}>{post.title}</a>
         </h2>
-        <div className="entry-meta">
-          <div className="byline author vcard">
-            {post.source && (
-              <img
-                src={getSourceFavicon(post.source)}
-                alt={post.source}
-                width={16}
-                height={16}
-              />
-            )}{" "}
-            {sourceDomain ? (
-              <a
-                href={`//${sourceDomain}`}
-                rel="author"
-                className="fn"
-                target="_blank"
-                title="opens new window"
-              >
-                {post.source || post.author}
-              </a>
-            ) : (
-              <span className="fn">{post.source || post.author}</span>
-            )}
-            <span className="sep">&bull;</span>
-          </div>
-          <time className="updated" dateTime={post.date}>
-            <span className="extra">Posted</span>{" "}
-            <a rel="bookmark" href={postHref}>
-              {formatTimeAgo(post.date)}
-            </a>
-          </time>
-        </div>
+        <EntryMeta post={post} href={postHref} />
       </header>
       <div className="entry-summary">
         <p>{post.excerpt}</p>
