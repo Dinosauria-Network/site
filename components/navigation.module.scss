@@ -25,6 +25,12 @@
     li {
         display: block;
     }
+
+    [class*="drawer"] {
+        &:not([open], .hiding) {
+            transition: none !important;
+        }
+    }
 }
 
 .close-btn {
@@ -60,7 +66,6 @@
     max-height: calc(100% - 1rem * 2);
     color: theme-get($text-primary);
     visibility: hidden;
-    background-color: var(--bs-drawer-bg);
     border: 1px solid color-mix(in oklch, #120f0d 15%, transparent);
     border-radius: 0.75rem;
     box-shadow: rgba(colors.$obsidian, 0.05) 0px 3px 8px -1px, rgba(colors.$obsidian, 0.06) 0px 8px 20px -3px, rgba(colors.$obsidian, 0.07) 0px 16px 40px -6px, rgba(colors.$obsidian, 0.09) 0px 32px 80px -12px;
