@@ -5,61 +5,61 @@
 $salt: #fffefb;
 
 // Light Strata
-$color-chalk-bright:    #e7e6e3; // Viewport canvas light
-$color-chalk-powder:    #d0cdc9; // Surface-1 light
-$color-limestone:       #b8b6ad; // Surface-2 light
+$chalk-bright:    #e7e6e3; // Viewport canvas light
+$chalk-powder:    #d0cdc9; // Surface-1 light
+$limestone:       #b8b6ad; // Surface-2 light
 
 // Silt & Slate Strata (Harmonized Mid-tones)
-$color-silt-warm:       #807d76; // Subtle border / inner shadow
-$color-clay-sandy:      #7f7c79; // Default border
-$color-slate-warm:      #706c65; // Dark mode border / ambient shadow
+$silt-warm:       #807d76; // Subtle border / inner shadow
+$clay-sandy:      #7f7c79; // Default border
+$slate-warm:      #706c65; // Dark mode border / ambient shadow
 
 // Deep Shale & Fossil Strata (Harmonized Dark Tones)
-$color-shale-charcoal:  #48413a; // Muted dark text / dark surface-2
-$color-shale-iron:      #4f362a; // Recessed dark surface / active border
-$color-fossil-bed:      #3d2b20; // Surface-1 dark
-$color-obsidian:        #120f0d; // Viewport canvas dark / light primary text
+$shale-charcoal:  #48413a; // Muted dark text / dark surface-2
+$shale-iron:      #4f362a; // Recessed dark surface / active border
+$fossil-bed:      #3d2b20; // Surface-1 dark
+$obsidian:        #120f0d; // Viewport canvas dark / light primary text
 
 // Mineral Vein Accents
-$color-gold-ore:        #bf9c5a; // Button fills / focus rings
-$color-gold-text:       #a17f42; // WCAG AA text variant on light canvas
-$color-terracotta:      #92644d; // Secondary accent / badges
-$color-raw-umber:       #6d492e; // Accent hover / active
+$gold-ore:        #bf9c5a; // Button fills / focus rings
+$gold-text:       #a17f42; // WCAG AA text variant on light canvas
+$terracotta:      #92644d; // Secondary accent / badges
+$raw-umber:       #6d492e; // Accent hover / active
 
 $required: #0aa801;
 
 // LIGHT THEME MAP
 $theme-light-map: (
-  canvas:           $color-chalk-bright,
-  surface-1:        $color-chalk-powder,
-  surface-2:        $color-limestone,
-  text-primary:     $color-obsidian,
-  text-secondary:   $color-shale-charcoal,
-  border:           $color-clay-sandy,
-  border-subtle:    $color-silt-warm,
-  accent-primary:   $color-gold-ore,
-  accent-text:      $color-gold-text,
-  accent-secondary: $color-terracotta,
-  accent-hover:     $color-raw-umber,
+  canvas:           $chalk-bright,
+  surface-1:        $chalk-powder,
+  surface-2:        $limestone,
+  text-primary:     $obsidian,
+  text-secondary:   $shale-charcoal,
+  border:           $clay-sandy,
+  border-subtle:    $silt-warm,
+  accent-primary:   $gold-ore,
+  accent-text:      $gold-text,
+  accent-secondary: $terracotta,
+  accent-hover:     $raw-umber,
   shadow-highlight: -2px -2px 6px 0px rgba(255, 255, 255, 0.65),
-  shadow-ambient:   3px 5px 12px 0px rgba($color-slate-warm, 0.30),
-  shadow-deep:      1px 2px 4px 0px rgba($color-obsidian, 0.15)
+  shadow-ambient:   3px 5px 12px 0px rgba($slate-warm, 0.30),
+  shadow-deep:      1px 2px 4px 0px rgba($obsidian, 0.15)
 );
 
 // DARK THEME MAP
 $theme-dark-map: (
-  canvas:           $color-obsidian,
-  surface-1:        $color-fossil-bed,
-  surface-2:        $color-shale-charcoal,
-  text-primary:     $color-chalk-bright,
-  text-secondary:   $color-limestone,
-  border:           $color-slate-warm,
-  border-subtle:    $color-shale-iron,
-  accent-primary:   $color-gold-ore,
-  accent-text:      $color-gold-ore,
-  accent-secondary: $color-terracotta,
-  accent-hover:     $color-raw-umber,
-  shadow-highlight: -1px -1px 3px 0px rgba($color-chalk-powder, 0.12),
+  canvas:           $obsidian,
+  surface-1:        $fossil-bed,
+  surface-2:        $shale-charcoal,
+  text-primary:     $chalk-bright,
+  text-secondary:   $limestone,
+  border:           $slate-warm,
+  border-subtle:    $shale-iron,
+  accent-primary:   $gold-ore,
+  accent-text:      $gold-ore,
+  accent-secondary: $terracotta,
+  accent-hover:     $raw-umber,
+  shadow-highlight: -1px -1px 3px 0px rgba($chalk-powder, 0.12),
   shadow-ambient:   4px 6px 16px 0px rgba(0, 0, 0, 0.50),
-  shadow-deep:      1px 2px 4px 0px rgba($color-obsidian, 0.80)
+  shadow-deep:      1px 2px 4px 0px rgba($obsidian, 0.80)
 );

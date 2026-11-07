@@ -75,7 +75,7 @@ export default function Navigation() {
       
       <dialog
         ref={dialogRef}
-        className={styles.drawer}
+        className={`${styles.drawer} ${styles['drawer-end']}`}
         id="primary-menu"
         onClose={handleClose}
         onClick={(e) => {

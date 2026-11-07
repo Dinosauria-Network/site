@@ -1,4 +1,4 @@
-@use "@/app/styles/colors" as *;
+@use "@/app/styles/colors";
 @use "@/app/styles/mixins" as *;
 
 .menu-toggle {
@@ -53,29 +53,58 @@
 }
 
 .drawer {
-    position: fixed;
     z-index: 1030;
-    width: 100%;
-    max-width: 400px;
-    height: 100%;
-    max-height: 100%;
-    top: 0;
-    right: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    width: auto;
+    max-width: calc(100% - 1rem * 2);
+    height: auto;
+    max-height: calc(100% - 1rem * 2);
+    color: theme-get($text-primary);
+    visibility: hidden;
+    background-color: var(--bs-drawer-bg);
+    border: 1px solid color-mix(in oklch, #120f0d 15%, transparent);
+    border-radius: 0.75rem;
+    box-shadow: rgba(colors.$obsidian, 0.05) 0px 3px 8px -1px, rgba(colors.$obsidian, 0.06) 0px 8px 20px -3px, rgba(colors.$obsidian, 0.07) 0px 16px 40px -6px, rgba(colors.$obsidian, 0.09) 0px 32px 80px -12px;
+    background-clip: padding-box;
+    outline: 0;
     flex-direction: column;
     margin: 0;
     padding: 0;
-    background-color: #fff;
-    visibility: hidden;
-    border-left: 1px solid color-mix(in oklch, #120f0d 15%, transparent);
-    box-shadow: oklch(0 0 0 / 0.05) 0px 3px 8px -1px, oklch(0 0 0 / 0.06) 0px 8px 20px -3px, oklch(0 0 0 / 0.07) 0px 16px 40px -6px, oklch(0 0 0 / 0.09) 0px 32px 80px -12px;
     display: flex;
-    inset: 0;
+    position: fixed;
+    inset: auto;
+    overflow: hidden;
 
     &[open],
     &.open {
         visibility: visible;
+        transform: none;
+    }
+
+    &:where(.drawer-end) {
+        inset-block: 1rem;
+        width: 400px;
+        inset-inline-end: 1rem;
+        transform: translateX(calc(100% + 1rem));
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        transition-timing-function: cubic-bezier(0.21, 1, 0.36, 1);
+        transition-duration: 0.3s;
+        transition-property: transform, visibility;
+    }
+
+    &::backdrop {
+        @starting-style {
+            backdrop-filter: blur();
+            background-color: #0000;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            transition: background-color 0.3s cubic-bezier(0.21, 1, 0.36, 1), backdrop-filter 0.3s cubic-bezier(0.21, 1, 0.36, 1), display 0.3s allow-discrete, overlay 0.3s allow-discrete;
+        }
+
+        backdrop-filter: blur(8px);
+        background-color: color-mix(in oklch, #e7e6e3 25%, transparent)
     }
 
     &-header {
