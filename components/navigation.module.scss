@@ -64,7 +64,11 @@
     max-width: calc(100% - 1rem * 2);
     height: auto;
     max-height: calc(100% - 1rem * 2);
-    color: theme-get($text-primary);
+    @include apply-theme() {
+        color: theme-get('text-primary');
+        background-color: theme-get('canvas');
+        border-color: color-mix(in oklch, theme-get('border') 15%, transparent)
+    }
     visibility: hidden;
     border: 1px solid color-mix(in oklch, #120f0d 15%, transparent);
     border-radius: 0.75rem;
