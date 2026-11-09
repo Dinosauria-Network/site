@@ -21,10 +21,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="js">
+    <html lang="en" className="no-js" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Script
+          id="js-detection"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.className = document.documentElement.className.replace('no-js', 'js');`,
+          }}
+        />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Vollkorn"
