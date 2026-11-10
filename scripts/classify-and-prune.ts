@@ -13,6 +13,9 @@ const run = async () => {
       const cls = await classifyDinosaur(p.title + ' ' + (p.abstract || ''), key) as any;
       const prob = cls.answers?.dinosaur?.noul ?? cls.questions?.dinosaur?.probability ?? 0;
       console.log(prob.toFixed(3), '|', p.id, '|', p.title?.slice(0, 60));
+      await db.update(researchPapers)
+        .set({ editorialScore: prob })
+        .where(eq(researchPapers.id, p.id));
       if (prob < 0.25) toDelete.push(p.id);
     } catch (e: any) { console.log('ERR', p.id); }
   }

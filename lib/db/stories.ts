@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client';
 import { editorialStories } from '@/lib/db/schema';
-import { count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, sql } from 'drizzle-orm';
 import type { NewsPost } from '@/lib/genus-data';
 
 export interface StoriesPage {
@@ -36,6 +36,20 @@ function storyToNewsPost(s: typeof editorialStories.$inferSelect): NewsPost {
     post_name: s.slug,
     syndication_source: body.source ?? undefined,
   };
+}
+
+/**
+ * Detail page lookup (fallback to JSON for curated posts): match a numeric
+ * sourcePostId stored on the published story's body.
+ */
+export async function getPublishedStoryByNumericId(id: number) {
+  const [row] = await db.select().from(editorialStories)
+    .where(and(
+      eq(editorialStories.status, 'published'),
+      sql`body->>'sourcePostId' = ${String(id)}`,
+    ))
+    .limit(1);
+  return row ?? null;
 }
 
 /**

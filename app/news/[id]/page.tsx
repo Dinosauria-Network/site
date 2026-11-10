@@ -1,6 +1,55 @@
 import Link from "next/link";
 import { getEnrichedPostById, getSourceFavicon, formatTimeAgo, getAllPosts } from "@/lib/genus-data";
 import { notFound } from "next/navigation";
+import { getPublishedStoryByNumericId } from "@/lib/db/stories";
+
+export const revalidate = 3600;
+
+interface DetailPost {
+  id: number | string;
+  title: string;
+  excerpt: string;
+  image: string;
+  date: string;
+  author?: string;
+  source: string;
+  url?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+}
+
+async function getDetailPost(id: number): Promise<DetailPost | null> {
+  // DB first: pipeline stories (postIds issued from max+1) collide with
+  // retired JSON ids — the DB story wins for its own id.
+  const story = await getPublishedStoryByNumericId(id);
+  if (story) {
+    const body = (story.body ?? {}) as {
+      image?: string | null;
+      url?: string | null;
+      source?: string | null;
+      author?: string | null;
+      sourcePostId?: number | null;
+    };
+    const date = story.publishedAt ?? story.createdAt;
+    return {
+      id: body.sourcePostId ?? id,
+      title: story.headline,
+      excerpt: story.description ?? story.deck ?? "",
+      image: body.image ?? "",
+      date: date ? date.toISOString().split("T")[0] : "",
+      author: body.author ?? "Dinosauria Network",
+      source: body.source ?? "Database",
+      url: body.url ?? "",
+      ogTitle: story.headline,
+      ogDescription: story.description ?? story.deck ?? "",
+      ogImage: body.image ?? undefined,
+    };
+  }
+
+  const jsonPost = await getEnrichedPostById(id);
+  return jsonPost as unknown as DetailPost | null;
+}
 
 export async function generateMetadata({
   params,
@@ -8,7 +57,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const post = await getEnrichedPostById(parseInt(id, 10));
+  const post = await getDetailPost(parseInt(id, 10));
   if (!post) return { title: "Dinosaur News - Dinosauria Network" };
   return {
     title: post.ogTitle || post.title || "Dinosauria Network",
@@ -34,7 +83,7 @@ export default async function NewsDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const post = await getEnrichedPostById(parseInt(id, 10));
+  const post = await getDetailPost(parseInt(id, 10));
 
   if (!post) {
     notFound();

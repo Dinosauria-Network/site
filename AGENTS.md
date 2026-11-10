@@ -25,7 +25,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - SCSS: use `@use "..."` with file path, not `@import` (see `app/styles/globals.scss`).
 - `.main` gets a right-side reserve via `@media (width >= 1280px)` (240px) and `@media (width >= 1600px)` (25%); the hamburger toggle hides at ≥1280px. New layout rules go in modules, but verify against legacy `.main` selectors first — both apply at runtime.
 
+### Editorial Phase 4 CLI (review surface — no admin UI)
+- `npm run editorial:propose` — score papers **persisted in `research_papers.editorial_score`** (written by `editorial:classify`), create `draft` stories (≥ `--min-score`, default 0.5), issues next numeric postId = `max(DB body.sourcePostId, JSON max id) + 1`.
+- `npm run editorial:pending` — list drafts (`--all` adds `pending_review`; `--json` for raw).
+- `npm run editorial:attach-image -- --slug <slug> --url <url-or-path>` — real images only (Wikimedia Commons CC images work; DOI pages typically 403 to scrapers so `og:image` is usually MISSING at propose time). Cap 5 MB, writes `public/images/news/<slug>.<ext>`, records `media_assets` (`reuseStatus='pending_verification'`), auto-generates `-1024/-640/-480.jpg` derivatives via `lib/image-derivatives.ts`.
+- `npm run editorial:publish -- <slug>` — hard-refuses without an existing on-disk image (no placeholders, ever); sets `status='published'` + `publication_events` row.
+- `npm run editorial:reject -- <slug>` — sets `status='rejected'`.
+- One story per paper: unique `stories_paper_unique` on `editorial_stories.paper_id` (0003); `research_papers.doi` is unique (0004). `drizzle-kit push` is TTY-interactive here — apply SQL manually with `pg.Pool` via tsx (raw `.sql` files in `drizzle/`), not via `push`/`generate`.
+- Admin/review UI is **deferred** until server-side auth lands (Phase 1b → Phase 5). The CLI is the review surface until then; do not build an admin UI in the meantime.
+
 ### Housekeeping
 - Don't commit `IMPLEMENTATION_CHECKLIST.md`, `skills-lock.json`, or `.agents/` — user request. Committing the two listed files is never desired.
 - `ArticleCard.tsx` reading-time label (`< 10 min`) is hardcoded on purpose; should become computed eventually.
-- Homepage news is rendered from `_data/news-posts.json` (22 dinosaur stories), not the DB; DB-backed research ingestion is tracked separately in `docs/phase-status.md`.
+- Homepage news and `/news` read published `editorial_stories` from the DB (status='published', newest by publishedAt, JSON fallback only on DB error); `_data/news-posts.json` is legacy/retired, used only as a safety net for `/news/[id]` via JSON fallback.
