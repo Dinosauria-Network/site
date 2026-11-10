@@ -1,4 +1,5 @@
 import React from 'react';
+import PageHeader from "@/components/PageHeader";
 
 export const metadata = {
   title: "Mesozoic Era - Dinosauria Network",
@@ -477,13 +478,12 @@ export default function MesozoicPage() {
 
   return (
     <div className="mesozoic-page">
-      <header className="page-header">
-        <h1>Mesozoic Era</h1>
+      <PageHeader title="Mesozoic Era">
         <p>
           The "Age of Reptiles" - spanning approximately 180 million years of
           dinosaur evolution.
         </p>
-      </header>
+      </PageHeader>
 
       <section className="chronometric-chart" aria-label="International Chronostratigraphic Chart">
         <h2>International Chronostratigraphic Chart (Linear Scale)</h2>

@@ -1,3 +1,5 @@
+import PageHeader from "@/components/PageHeader";
+
 export const metadata = {
   title: "Phylogeny - Dinosauria Network",
   description:
@@ -7,13 +9,12 @@ export const metadata = {
 export default function PhylogenyPage() {
   return (
     <div className="phylogeny-page">
-      <header className="page-header">
-        <h1>Dinosaur Phylogeny</h1>
+      <PageHeader title="Dinosaur Phylogeny">
         <p>
           Explore the evolutionary relationships of dinosaurs through their
           taxonomic classification.
         </p>
-      </header>
+      </PageHeader>
 
       <div className="phylogeny-tree">
         <div className="clade">

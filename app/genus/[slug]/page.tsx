@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getGenusBySlug, getAllGenera } from "@/lib/genus-data";
+import PageHeader from "@/components/PageHeader";
 
 export async function generateStaticParams() {
   const genera = getAllGenera();
@@ -34,13 +35,12 @@ export default async function GenusPage({
 
   return (
     <div className="genus-page">
-      <header className="page-header">
-        <h1>{genus.post_title}</h1>
+      <PageHeader title={genus.post_title}>
         <p className="genus-subtitle">
           {genus.author || "Unknown author"} &nbsp;|&nbsp;
           {genus.taxonomy.map((t) => t.name).join(", ")}
         </p>
-      </header>
+      </PageHeader>
 
       <main className="genus-content">
         <article className="genus-article">

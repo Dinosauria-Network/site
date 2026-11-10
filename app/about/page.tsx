@@ -1,3 +1,5 @@
+import PageHeader from "@/components/PageHeader";
+
 export const metadata = {
   title: "About - Dinosauria Network",
   description: "About the Dinosauria Network - Digital portal for dinosaurian paleontology",
@@ -6,9 +8,7 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <div className="about-page">
-      <header className="page-header">
-        <h1>About Dinosauria Network</h1>
-      </header>
+      <PageHeader title="About Dinosauria Network" />
 
       <main className="about-content">
         <p>

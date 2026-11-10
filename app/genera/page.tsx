@@ -1,5 +1,6 @@
 import { getGeneraByPeriod, getAllGenera, getUniquePeriods } from "@/lib/genus-data";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 export const metadata = {
   title: "Dinosaur Genera Database",
@@ -17,13 +18,12 @@ export default async function GeneraPage({
 
   return (
     <div className="genera-page">
-      <header className="page-header">
-        <h1>Dinosaur Genera Database</h1>
+      <PageHeader title="Dinosaur Genera Database">
         <p>
           Browse {genera.length} dinosaur genus
           {genera.length === 1 ? "" : "es"} organized by geological period.
         </p>
-      </header>
+      </PageHeader>
 
       <section className="period-filters">
         <h2>Filter by Period</h2>
