@@ -1,7 +1,7 @@
 import { getPostsPaginated } from "@/lib/genus-data";
-import Link from "next/link";
 import ArticleCard from "@/components/ArticleCard";
 import MasonryGrid from "@/components/MasonryGrid";
+import PostsPagination from "@/components/PostsPagination";
 
 export const metadata = {
   title: "News Archive - Dinosauria Network",
@@ -33,23 +33,11 @@ export default async function NewsPage({
         <ArticleCard key={post.id} post={post} index={index} />
       ))}
 
-      {totalPages > 1 && (
-        <nav className="navigation posts-navigation" aria-label="Posts">
-          <h2 className="screen-reader-text">Posts navigation</h2>
-          <div className="nav-links">
-            {currentPage > 1 && (
-              <div className="nav-previous">
-                <a href={`/news?page=${currentPage - 1}`}>Newer posts</a>
-              </div>
-            )}
-            {currentPage < totalPages && (
-              <div className="nav-next">
-                <a href={`/news?page=${currentPage + 1}`}>Older posts</a>
-              </div>
-            )}
-          </div>
-        </nav>
-      )}
+      <PostsPagination
+        basePath="/news"
+        currentPage={currentPage}
+        totalPages={totalPages}
+      />
     </MasonryGrid>
   );
 }
