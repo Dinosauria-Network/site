@@ -44,7 +44,7 @@ export default function EntryMeta({ post, href }: EntryMetaProps) {
             <span className={styles.sep}>&bull;</span>
             </div>
             <time className={styles.updated} dateTime={post.date}>
-            <span className="extra">Posted</span>{" "}
+            <span className={styles.extra}>Posted</span>{" "}
             <a rel="bookmark" href={href}>
                 {formatTimeAgo(post.date)}
             </a>

@@ -8,9 +8,9 @@ import styles from "./navigation.module.scss";
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/genera", label: "Genera" },
-  { href: "/phylogeny", label: "Phylogeny" },
   { href: "/mesozoic", label: "Mesozoic Era" },
+  { href: "/phylogeny", label: "Phylogeny" },
+  { href: "/genera", label: "Genera" },
   { href: "/about", label: "About" },
   { href: "/search", label: "News" },
 ];

@@ -17,7 +17,11 @@
         display: block;
         width: 24px;
         height: 2px;
-        background: #333;
+        background: #3d2b20;
+    }
+
+    @media (width >= 1280px) {
+        display: none !important;
     }
 }
 
@@ -34,14 +38,11 @@
 }
 
 .close-btn {
-    --bs-btn-close-hover-opacity: .75;
-    --bs-btn-close-focus-opacity: .85;
-    --bs-btn-close-disabled-opacity: .25;
     box-sizing: content-box;
     min-width: 1.25rem;
     min-height: 1.25rem;
     color: inherit;
-    border-radius: var(--bs-radius-4);
+    border-radius: 0;
     opacity: 0.5;
     mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath d='M12 0a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4zm-.646 4.646a.5.5 0 0 0-.707 0L8 7.293 5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.647a.5.5 0 1 0 .708.708L8 8.707l2.647 2.646a.5.5 0 1 0 .707-.707L8.707 8l2.646-2.646a.5.5 0 0 0 0-.708z'/%3e%3c/svg%3e");
     background-color: currentColor;
@@ -96,6 +97,18 @@
         transform: translateX(calc(100% + 1rem));
     }
 
+    &:where(.drawer-end).hiding {
+        transform: translateX(calc(1rem));
+        visibility: hidden;
+    }
+
+    &:where(.drawer-end) {
+        inset-block: 1rem;
+        width: 400px;
+        inset-inline-end: 1rem;
+        transform: translateX(calc(100% + 1rem));
+    }
+
     @media (prefers-reduced-motion: no-preference) {
         transition-timing-function: cubic-bezier(0.21, 1, 0.36, 1);
         transition-duration: 0.3s;
@@ -114,6 +127,40 @@
 
         backdrop-filter: blur(8px);
         background-color: color-mix(in oklch, #e7e6e3 25%, transparent)
+    }
+
+    @media (width >= 1280px) {
+        width: 240px;
+		position: fixed;
+		top: 28px;
+		right: 0px;
+		text-align: right;
+        border: 0 none;
+
+        z-index: auto;
+        box-shadow: none;
+        flex-grow: 1;
+        margin: 0;
+        padding: 0;
+        transition: none;
+        visibility: visible !important;
+        background-color: #0000 !important;
+        border: 0 !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        display: flex !important;
+        overflow: visible !important;
+        transform: none !important;
+
+        &::backdrop {
+            backdrop-filter: blur();
+            background-color: transparent;
+        }
+    }
+
+    @media (width >= 1600px) {
+        width: 15%;
     }
 
     &-header {

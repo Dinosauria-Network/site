@@ -69,7 +69,7 @@ export default function ArticleCard({ post, index }: ArticleCardProps) {
               aria-hidden="true"
             ></span>
             <span className="sr-only">Estimated reading time: </span>
-            &lt; 1 min
+            &lt; 10 min
           </button>
           <a className="btn btn-sm btn-primary" href={postHref}>
             Read more

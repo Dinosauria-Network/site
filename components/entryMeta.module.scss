@@ -1,5 +1,3 @@
-@value main from "./parent.css";
-
 .entry-meta {
     line-height: 1.28571429;
     padding: 0 1.9%;
@@ -14,7 +12,7 @@
 :global(.first) .entry-meta {
     display: inline-block;
     padding: 1.166666667em;
-    border-bottom: 3px grrove #7f7f72;
+    border-bottom: 2px groove #e6e6cf;
 }
 
 .byline {
@@ -43,4 +41,16 @@
 
 .updated {
     color: #7f7c79;
+
+    .extra {
+        display: none;
+
+        @media (width >= 960px) {
+            display: inherit;
+        }
+    }
+
+    a {
+        color: #46423B
+    }
 }
