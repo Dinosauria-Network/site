@@ -1,4 +1,4 @@
-import { getPostsPaginated } from "@/lib/genus-data";
+import { getPublishedStoriesPaginated } from "@/lib/db/stories";
 import ArticleCard from "@/components/ArticleCard";
 import MasonryGrid from "@/components/MasonryGrid";
 import PostsPagination from "@/components/PostsPagination";
@@ -9,7 +9,7 @@ export const metadata = {
     "Archive of dinosaur news and paleontology discoveries - Dinosauria Network",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const PER_PAGE = 10;
 
@@ -20,7 +20,7 @@ export default async function NewsPage({
 }) {
   const sp = await searchParams;
   const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
-  const { posts, totalPages, currentPage } = getPostsPaginated(
+  const { posts, totalPages, currentPage } = await getPublishedStoriesPaginated(
     page,
     PER_PAGE
   );
