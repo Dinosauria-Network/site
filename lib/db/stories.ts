@@ -23,10 +23,13 @@ interface StoryBody {
 function storyToNewsPost(s: typeof editorialStories.$inferSelect): NewsPost {
   const body = (s.body ?? {}) as StoryBody;
   const date = s.publishedAt ?? s.createdAt;
+  // '' is not nullish — use || so empty strings fall through instead of
+  // rendering a blank excerpt on the card.
+  const fallbackExcerpt = (s.headline || '').replace(/\s+/g, ' ').trim().slice(0, 100);
   return {
     id: body.sourcePostId ?? s.slug,
     title: s.headline ?? '',
-    excerpt: s.description ?? s.deck ?? '',
+    excerpt: s.description || s.deck || fallbackExcerpt || '',
     date: date ? date.toISOString().split('T')[0] : '',
     author: body.author ?? 'Palai',
     source: body.source ?? 'Database',

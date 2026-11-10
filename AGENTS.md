@@ -30,7 +30,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - `npm run editorial:pending` — list drafts (`--all` adds `pending_review`; `--json` for raw).
 - `npm run editorial:attach-image -- --slug <slug> --url <url-or-path>` — real images only (Wikimedia Commons CC images work; DOI pages typically 403 to scrapers so `og:image` is usually MISSING at propose time). Cap 5 MB, writes `public/images/news/<slug>.<ext>`, records `media_assets` (`reuseStatus='pending_verification'`), auto-crops to 1024×633 (1.618:1 — ArticleCard box, see `lib/image-derivatives.ts` `CARD_RATIO`) and generates `-1024/-640/-480.jpg` derivatives at the same ratio.
 - News images must be 1024×633 (1.618:1, center-cropped): every pipeline write goes through `normalizeCardImage`, which center-crops the base before resizing — do not store raw off-ratio files in `public/images/news/`.
-- `npm run editorial:publish -- <slug>` — hard-refuses without an existing on-disk image (no placeholders, ever); sets `status='published'` + `publication_events` row.
+- `npm run editorial:publish -- <slug>` — hard-refuses without an existing on-disk image **or a non-empty description** (no placeholders, ever); sets `status='published'` + `publication_events` row.
 - `npm run editorial:reject -- <slug>` — sets `status='rejected'`.
 - One story per paper: unique `stories_paper_unique` on `editorial_stories.paper_id` (0003); `research_papers.doi` is unique (0004). `drizzle-kit push` is TTY-interactive here — apply SQL manually with `pg.Pool` via tsx (raw `.sql` files in `drizzle/`), not via `push`/`generate`.
 - Admin/review UI is **deferred** until server-side auth lands (Phase 1b → Phase 5). The CLI is the review surface until then; do not build an admin UI in the meantime.

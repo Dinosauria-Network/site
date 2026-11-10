@@ -24,6 +24,10 @@ const run = async () => {
     console.error('Refusing to publish: image file is missing on disk:', storagePath);
     process.exit(1);
   }
+  if (!(story.description ?? '').trim()) {
+    console.error('Refusing to publish: description is empty for', slug);
+    process.exit(1);
+  }
 
   await db.update(editorialStories)
     .set({ status: 'published', publishedAt: new Date() })

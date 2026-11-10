@@ -90,6 +90,12 @@ const run = async () => {
 
     const meta = (paper.metadata ?? {}) as any;
     const url = paper.doi ? `https://doi.org/${paper.doi}` : (meta.url ?? meta.sourceUrl ?? '');
+    const abstract = typeof paper.abstract === 'string' ? paper.abstract : '';
+    let description = uniqueSentence(abstract, 240);
+    if (!description.trim()) {
+      description = headline; // honest fallback — never store a blank excerpt
+      console.log('note:', slug, 'has no abstract; description falls back to headline');
+    }
     const imageCandidateUrl = url ? (await scrapeArticleMeta(url))?.image : null;
     let image = null;
     if (imageCandidateUrl) {
@@ -106,7 +112,7 @@ const run = async () => {
       slug,
       paperId: paper.id,
       headline,
-      description: uniqueSentence(paper.abstract ?? '', 240),
+      description,
       body: {
         image,
         imageAttribution: url || undefined,
