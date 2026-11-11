@@ -26,32 +26,36 @@ export default function ArticleCard({ post, index, preview }: ArticleCardProps) 
   const postHref = preview ? `/news/${post.id}?preview=${encodeURIComponent(preview)}` : `/news/${post.id}`;
 
   const rawImage = post.image || '';
-  const hasImage = rawImage && rawImage !== '';
+  // No image on the story → render no image at all. Never substitute a
+  // generic photo: a story must carry its own licensed image or none.
+  const hasImage = Boolean(rawImage);
   const basename = hasImage
     ? rawImage.replace('/images/news/', '').replace(/\.(jpg|jpeg|png|gif|webp|avif)$/i, '')
-    : 'archaeopteryx-plumage'; // fallback — no mapping rules
+    : '';
   const ext = hasImage ? (rawImage.match(/\.([^.\/]+)$/)?.[1] || 'jpg') : 'jpg';
-  const imgSrc = hasImage ? `/images/news/${basename}.${ext}` : `/images/news/${basename}-1024.jpg`;
+  const imgSrc = hasImage ? `/images/news/${basename}.${ext}` : '';
 
   return (
     <article className={articleClasses}>
-      <div className="post-image">
-        <a className="responsive-image" href={postHref} title={post.title}>
-          <picture>
-            <source srcSet={`/images/news/${basename}-1024.jpg`} media="(min-width: 1024px)" />
-            <source srcSet={`/images/news/${basename}-640.jpg`} media="(min-width: 640px)" />
-            <source srcSet={`/images/news/${basename}-480.jpg`} media="(min-width: 480px)" />
-            <img
-              className="wp-post-image"
-              src={imgSrc}
-              alt={post.title}
-              loading="lazy"
-              width={1024}
-              height={633}
-            />
-          </picture>
-        </a>
-      </div>
+      {hasImage && (
+        <div className="post-image">
+          <a className="responsive-image" href={postHref} title={post.title}>
+            <picture>
+              <source srcSet={`/images/news/${basename}-1024.jpg`} media="(min-width: 1024px)" />
+              <source srcSet={`/images/news/${basename}-640.jpg`} media="(min-width: 640px)" />
+              <source srcSet={`/images/news/${basename}-480.jpg`} media="(min-width: 480px)" />
+              <img
+                className="wp-post-image"
+                src={imgSrc}
+                alt={post.title}
+                loading="lazy"
+                width={1024}
+                height={633}
+              />
+            </picture>
+          </a>
+        </div>
+      )}
       <header className="entry-header">
         <h2 className="summary-title">
           <a href={postHref}>{post.title}</a>
