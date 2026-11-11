@@ -2,11 +2,32 @@ import { db } from '../lib/db/client';
 import { researchPapers, editorialStories, mediaAssets } from '../lib/db/schema';
 import { scrapeArticleMeta } from '../lib/article-scraper';
 import { writeDerivatives } from '../lib/image-derivatives';
-import { and, desc, eq, gte, notExists, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, isNull, lt, notExists, or, sql } from 'drizzle-orm';
+import { SITE_NAME } from '../lib/site';
 import fs from 'fs';
 import path from 'path';
 
-interface Args { limit: number; minScore: number; dryRun: boolean; }
+interface Args { limit: number; minScore: number; dryRun: boolean; since: Date | null; sinceLabel: string; }
+
+/**
+ * --since YYYY[-MM[-DD]]  only papers published on/after this date are eligible
+ * --since all             disable the recency filter entirely
+ * default                 2024-01-01 (this is a news site: latest work first)
+ * Papers with NULL publication_date are skipped while a filter is active.
+ */
+const parseSince = (args: string[]): { since: Date | null; sinceLabel: string } => {
+  const i = args.indexOf('--since');
+  if (i < 0) return { since: new Date(Date.UTC(2024, 0, 1)), sinceLabel: '2024-01-01 (default)' };
+  const raw = (args[i + 1] || '').toLowerCase();
+  if (raw === 'all') return { since: null, sinceLabel: 'all (filter disabled)' };
+  const m = /^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/.exec(raw);
+  if (!m) { console.error('bad --since value:', raw, '(expected YYYY, YYYY-MM, YYYY-MM-DD, or "all")'); process.exit(1); }
+  const year = Number(m[1]);
+  const month = m[2] ? Number(m[2]) : 1;
+  const day = m[3] ? Number(m[3]) : 1;
+  if (month < 1 || month > 12 || day < 1 || day > 31) { console.error('bad --since value:', raw); process.exit(1); }
+  return { since: new Date(Date.UTC(year, month - 1, day)), sinceLabel: raw };
+};
 
 const parseArgs = (): Args => {
   const args = process.argv.slice(2);
@@ -15,10 +36,13 @@ const parseArgs = (): Args => {
     const v = i >= 0 ? parseInt(args[i + 1], 10) : NaN;
     return Number.isFinite(v) && v > 0 ? v : def;
   };
+  const { since, sinceLabel } = parseSince(args);
   return {
     limit: getNum('--limit', 10),
     minScore: getNum('--min-score', Math.round(0.5 * 100) / 100),
     dryRun: args.includes('--dry-run'),
+    since,
+    sinceLabel,
   };
 };
 
@@ -50,7 +74,7 @@ const downloadImage = async (imageUrl: string, slug: string): Promise<string | n
 };
 
 const run = async () => {
-  const { limit, minScore, dryRun } = parseArgs();
+  const { limit, minScore, dryRun, since, sinceLabel } = parseArgs();
 
   // Next numeric sourcePostId (continue past migrated posts' max id).
   const [{ value: dbMax }] = await db
@@ -59,6 +83,23 @@ const run = async () => {
   const json = JSON.parse(fs.readFileSync('_data/news-posts.json', 'utf-8')) as any[];
   const jsonMax = Math.max(...json.map((p) => (p.id as number) || 0), 0);
   let nextPostId = Math.max(dbMax ?? 0, jsonMax) + 1;
+
+  const notProposed = notExists(db.select({ x: editorialStories.id }).from(editorialStories).where(eq(editorialStories.paperId, researchPapers.id)));
+  const eligible = and(
+    notProposed,
+    gte(researchPapers.editorialScore, minScore),
+    ...(since ? [gte(researchPapers.publicationDate, since)] : []),
+  )!;
+
+  if (since) {
+    const [{ value: skipped }] = await db.select({ value: count() }).from(researchPapers)
+      .where(and(
+        notProposed,
+        gte(researchPapers.editorialScore, minScore),
+        or(isNull(researchPapers.publicationDate), lt(researchPapers.publicationDate, since)),
+      ));
+    if (skipped > 0) console.log(`note: skipped ${skipped} eligible paper(s) published before --since ${sinceLabel} (use --since all to include)`);
+  }
 
   const rows = await db.select({
     id: researchPapers.id,
@@ -70,14 +111,11 @@ const run = async () => {
     metadata: researchPapers.metadata,
     editorialScore: researchPapers.editorialScore,
   }).from(researchPapers)
-    .where(and(
-      notExists(db.select({ x: editorialStories.id }).from(editorialStories).where(eq(editorialStories.paperId, researchPapers.id))),
-      gte(researchPapers.editorialScore, minScore),
-    ))
+    .where(eligible)
     .orderBy(desc(sql`coalesce(publication_date, created_at)`))
     .limit(limit);
 
-  if (!rows.length) { console.log('No eligible papers (needs stored editorial_score >=', minScore, ')'); return; }
+  if (!rows.length) { console.log('No eligible papers (needs stored editorial_score >=', minScore, 'since', sinceLabel, ')'); return; }
 
   let created = 0;
   for (const paper of rows) {
@@ -119,7 +157,7 @@ const run = async () => {
         imageAttribution: url || undefined,
         url,
         source: paper.journalName ?? 'Database',
-        author: 'Dinosauria Network',
+        author: SITE_NAME,
         sourcePostId: nextPostId,
         editorialScore: paper.editorialScore,
       },
@@ -144,7 +182,7 @@ const run = async () => {
     created++;
   }
 
-  console.log(`\nproposed=${created} limit=${limit} minScore=${minScore}`);
+  console.log(`\nproposed=${created} limit=${limit} minScore=${minScore} since=${sinceLabel}`);
 };
 
 run().catch((e) => { console.error(e); process.exit(1); });

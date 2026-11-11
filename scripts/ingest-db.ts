@@ -25,6 +25,7 @@ const run = async () => {
           title: r.title?.slice(0, 500) || 'Untitled',
           doi: r.doi || null,
           abstract: r.abstract ? r.abstract.slice(0, 4000) : null,
+          publicationDate: r.publicationDate ?? null,
           journalName: r.journalName || null,
           publisher: r.publisher || null,
           peerReviewStatus: (r.peerReviewStatus as any) || 'unknown',
