@@ -96,15 +96,16 @@ const run = async () => {
       description = headline; // honest fallback — never store a blank excerpt
       console.log('note:', slug, 'has no abstract; description falls back to headline');
     }
+    // Dry-run must not write files — scrape for the report only, never download.
     const imageCandidateUrl = url ? (await scrapeArticleMeta(url))?.image : null;
     let image = null;
-    if (imageCandidateUrl) {
+    if (imageCandidateUrl && !dryRun) {
       image = await downloadImage(imageCandidateUrl, slug);
       if (image) await writeDerivatives(image);
     }
 
     if (dryRun) {
-      console.log(`[dry-run] WOULD CREATE ${slug} | ${uniqueSentence(headline, 60)} | img=${image ?? 'MISSING'}`);
+      console.log(`[dry-run] WOULD CREATE ${slug} | ${uniqueSentence(headline, 60)} | img=${imageCandidateUrl ? 'og-image' : 'MISSING'}`);
       continue;
     }
 
