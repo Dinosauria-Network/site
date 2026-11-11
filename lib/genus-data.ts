@@ -211,6 +211,20 @@ const FALLBACK_POSTS: NewsPost[] = [
   },
 ];
 
+/** WP-export row → NewsPost (both the JSON file and the enriched cache use these keys). */
+const mapWpPost = (post: any): NewsPost => ({
+  id: post.id,
+  title: post.post_title ?? post.title ?? '',
+  excerpt: post.post_excerpt ?? post.excerpt ?? post.post_content ?? '',
+  date: post.post_date ?? post.date ?? '',
+  author: post.author ?? 'Palai',
+  source: post.syndication_source ?? post.source ?? '',
+  url: post.guid ?? post.url,
+  guid: post.guid ?? post.url ?? '',
+  image: post.image ?? undefined,
+  post_name: post.post_name ?? '',
+});
+
 let cachedPosts: NewsPost[] | null = null;
 
 function loadPosts(): NewsPost[] {
@@ -218,18 +232,7 @@ function loadPosts(): NewsPost[] {
   try {
     const raw = fs.readFileSync(POSTS_DATA_PATH, "utf-8");
     const rawData = JSON.parse(raw) as any[];
-    cachedPosts = rawData.map((post) => ({
-      id: post.id,
-      title: post.post_title ?? post.title ?? '',
-      excerpt: post.post_excerpt ?? post.excerpt ?? post.post_content ?? '',
-      date: post.post_date ?? post.date ?? '',
-      author: post.author ?? 'Palai',
-      source: post.syndication_source ?? post.source ?? '',
-      url: post.guid ?? post.url,
-      guid: post.guid ?? post.url ?? '',
-      image: post.image ?? undefined,
-      post_name: post.post_name ?? '',
-    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    cachedPosts = rawData.map(mapWpPost).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return cachedPosts;
   } catch {
     cachedPosts = FALLBACK_POSTS;
@@ -351,7 +354,7 @@ export async function getEnrichedPostById(id: number): Promise<EnrichedPost | nu
   try {
     const cacheFile = fs.readFileSync(path.join(process.cwd(), "_data", "enriched-cache.json"), "utf-8");
     const cacheData = JSON.parse(cacheFile);
-    if (cacheData[String(id)]) { enrichedCache.set(id, cacheData[String(id)]); return cacheData[String(id)]; }
+    if (cacheData[String(id)]) { const normalized = mapWpPost(cacheData[String(id)]) as EnrichedPost; enrichedCache.set(id, normalized); return normalized; }
   } catch { /* no build-time cache */ }
   const post = getPostById(id);
   if (!post || !post.url) { enrichedCache.set(id, post as EnrichedPost | null); return post as EnrichedPost | null; }
