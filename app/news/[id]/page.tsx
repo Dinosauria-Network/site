@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getEnrichedPostById, getSourceFavicon, formatTimeAgo, getAllPosts } from "@/lib/genus-data";
 import { notFound } from "next/navigation";
 import { getPublishedStoryByNumericId } from "@/lib/db/stories";
+import { isPreviewEnabled } from "@/lib/preview";
 
 export const revalidate = 3600;
 
@@ -19,10 +20,20 @@ interface DetailPost {
   ogImage?: string;
 }
 
-async function getDetailPost(id: number): Promise<DetailPost | null> {
+async function getDetailPost(
+  id: number,
+  includeDrafts = false
+): Promise<DetailPost | null> {
   // DB first: pipeline stories (postIds issued from max+1) collide with
   // retired JSON ids — the DB story wins for its own id.
-  const story = await getPublishedStoryByNumericId(id);
+  const story = await getPublishedStoryByNumericId(id, includeDrafts);
+  if (!story && !includeDrafts) {
+    // The DB pipeline owns its issued sourcePostIds. If an unpublished story
+    // holds this id, do NOT fall back to legacy JSON (stale collision) — the
+    // post must 404 until it is published or previewed.
+    const ownedByDraft = await getPublishedStoryByNumericId(id, true);
+    if (ownedByDraft) return null;
+  }
   if (story) {
     const body = (story.body ?? {}) as {
       image?: string | null;
@@ -35,14 +46,14 @@ async function getDetailPost(id: number): Promise<DetailPost | null> {
     return {
       id: body.sourcePostId ?? id,
       title: story.headline,
-      excerpt: story.description ?? story.deck ?? "",
+      excerpt: story.description || story.deck || story.headline || "",
       image: body.image ?? "",
       date: date ? date.toISOString().split("T")[0] : "",
       author: body.author ?? "Dinosauria Network",
       source: body.source ?? "Database",
       url: body.url ?? "",
       ogTitle: story.headline,
-      ogDescription: story.description ?? story.deck ?? "",
+      ogDescription: story.description || story.deck || story.headline || "",
       ogImage: body.image ?? undefined,
     };
   }
@@ -51,13 +62,18 @@ async function getDetailPost(id: number): Promise<DetailPost | null> {
   return jsonPost as unknown as DetailPost | null;
 }
 
+interface PageParams {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+  searchParams,
+}: PageParams) {
   const { id } = await params;
-  const post = await getDetailPost(parseInt(id, 10));
+  const sp = await searchParams;
+  const post = await getDetailPost(parseInt(id, 10), isPreviewEnabled(sp));
   if (!post) return { title: "Dinosaur News - Dinosauria Network" };
   return {
     title: post.ogTitle || post.title || "Dinosauria Network",
@@ -79,24 +95,17 @@ export async function generateStaticParams() {
 
 export default async function NewsDetailPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+  searchParams,
+}: PageParams) {
   const { id } = await params;
-  const post = await getDetailPost(parseInt(id, 10));
+  const sp = await searchParams;
+  const post = await getDetailPost(parseInt(id, 10), isPreviewEnabled(sp));
 
   if (!post) {
     notFound();
   }
 
-  let sourceDomain = "";
-  try {
-    if (post.url && post.url.startsWith("http")) {
-      sourceDomain = new URL(post.url).hostname;
-    }
-  } catch {
-    sourceDomain = "";
-  }
+  const paperUrl = post.url && post.url.startsWith("http") ? post.url : "";
 
   return (
     <article className="hentry">
@@ -112,9 +121,9 @@ export default async function NewsDetailPage({
                 height={16}
               />
             )}{" "}
-            {sourceDomain ? (
+            {paperUrl ? (
               <a
-                href={`//${sourceDomain}`}
+                href={paperUrl}
                 rel="author"
                 className="fn"
                 target="_blank"

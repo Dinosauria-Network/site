@@ -1,6 +1,6 @@
 import { db } from '../lib/db/client';
 import { editorialStories, mediaAssets } from '../lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { writeDerivatives } from '../lib/image-derivatives';
 import fs from 'fs';
 import path from 'path';
@@ -40,6 +40,11 @@ const run = async () => {
     if (bytes.length > 5 * 1024 * 1024) { console.error('Image too large (>5MB), refusing'); process.exit(1); }
     const ext = (ct.split('/')[1] || 'jpeg').replace('jpeg', 'jpg').replace('+xml', '').replace('svg', 'svg');
     const storagePath = writeBytes(bytes, ext);
+    // paperId is nullable on stories — fall back to storagePath-only dedupe.
+    const mediaWhere = story.paperId
+      ? and(eq(mediaAssets.paperId, story.paperId), eq(mediaAssets.storagePath, storagePath))
+      : eq(mediaAssets.storagePath, storagePath);
+    await db.delete(mediaAssets).where(mediaWhere);
     await writeDerivatives(storagePath);
     await db.insert(mediaAssets).values({
       paperId: story.paperId,
@@ -61,6 +66,10 @@ const run = async () => {
   bytes = fs.readFileSync(src);
   const ext = (path.extname(src).replace('.', '') || 'jpg').replace('jpeg', 'jpg');
   const storagePath = writeBytes(bytes, ext);
+  const mediaWhere2 = story.paperId
+    ? and(eq(mediaAssets.paperId, story.paperId), eq(mediaAssets.storagePath, storagePath))
+    : eq(mediaAssets.storagePath, storagePath);
+  await db.delete(mediaAssets).where(mediaWhere2);
   await writeDerivatives(storagePath);
   await db.insert(mediaAssets).values({
     paperId: story.paperId,

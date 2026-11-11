@@ -274,6 +274,7 @@ const SOURCE_DOMAINS: Record<string, string> = {
   RedOrbit: "redorbit.com",
   "National Geographic News": "nationalgeographic.com",
   PNAS: "pnas.org",
+  Nature: "nature.com",
   "Fox News": "foxnews.com",
   "EurekAlert!": "eurekalert.org",
 };

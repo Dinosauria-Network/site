@@ -6,6 +6,8 @@ import Script from "next/script";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
 import "@/app/styles/globals.scss";
 import SkipLink from "@/components/SkipLink";
+import PreviewBanner from "@/components/PreviewBanner";
+import { Suspense } from "react";
 
 const site = getSiteMetadata();
 
@@ -40,6 +42,9 @@ export default function RootLayout({
       </head>
       <body className="home blog">
         <ThemeProvider>
+        <Suspense fallback={null}>
+          <PreviewBanner />
+        </Suspense>
         <SkipLink />
         <header className="banner" role="banner">
           <div className="container">

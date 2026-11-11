@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client';
 import { editorialStories } from '@/lib/db/schema';
-import { and, count, desc, eq, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { NewsPost } from '@/lib/genus-data';
 
 export interface StoriesPage {
@@ -41,14 +41,24 @@ function storyToNewsPost(s: typeof editorialStories.$inferSelect): NewsPost {
   };
 }
 
+const VISIBLE_STATUSES = ['published', 'draft', 'pending_review'] as const;
+
+/** Status filter: published only, or all preview-visible statuses. */
+function visibleStatuses(includeDrafts?: boolean) {
+  return includeDrafts
+    ? inArray(editorialStories.status, [...VISIBLE_STATUSES])
+    : eq(editorialStories.status, 'published');
+}
+
 /**
  * Detail page lookup (fallback to JSON for curated posts): match a numeric
- * sourcePostId stored on the published story's body.
+ * sourcePostId stored on the published story's body. Pass includeDrafts to
+ * also match unpublished stories (preview mode).
  */
-export async function getPublishedStoryByNumericId(id: number) {
+export async function getPublishedStoryByNumericId(id: number, includeDrafts = false) {
   const [row] = await db.select().from(editorialStories)
     .where(and(
-      eq(editorialStories.status, 'published'),
+      visibleStatuses(includeDrafts),
       sql`body->>'sourcePostId' = ${String(id)}`,
     ))
     .limit(1);
@@ -63,9 +73,10 @@ export async function getPublishedStoryByNumericId(id: number) {
 export async function getPublishedStoriesPaginated(
   page: number,
   perPage: number,
+  opts?: { includeDrafts?: boolean },
 ): Promise<StoriesPage> {
   try {
-    const where = eq(editorialStories.status, 'published');
+    const where = visibleStatuses(opts?.includeDrafts);
     const offset = Math.max(0, (page - 1) * perPage);
 
     const [{ value: total }] = await db

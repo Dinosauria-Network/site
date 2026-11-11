@@ -7,15 +7,9 @@ interface EntryMetaProps {
 }
 
 export default function EntryMeta({ post, href }: EntryMetaProps) {
-    // Extract source domain safely
-    let sourceDomain = "";
-    try {
-        if (post.url && post.url.startsWith("http")) {
-            sourceDomain = new URL(post.url).hostname;
-        }
-    } catch {
-        sourceDomain = "";
-    }
+    // Link the source to the paper itself, not the bare domain (doi.org has
+    // no useful root page).
+    const paperUrl = post.url && post.url.startsWith("http") ? post.url : "";
 
     return (
         <div className={styles['entry-meta']}>
@@ -28,9 +22,9 @@ export default function EntryMeta({ post, href }: EntryMetaProps) {
                 height={16}
                 />
             )}{" "}
-            {sourceDomain ? (
+            {paperUrl ? (
                 <a
-                href={`//${sourceDomain}`}
+                href={paperUrl}
                 rel="author"
                 className={styles.fn}
                 target="_blank"

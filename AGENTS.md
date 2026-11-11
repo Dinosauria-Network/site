@@ -35,6 +35,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - One story per paper: unique `stories_paper_unique` on `editorial_stories.paper_id` (0003); `research_papers.doi` is unique (0004). `drizzle-kit push` is TTY-interactive here — apply SQL manually with `pg.Pool` via tsx (raw `.sql` files in `drizzle/`), not via `push`/`generate`.
 - Admin/review UI is **deferred** until server-side auth lands (Phase 1b → Phase 5). The CLI is the review surface until then; do not build an admin UI in the meantime.
 
+### Previewing drafts in dev (?preview)
+- Any `?preview` on `/`, `/news`, `/news/[id]` includes `draft`/`pending_review` stories in the feed and enables click-through to draft detail pages (bare `?preview` also works; `0`/`false` disable; card links normalize to `?preview=1`); a preview banner is shown. Detail router owns DB sourcePostIds: an unpublished story's id 404s without preview (no legacy JSON fallback).
+- Production: preview is **completely disabled** — unpublished stories can never be loaded via query params in a prod build (dev-only feature). Review for publish happens via `editorial:pending`; publish applies the gates.
+- `/news/[id]` passes `includeDrafts=true` only in preview mode; `getPublishedStoryByNumericId(id, includeDrafts)` is the shared lookup. Gated by `lib/preview.ts::previewValue`.
+
 ### Housekeeping
 - Don't commit `IMPLEMENTATION_CHECKLIST.md`, `skills-lock.json`, or `.agents/` — user request. Committing the two listed files is never desired.
 - `ArticleCard.tsx` reading-time label (`< 10 min`) is hardcoded on purpose; should become computed eventually.

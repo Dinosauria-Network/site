@@ -37,6 +37,7 @@ export async function normalizeCardImage(storagePath: string): Promise<{
     let pipe = sharp(base).extract({ left, top, width: cropW, height: cropH });
     if (cropW > CARD_WIDTH) pipe = pipe.resize({ width: CARD_WIDTH });
     if (ext === '.webp') await pipe.webp({ quality: 82 }).toFile(tmp);
+    else if (ext === '.png') await pipe.png({ quality: 80, compressionLevel: 9 }).toFile(tmp);
     else await pipe.jpeg({ quality: 80 }).toFile(tmp);
     fs.renameSync(tmp, base);
     croppedBase = true;

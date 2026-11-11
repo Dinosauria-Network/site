@@ -1,4 +1,5 @@
 import { getPublishedStoriesPaginated } from "@/lib/db/stories";
+import { previewValue } from "@/lib/preview";
 import ArticleCard from "@/components/ArticleCard";
 import MasonryGrid from "@/components/MasonryGrid";
 import PostsPagination from "@/components/PostsPagination";
@@ -20,9 +21,11 @@ export default async function NewsPage({
 }) {
   const sp = await searchParams;
   const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
+  const preview = previewValue(sp);
   const { posts, totalPages, currentPage } = await getPublishedStoriesPaginated(
     page,
-    PER_PAGE
+    PER_PAGE,
+    { includeDrafts: preview !== null }
   );
 
   return (
@@ -30,7 +33,7 @@ export default async function NewsPage({
       <div className="page-header" />
 
       {posts.map((post, index) => (
-        <ArticleCard key={post.id} post={post} index={index} />
+        <ArticleCard key={post.id} post={post} index={index} preview={preview ?? undefined} />
       ))}
 
       <PostsPagination

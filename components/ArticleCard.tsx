@@ -4,9 +4,11 @@ import EntryMeta from "./EntryMeta";
 interface ArticleCardProps {
   post: NewsPost;
   index: number;
+  /** When set (preview mode), detail links keep ?preview=<value> so drafts stay reachable. */
+  preview?: string;
 }
 
-export default function ArticleCard({ post, index }: ArticleCardProps) {
+export default function ArticleCard({ post, index, preview }: ArticleCardProps) {
   const isFirst = index === 0;
   const isFirstEven = index % 2 === 0; // 0-based: first card is even // 0-based: 0 is odd (1st), 1 is even (2nd)
 
@@ -21,7 +23,7 @@ export default function ArticleCard({ post, index }: ArticleCardProps) {
     .filter(Boolean)
     .join(" ");
 
-  const postHref = `/news/${post.id}`;
+  const postHref = preview ? `/news/${post.id}?preview=${encodeURIComponent(preview)}` : `/news/${post.id}`;
 
   const rawImage = post.image || '';
   const hasImage = rawImage && rawImage !== '';
