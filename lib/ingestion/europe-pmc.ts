@@ -4,7 +4,7 @@ export const europePmcAdapter: SourceAdapter = {
   sourceName: 'Europe PMC',
   async discover(cursor?: string) {
     const query = cursor || 'dinosaur*';
-    const url = `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodeURIComponent(query)}&format=json&pageSize=10`;
+    const url = `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodeURIComponent(query)}&format=json&pageSize=10&resultType=core`;
     const res = await fetch(url);
     const data = await res.json();
     const results = data.resultList?.result || [];
@@ -17,7 +17,9 @@ export const europePmcAdapter: SourceAdapter = {
       abstract: r.abstractText || undefined,
       authors: (r.authorString || '').split(',').map((n: string) => ({ fullName: n.trim() })),
       publicationDate: r.pubYear ? new Date(r.pubYear, 0, 1) : undefined,
-      journalName: r.journalTitle || undefined,
+      // Europe PMC returns the MEDLINE *abbreviated* name in journalTitle
+      // (e.g. "R Soc Open Sci"); the full title lives in journalInfo.journal.title.
+      journalName: r.journalInfo?.journal?.title || r.journalTitle || undefined,
       publisher: r.publisher || undefined,
       peerReviewStatus: r.journalType === 'journal' ? 'peer_reviewed' : (r.journalType === 'preprint' ? 'preprint' : 'unknown'),
       rawMetadata: r,
