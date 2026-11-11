@@ -3,11 +3,12 @@ import { previewValue } from "@/lib/preview";
 import ArticleCard from "@/components/ArticleCard";
 import MasonryGrid from "@/components/MasonryGrid";
 import PostsPagination from "@/components/PostsPagination";
+import { pageTitle, SITE_NAME } from "@/lib/site";
 
 export const metadata = {
-  title: "News Archive - Dinosauria Network",
+  title: pageTitle("News Archive"),
   description:
-    "Archive of dinosaur news and paleontology discoveries - Dinosauria Network",
+    `Archive of dinosaur news and paleontology discoveries - ${SITE_NAME}`,
 };
 
 export const revalidate = 3600;

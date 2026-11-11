@@ -8,12 +8,13 @@ import "@/app/styles/globals.scss";
 import SkipLink from "@/components/SkipLink";
 import PreviewBanner from "@/components/PreviewBanner";
 import { Suspense } from "react";
+import { SITE_TAGLINE } from "@/lib/site";
 
 const site = getSiteMetadata();
 
 export const metadata = {
   title: site.name,
-  description: "Dispensing your daily dose of dinosaurs",
+  description: SITE_TAGLINE,
   siteName: site.name,
 };
 

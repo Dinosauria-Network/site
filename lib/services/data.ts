@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { Genus, NewsPost, TaxonomyTerm } from "./domain";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "../site";
 
 const DATA_PATH = path.join(process.cwd(), "_data", "genus-data.json");
 let cachedData: any = null;
@@ -12,13 +13,17 @@ export function loadData(): any {
     cachedData = JSON.parse(raw);
   } catch (e) {
     console.error("Failed to load data file:", DATA_PATH, e);
-    cachedData = { site: { name: "Dinosauria Network", title: "Dinosauria Network", url: "https://dinosauria.network", description: "Dinosauria Network", generatedAt: new Date().toISOString() }, postTypes: { genus: [] } };
+    cachedData = { site: { name: SITE_NAME, title: SITE_NAME, url: SITE_URL, description: SITE_DESCRIPTION, generatedAt: new Date().toISOString() }, postTypes: { genus: [] } };
   }
   return cachedData;
 }
 
 export function getSiteMetadata() {
-  return loadData().site;
+  return {
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
+  };
 }
 
 export function getAllGenera(): Genus[] {

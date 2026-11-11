@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getGenusBySlug, getAllGenera } from "@/lib/genus-data";
+import { pageTitle, SITE_NAME } from "@/lib/site";
 import PageHeader from "@/components/PageHeader";
 
 export async function generateStaticParams() {
@@ -13,10 +14,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const genus = getGenusBySlug(slug);
   if (!genus) {
-    return { title: "Genus Not Found - Dinosauria Network" };
+    return { title: pageTitle("Genus Not Found") };
   }
   return {
-    title: `${genus.post_title} - Dinosauria Network`,
+    title: `${genus.post_title} - ${SITE_NAME}`,
     description: `${genus.post_title} - ${genus.author || "Unknown author"}, ${genus.taxonomy.map((t) => t.name).join(", ")}`,
   };
 }

@@ -1,7 +1,8 @@
 import PageHeader from "@/components/PageHeader";
+import { pageTitle } from "@/lib/site";
 
 export const metadata = {
-  title: "Phylogeny - Dinosauria Network",
+  title: pageTitle("Phylogeny"),
   description:
     "Dinosaur phylogeny and taxonomy tree - Saurischia, Theropoda, Sauropodomorpha, Ornithischia",
 };

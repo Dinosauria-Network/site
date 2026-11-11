@@ -1,8 +1,9 @@
 import { getAllGenera } from "@/lib/services/data";
 import styles from "./page.module.css";
+import { pageTitle } from "@/lib/site";
 
 export const metadata = {
-  title: "How Many Dinosaurs Are There? - Dinosauria Network",
+  title: pageTitle("How Many Dinosaurs Are There?"),
   description: "A running count of named dinosaur species and genera.",
 };
 

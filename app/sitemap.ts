@@ -1,8 +1,9 @@
 import { MetadataRoute } from "next";
 import { getAllGenera, getAllPosts } from "@/lib/genus-data";
+import { SITE_URL } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = "https://dinosauria.network";
+  const base = SITE_URL;
   const genera = getAllGenera();
   const posts = getAllPosts();
   const urls = [

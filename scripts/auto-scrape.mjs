@@ -87,6 +87,8 @@ function generatePostId(existingPosts) {
   return maxId + 1;
 }
 
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://dinosauria.net').replace(/\/+$/, '');
+
 async function scrapeArticle(url) {
   try {
     const controller = new AbortController();
@@ -94,7 +96,7 @@ async function scrapeArticle(url) {
     
     const res = await fetch(url, {
       headers: { 
-        'User-Agent': 'Mozilla/5.0 (compatible; DinosauriaBot/1.0; +https://dinosauria.net/bot)' 
+        'User-Agent': `Mozilla/5.0 (compatible; DinosauriaBot/1.0; +${SITE_URL}/bot)` 
       },
       signal: controller.signal
     });

@@ -1,11 +1,12 @@
 import { getGeneraByPeriod, getAllGenera, getUniquePeriods } from "@/lib/genus-data";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import { SITE_NAME } from "@/lib/site";
 
 export const metadata = {
   title: "Dinosaur Genera Database",
   description:
-    "Browse the complete database of dinosaur genera - Dinosauria Network",
+    `Browse the complete database of dinosaur genera - ${SITE_NAME}`,
 };
 
 export default async function GeneraPage({

@@ -3,6 +3,7 @@ import { getEnrichedPostById, getSourceFavicon, formatTimeAgo, getAllPosts } fro
 import { notFound } from "next/navigation";
 import { getPublishedStoryByNumericId } from "@/lib/db/stories";
 import { isPreviewEnabled } from "@/lib/preview";
+import { pageTitle, SITE_NAME } from "@/lib/site";
 
 export const revalidate = 3600;
 
@@ -49,7 +50,7 @@ async function getDetailPost(
       excerpt: story.description || story.deck || story.headline || "",
       image: body.image ?? "",
       date: date ? date.toISOString().split("T")[0] : "",
-      author: body.author ?? "Dinosauria Network",
+      author: body.author ?? SITE_NAME,
       source: body.source ?? "Database",
       url: body.url ?? "",
       ogTitle: story.headline,
@@ -74,9 +75,9 @@ export async function generateMetadata({
   const { id } = await params;
   const sp = await searchParams;
   const post = await getDetailPost(parseInt(id, 10), isPreviewEnabled(sp));
-  if (!post) return { title: "Dinosaur News - Dinosauria Network" };
+  if (!post) return { title: pageTitle("Dinosaur News") };
   return {
-    title: post.ogTitle || post.title || "Dinosauria Network",
+    title: post.ogTitle || post.title || SITE_NAME,
     description: post.ogDescription || post.excerpt || "",
     openGraph: {
       title: post.ogTitle || post.title || "",

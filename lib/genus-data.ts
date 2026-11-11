@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { ScrapedMeta, scrapeArticleMeta } from "./article-scraper";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "./site";
 
 const faviconCache = new Map<string, string>();
 const enrichedCache = new Map<number, any>();
@@ -48,7 +49,7 @@ export interface SiteMetadata {
   name: string;
   url: string;
   description: string;
-  generatedAt: string;
+  generatedAt?: string;
 }
 
 export interface NewsPost {
@@ -83,16 +84,16 @@ function loadData(): GenusData {
     cachedData = JSON.parse(raw) as GenusData;
   } catch (e) {
     console.error("Failed to load data file:", DATA_PATH, e);
-    cachedData = { site: { name: "Dinosauria Network", title: "Dinosauria Network", url: "https://dinosauria.network", description: "Dinosauria Network", generatedAt: new Date().toISOString() }, postTypes: { genus: [] } } as unknown as GenusData;
+    cachedData = { site: { name: SITE_NAME, title: SITE_NAME, url: SITE_URL, description: SITE_DESCRIPTION, generatedAt: new Date().toISOString() }, postTypes: { genus: [] } } as unknown as GenusData;
   }
   return cachedData;
 }
 
 export function getSiteMetadata(): SiteMetadata {
-  const data = loadData().site;
   return {
-    ...data,
-    description: data.description || "Dispensing your daily dose of dinosaurs",
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
   };
 }
 

@@ -1,8 +1,9 @@
 import { getAllPosts, getAllGenera } from "@/lib/genus-data";
 import Link from "next/link";
+import { pageTitle } from "@/lib/site";
 
 export const metadata = {
-  title: "Search - Dinosauria Network",
+  title: pageTitle("Search"),
 };
 
 export default async function SearchPage({

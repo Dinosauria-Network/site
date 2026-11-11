@@ -3,11 +3,12 @@ import { previewValue } from "@/lib/preview";
 import ArticleCard from "@/components/ArticleCard";
 import MasonryGrid from "@/components/MasonryGrid";
 import PostsPagination from "@/components/PostsPagination";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 
 export const metadata = {
-  title: "Dinosauria Network – Dispensing your daily dose of dinosaurs",
+  title: `${SITE_NAME} – ${SITE_TAGLINE}`,
   description:
-    "Dispensing your daily dose of dinosaurs - Latest dinosaur news and paleontology discoveries",
+    `${SITE_TAGLINE} - Latest dinosaur news and paleontology discoveries`,
 };
 
 export const revalidate = 3600;

@@ -1,8 +1,9 @@
 import React from 'react';
 import PageHeader from "@/components/PageHeader";
+import { pageTitle } from "@/lib/site";
 
 export const metadata = {
-  title: "Mesozoic Era - Dinosauria Network",
+  title: pageTitle("Mesozoic Era"),
   description:
     "Mesozoic Era chronostratigraphy - Triassic, Jurassic, Cretaceous periods",
 };

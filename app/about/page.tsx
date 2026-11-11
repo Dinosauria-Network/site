@@ -1,8 +1,9 @@
 import PageHeader from "@/components/PageHeader";
+import { pageTitle, SITE_NAME } from "@/lib/site";
 
 export const metadata = {
-  title: "About - Dinosauria Network",
-  description: "About the Dinosauria Network - Digital portal for dinosaurian paleontology",
+  title: pageTitle("About"),
+  description: `About the ${SITE_NAME} - Digital portal for dinosaurian paleontology`,
 };
 
 export default function AboutPage() {
