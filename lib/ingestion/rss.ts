@@ -86,10 +86,33 @@ export const rssAdapter: SourceAdapter = {
         failures.push(`${outlet.name}: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
-    // Newest first — the ingest cap takes the head.
-    records.sort((a, b) => (b.publicationDate?.getTime() ?? 0) - (a.publicationDate?.getTime() ?? 0));
+    // Round-robin interleave per outlet (each newest-first internally) — a
+    // plain global newest-first sort lets the high-volume general feeds
+    // consume the whole ingest cap (SciAm 50 items, NCYT 99 items…) and the
+    // low-volume paleo outlets never get a slot. Each pass takes the next
+    // item from every outlet in turn.
+    const byOutlet = new Map<string, IngestionRecord[]>();
+    for (const r of records) {
+      const key = r.journalName ?? 'unknown';
+      const g = byOutlet.get(key);
+      if (g) g.push(r);
+      else byOutlet.set(key, [r]);
+    }
+    for (const g of byOutlet.values()) {
+      g.sort((a, b) => (b.publicationDate?.getTime() ?? 0) - (a.publicationDate?.getTime() ?? 0));
+    }
+    const interleaved: IngestionRecord[] = [];
+    const queues = [...byOutlet.values()];
+    for (let i = 0; ; i++) {
+      let added = false;
+      for (const q of queues) {
+        const item = q[i];
+        if (item) { interleaved.push(item); added = true; }
+      }
+      if (!added) break;
+    }
     if (failures.length) console.log('rss-sweep failures:', failures.join('; '));
-    return { records, nextCursor: undefined, done: true };
+    return { records: interleaved, nextCursor: undefined, done: true };
   },
   normalize(raw) {
     const r = raw as IngestionRecord;
