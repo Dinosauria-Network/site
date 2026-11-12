@@ -1717,6 +1717,19 @@ picture {
   color: #6b6459;
 }
 
+.card-image-credit {
+  margin: 0.2rem 0 0;
+  font-size: 0.625rem;
+  line-height: 1.35;
+  color: #6b6459;
+  word-break: break-word;
+}
+
+.card-image-credit a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .post-navigation {
   margin-top: 2rem;
   padding-top: 1rem;

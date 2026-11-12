@@ -12,6 +12,8 @@ export interface StoriesPage {
 
 interface StoryBody {
   image?: string | null;
+  imageAttribution?: string | null;
+  imageLicense?: string | null;
   source?: string | null;
   author?: string | null;
   url?: string | null;
@@ -36,6 +38,8 @@ function storyToNewsPost(s: typeof editorialStories.$inferSelect): NewsPost {
     url: body.url ?? '',
     guid: body.guid ?? '',
     image: body.image ?? '',
+    imageAttribution: body.imageAttribution ?? undefined,
+    imageLicense: body.imageLicense ?? undefined,
     post_name: s.slug,
     syndication_source: body.source ?? undefined,
   };

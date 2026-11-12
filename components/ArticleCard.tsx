@@ -34,6 +34,21 @@ export default function ArticleCard({ post, index, preview }: ArticleCardProps) 
     : '';
   const ext = hasImage ? (rawImage.match(/\.([^.\/]+)$/)?.[1] || 'jpg') : 'jpg';
   const imgSrc = hasImage ? `/images/news/${basename}.${ext}` : '';
+  // CC BY/BY-SA images legally require attribution — it travels with the
+  // image everywhere the card renders (homepage masonry, /news archive).
+  const credit = (() => {
+    const a = post.imageAttribution?.trim();
+    const lic = post.imageLicense?.trim();
+    if (!a && !lic) return null;
+    const isUrl = a ? /^https?:\/\//i.test(a) : false;
+    let label = a ?? '';
+    if (a && isUrl) {
+      try { label = new URL(a).hostname.replace(/^www\./, ''); } catch { /* keep full string */ }
+    } else if (label.length > 80) {
+      label = label.slice(0, 77) + '…';
+    }
+    return { a, lic, isUrl, label };
+  })();
 
   return (
     <article className={articleClasses}>
@@ -54,6 +69,18 @@ export default function ArticleCard({ post, index, preview }: ArticleCardProps) 
               />
             </picture>
           </a>
+          {credit && (
+            <div className="card-image-credit">
+              Image:{" "}
+              {credit.isUrl && credit.a ? (
+                <a href={credit.a} target="_blank" rel="noopener">{credit.label}</a>
+              ) : (
+                credit.label
+              )}
+              {credit.a && credit.lic ? " · " : ""}
+              {credit.lic}
+            </div>
+          )}
         </div>
       )}
       <header className="entry-header">

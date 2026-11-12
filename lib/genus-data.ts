@@ -62,6 +62,8 @@ export interface NewsPost {
   url?: string;
   guid?: string;
   image?: string;
+  imageAttribution?: string;
+  imageLicense?: string;
   post_name?: string;
   syndication_source?: string;
 }
