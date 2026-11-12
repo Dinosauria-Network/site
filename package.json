@@ -18,6 +18,7 @@
     "ingest:arxiv": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/ingest-db.ts --adapter arxiv",
     "ingest:crossref": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/ingest-crossref.ts",
     "ingest:journals": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/ingest-db.ts --adapter crossref-journals",
+    "ingest:rss": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/ingest-db.ts --adapter rss",
     "ingest:check": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/run-ingestion.ts",
     "backfill:abstracts": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/backfill-abstracts.ts",
     "editorial:generate": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/classify-and-prune.ts",
@@ -44,6 +45,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "rss": "^1.2.2",
+    "rss-parser": "^3.13.0",
     "sharp": "^0.35.5",
     "zod": "^4.6.7"
   },

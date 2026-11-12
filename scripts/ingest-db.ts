@@ -6,13 +6,14 @@ import { europePmcAdapter } from '../lib/ingestion/europe-pmc';
 import { arxivAdapter } from '../lib/ingestion/arxiv';
 import { crossrefAdapter } from '../lib/ingestion/crossref-adapter';
 import { journalCrossrefAdapter } from '../lib/ingestion/crossref-journals';
+import { rssAdapter } from '../lib/ingestion/rss';
 import { resolveAbstract, abstractOutcomeMetadata } from '../lib/ingestion/abstracts';
 import { stripTags } from '../lib/license';
 
-const adapters = [europePmcAdapter, arxivAdapter, crossrefAdapter, journalCrossrefAdapter];
+const adapters = [europePmcAdapter, arxivAdapter, crossrefAdapter, journalCrossrefAdapter, rssAdapter];
 
 /**
- * --adapter europe-pmc|arxiv|crossref|crossref-journals   run just one source
+ * --adapter europe-pmc|arxiv|crossref|crossref-journals|rss   run just one source
  * default (no flag)                                       run all four
  * --limit N                                               max NEW papers per adapter (default 5)
  * Names are case-insensitive.
@@ -21,8 +22,8 @@ const adapterArg = (() => {
   const i = process.argv.indexOf('--adapter');
   if (i < 0) return null;
   const name = (process.argv[i + 1] || '').toLowerCase().replace(/[^a-z]/g, '');
-  const key = { europepmc: 'europe-pmc', europe: 'europe-pmc', arxiv: 'arxiv', crossref: 'crossref', crossrefjournals: 'crossref-journals', journals: 'crossref-journals' }[name];
-  if (!key) { console.error('bad --adapter value:', process.argv[i + 1], '(expected europe-pmc, arxiv, crossref or crossref-journals)'); process.exit(1); }
+  const key = { europepmc: 'europe-pmc', europe: 'europe-pmc', arxiv: 'arxiv', crossref: 'crossref', crossrefjournals: 'crossref-journals', journals: 'crossref-journals', rss: 'rss' }[name];
+  if (!key) { console.error('bad --adapter value:', process.argv[i + 1], '(expected europe-pmc, arxiv, crossref, crossref-journals or rss)'); process.exit(1); }
   return key;
 })();
 const selected = adapterArg
