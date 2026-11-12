@@ -1,12 +1,26 @@
 import { db } from '../lib/db/client';
-import { editorialStories, publicationEvents } from '../lib/db/schema';
+import { editorialStories, publicationEvents, researchPapers } from '../lib/db/schema';
 import { eq } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 
-const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const slug = (process.argv.slice(2).find((a, i) => process.argv.slice(2)[i - 1] === '--slug')) ?? positional[0];
-if (!slug) { console.error('usage: npm run editorial:publish -- <slug>'); process.exit(1); }
+const all = process.argv.slice(2);
+const argValue = (flag: string) => {
+  const i = all.indexOf(flag);
+  return i >= 0 ? all[i + 1] : undefined;
+};
+const explicitDate = argValue('--date');
+const usePaperDate = all.includes('--use-paper-date');
+const positional = all.filter((a, i) => !a.startsWith('--') && a !== explicitDate);
+const slug = (argValue('--slug') ?? positional[0]);
+if (!slug) { console.error('usage: npm run editorial:publish -- <slug> [--date YYYY-MM-DD | --use-paper-date]'); process.exit(1); }
+const parseDate = (s: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) { console.error('bad --date:', s, '(expected YYYY-MM-DD)'); process.exit(1); }
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12));
+  if (isNaN(d.getTime())) { console.error('bad --date:', s); process.exit(1); }
+  return d;
+};
 
 const run = async () => {
   const [story] = await db.select().from(editorialStories).where(eq(editorialStories.slug, slug)).limit(1);
@@ -29,14 +43,31 @@ const run = async () => {
     process.exit(1);
   }
 
+  // publishedAt: --date wins; then --use-paper-date (paper pub date clamped to
+  // today — an article can never go live before it exists); default now.
+  let publishedAt = new Date();
+  let dateOverride = false;
+  if (explicitDate) { publishedAt = parseDate(explicitDate); dateOverride = true; }
+  else if (usePaperDate && story.paperId) {
+    const [paper] = await db.select({ d: researchPapers.publicationDate }).from(researchPapers).where(eq(researchPapers.id, story.paperId)).limit(1);
+    if (paper?.d) {
+      publishedAt = paper.d > new Date() ? new Date() : paper.d;
+      dateOverride = true;
+      console.log('publishedAt =', publishedAt.toISOString().split('T')[0], '(paper date', paper.d.toISOString().split('T')[0], publishedAt < paper.d ? '— clamped to today)' : ')');
+    } else {
+      console.log('paper has no publication date — publishing with today as publishedAt');
+    }
+  }
+
   await db.update(editorialStories)
-    .set({ status: 'published', publishedAt: new Date() })
+    .set({ status: 'published', publishedAt })
     .where(eq(editorialStories.id, story.id));
   await db.insert(publicationEvents).values({
     storyId: story.id,
     eventType: 'published',
     previousStatus: story.status,
     newStatus: 'published',
+    metadata: dateOverride ? { publishedAtOverride: publishedAt.toISOString() } : {},
   });
   console.log('published:', slug);
 };

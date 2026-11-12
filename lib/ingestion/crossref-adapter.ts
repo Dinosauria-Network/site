@@ -1,36 +1,10 @@
 import { SourceAdapter, IngestionRecord } from './types';
 
-function normalizeAuthor(a: unknown): { fullName: string; orcid?: string; institution?: string } {
-  const item = a as { given?: string; family?: string; ORCID?: string; name?: string };
-  const full = item.name || `${item.given || ''} ${item.family || ''}`.trim();
-  return { fullName: full || 'Unknown', orcid: item.ORCID, institution: undefined };
-}
-
-export const crossrefAdapter: SourceAdapter = {
-  sourceName: 'crossref',
-  async discover(cursor) {
-    const offset = cursor ? parseInt(cursor, 10) : 0;
-    const url = new URL('https://api.crossref.org/works');
-    url.searchParams.set('query', 'dinosaur');
-    url.searchParams.set('rows', '20');
-    url.searchParams.set('offset', String(offset));
-    url.searchParams.set('filter', 'type:journal-article');
-    url.searchParams.set('mailto', 'admin@dinosaur publication.local'); // polite
-
-    const res = await fetch(url.toString(), { headers: { 'User-Agent': 'Dinosauria-Science-Pub/1.0' } });
-    if (!res.ok) throw new Error(`Crossref error ${res.status}`);
-    const data = await res.json() as { message?: { items?: Array<unknown>; 'total-results'?: number } };
-    const items = data.message?.items || [];
-    const records: IngestionRecord[] = items.map((raw) => this.normalize(raw));
-    const nextOffset = offset + items.length;
-    const total = data.message?.['total-results'] || 0;
-    return {
-      records,
-      nextCursor: nextOffset < total ? String(nextOffset) : undefined,
-      done: nextOffset >= total,
-    };
-  },
-  normalize(raw) {
+/**
+ * Normalize a raw Crossref `works` item. Shared by the keyword adapter and the
+ * watched-journals adapter (same schema, same DOI uniqueness).
+ */
+export function normalizeCrossrefRecord(raw: unknown): IngestionRecord {
     const item = raw as {
       DOI?: string;
       title?: string[];
@@ -65,5 +39,39 @@ export const crossrefAdapter: SourceAdapter = {
       peerReviewStatus,
       rawMetadata: item,
     };
+}
+
+function normalizeAuthor(a: unknown): { fullName: string; orcid?: string; institution?: string } {
+  const item = a as { given?: string; family?: string; ORCID?: string; name?: string };
+  const full = item.name || `${item.given || ''} ${item.family || ''}`.trim();
+  return { fullName: full || 'Unknown', orcid: item.ORCID, institution: undefined };
+}
+
+export const crossrefAdapter: SourceAdapter = {
+  sourceName: 'crossref',
+  async discover(cursor) {
+    const offset = cursor ? parseInt(cursor, 10) : 0;
+    const url = new URL('https://api.crossref.org/works');
+    url.searchParams.set('query', 'dinosaur');
+    url.searchParams.set('rows', '20');
+    url.searchParams.set('offset', String(offset));
+    url.searchParams.set('filter', 'type:journal-article');
+    url.searchParams.set('mailto', 'admin@dinosauria.net'); // polite
+
+    const res = await fetch(url.toString(), { headers: { 'User-Agent': 'Dinosauria-Science-Pub/1.0' } });
+    if (!res.ok) throw new Error(`Crossref error ${res.status}`);
+    const data = await res.json() as { message?: { items?: Array<unknown>; 'total-results'?: number } };
+    const items = data.message?.items || [];
+    const records: IngestionRecord[] = items.map((raw) => this.normalize(raw));
+    const nextOffset = offset + items.length;
+    const total = data.message?.['total-results'] || 0;
+    return {
+      records,
+      nextCursor: nextOffset < total ? String(nextOffset) : undefined,
+      done: nextOffset >= total,
+    };
+  },
+  normalize(raw) {
+    return normalizeCrossrefRecord(raw);
   },
 };

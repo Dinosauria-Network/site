@@ -1709,6 +1709,14 @@ picture {
   margin: 1rem 0;
 }
 
+.post-image-attribution {
+  display: block;
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #6b6459;
+}
+
 .post-navigation {
   margin-top: 2rem;
   padding-top: 1rem;

@@ -2,6 +2,7 @@ import { db } from '../lib/db/client';
 import { editorialStories, mediaAssets } from '../lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { writeDerivatives } from '../lib/image-derivatives';
+import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 
@@ -32,7 +33,7 @@ const run = async () => {
 
   let bytes: Buffer;
   if (/^https?:\/\//.test(source)) {
-    const res = await fetch(source, { headers: { 'user-agent': 'DinosauriaBot/1.0' } });
+    const res = await fetch(source, { headers: { 'user-agent': 'DinosauriaNetwork/1.0 (mailto:research@dinosauria.network)' } });
     if (!res.ok) { console.error('Fetch failed:', res.status, source); process.exit(1); }
     const ct = res.headers.get('content-type') ?? '';
     if (!ct.startsWith('image/')) { console.error('Not an image content-type:', ct); process.exit(1); }
@@ -64,6 +65,8 @@ const run = async () => {
   const src = path.resolve(source);
   if (!fs.existsSync(src)) { console.error('Local file not found:', src); process.exit(1); }
   bytes = fs.readFileSync(src);
+  // Reject anything that isn't a readable image before it ever lands in public/
+  try { await sharp(bytes).metadata(); } catch { console.error('Local file is not a valid image:', src); process.exit(1); }
   const ext = (path.extname(src).replace('.', '') || 'jpg').replace('jpeg', 'jpg');
   const storagePath = writeBytes(bytes, ext);
   const mediaWhere2 = story.paperId

@@ -1,9 +1,10 @@
 import { europePmcAdapter } from '../lib/ingestion/europe-pmc';
 import { arxivAdapter } from '../lib/ingestion/arxiv';
-import { crossrefAdapter } from '../lib/ingestion/crossref';
+import { crossrefAdapter } from '../lib/ingestion/crossref-adapter';
+import { journalCrossrefAdapter } from '../lib/ingestion/crossref-journals';
 
 const test = async () => {
-  for (const a of [europePmcAdapter, arxivAdapter, crossrefAdapter]) {
+  for (const a of [europePmcAdapter, arxivAdapter, crossrefAdapter, journalCrossrefAdapter]) {
     try {
       const res = await a.discover();
       console.log(a.sourceName, 'records:', res.records.length, 'done:', res.done, 'nextCursor:', res.nextCursor?.slice(0, 20));

@@ -12,6 +12,7 @@ interface DetailPost {
   title: string;
   excerpt: string;
   image: string;
+  imageAttribution?: string;
   date: string;
   author?: string;
   source: string;
@@ -38,6 +39,7 @@ async function getDetailPost(
   if (story) {
     const body = (story.body ?? {}) as {
       image?: string | null;
+      imageAttribution?: string | null;
       url?: string | null;
       source?: string | null;
       author?: string | null;
@@ -49,6 +51,7 @@ async function getDetailPost(
       title: story.headline,
       excerpt: story.description || story.deck || story.headline || "",
       image: body.image ?? "",
+      imageAttribution: body.imageAttribution ?? undefined,
       date: date ? date.toISOString().split("T")[0] : "",
       author: body.author ?? SITE_NAME,
       source: body.source ?? "Database",
@@ -151,6 +154,15 @@ export default async function NewsDetailPage({
           <picture className="responsive-image">
             <img className="wp-post-image" src={post.image} alt={post.title} />
           </picture>
+          {post.imageAttribution && (
+            <figcaption className="post-image-attribution">
+              {/^https?:\/\//.test(post.imageAttribution) ? (
+                <>Image: <a href={post.imageAttribution} target="_blank" rel="noopener">{post.imageAttribution}</a></>
+              ) : (
+                <>Image: {post.imageAttribution}</>
+              )}
+            </figcaption>
+          )}
         </div>
       )}
 
