@@ -9,6 +9,9 @@ import { SITE_NAME } from '../lib/site';
 import fs from 'fs';
 import path from 'path';
 
+/** Erratum-type papers (Correction/Erratum/Corrigendum/Addendum/"Note added…") are never proposed, however high their Jev-Style score. */
+const ERRATUM_RE = /^(correction|erratum|corrigendum|errata|addendum|note added)\b/i;
+
 interface Args { limit: number; minScore: number; dryRun: boolean; since: Date | null; sinceLabel: string; doi: string[] | null }
 
 /**
@@ -155,6 +158,10 @@ const run = async () => {
 
   let created = 0;
   for (const paper of rows) {
+    if (ERRATUM_RE.test((paper.title ?? '').trim())) {
+      console.log('skip (erratum-type):', cleanTitle(paper.title).slice(0, 90));
+      continue;
+    }
     const headline = cleanTitle(paper.title);
     const base = slugify(headline);
     let slug = base;
