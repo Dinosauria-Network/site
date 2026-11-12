@@ -87,7 +87,7 @@ const run = async () => {
         if (process.env.JEVSTYLE_API_KEY && r.title) {
           try {
             const cls = await classifyDinosaur(r.title + ' ' + (r.abstract || ''), process.env.JEVSTYLE_API_KEY);
-            console.log('  classified:', r.title?.slice(0, 40), 'dinosaur prob:', cls.questions?.dinosaur?.probability);
+            console.log('  classified:', r.title?.slice(0, 40), 'dinosaur prob:', cls?.answers?.dinosaur?.noul ?? cls?.questions?.dinosaur?.probability);
           } catch (e) { /* silent. classification is optional */ }
         }
       }
