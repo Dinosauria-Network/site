@@ -108,42 +108,46 @@ export async function findCommonsMatch(token: string): Promise<CommonsCandidate 
   }
 }
 
-const STOPLIST = new Set([
-  'the', 'new', 'from', 'with', 'into', 'over', 'under', 'some', 'first', 'second',
-  'third', 'upper', 'lower', 'middle', 'early', 'late', 'review', 'analysis', 'growth',
-  'dynamics', 'notes', 'note', 'evidence', 'record', 'study', 'description', 'systematics',
-  'discovery', 'fossil', 'remains', 'specimens', 'locality', 'formation', 'member',
-  'basin', 'group', 'region', 'tracksite', 'jura', 'jurassic', 'cretaceous', 'triassic',
-  'permian', 'pennsylvanian', 'devonian', 'mesozoic', 'cenozoic', 'maastrichtian',
-  'campanian', 'coniacian', 'turonian', 'aptan', 'albian',
-  'canada', 'alberta', 'mongolia', 'argentina', 'brazil', 'morocco', 'peru', 'china',
-  'australia', 'japan', 'russia', 'europ', 'asia', 'africa', 'america', 'zealand',
-  'american', 'european', 'asian', 'african', 'australian', 'eastern', 'western',
-  'northern', 'southern', 'chico', 'querulpa', 'oldman', 'tyrannosaur', 'titanosaur',
-  'arequipa', 'lisbon', 'madrid', 'paris', 'london', 'tokyo', 'berlin', 'beijing',
-  'correction', 'corrections', 'erratum', 'errata', 'corrigendum', 'editorial',
-  'comment', 'reply', 'response', 'obituary', 'keynote', 'abstract', 'supplement',
-  'first', 'second', 'third', 'fourth', 'preface', 'foreword', 'index', 'contents',
-]);
+/**
+ * Known-genus validation. The previous fallback ("first non-stoplist
+ * capitalized token") matched common words on sentence-style blog titles in
+ * production — "Introducing" (from "Introducing Laueropterus"), "Veracity"
+ * (from "Veracity of Ikejiri's …") and "Diaz" (from "Diaz et al."). A token
+ * must now be a taxon this site knows (the ~1550 genera in
+ * _data/genus-data.json); otherwise no match is attempted. Misses genera
+ * absent from the dataset — the conservative choice for an auto-attach path.
+ */
+import fs from 'fs';
+import path from 'path';
+
+let genusSet: Set<string> | null = null;
+function loadGenera(): Set<string> {
+  if (genusSet) return genusSet;
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(process.cwd(), '_data', 'genus-data.json'), 'utf8'));
+    genusSet = new Set(
+      (j.postTypes?.genus ?? []).map((g: any) => String(g.post_title ?? '').toLowerCase()).filter(Boolean),
+    );
+  } catch (e) {
+    console.warn('warn: genus-data.json unreadable — taxon validation disabled (Tier-2 attaches nothing)');
+    genusSet = new Set();
+  }
+  return genusSet;
+}
 
 /**
- * Extract the most likely taxon token from a paper title.
- * Prefers a "Genus species" pair; falls back to the first non-stoplist capitalized token.
- * Returns null when nothing plausible is found (caller attaches nothing).
+ * Extract the taxon token from a title. Returns a genus this site knows, or
+ * null. Every common-English/sentence-initial word is impossible by
+ * construction — no fallback guesses.
  */
+/** Known-genus or known clade-alias token, or null — never a guess. */
 export function taxonQuery(title: string): string | null {
-  const pairs = title.match(/\b[A-Z][a-z]{2,}\s+[a-z]{2,}\b/g) ?? [];
-  for (const pair of pairs) {
-    const [genus, second] = pair.split(/\s+/);
-    // Skip when either word is a non-taxon (e.g. "Oldman Formation", "Chico tracksite",
-    // "Middle Jurassic") — place names and era words are useless queries.
-    if (STOPLIST.has(genus.toLowerCase())) continue;
-    if (STOPLIST.has(second.toLowerCase())) continue;
-    return genus;
-  }
-  const singles = title.match(/\b[A-Z][a-z]{4,}\b/g) ?? [];
-  for (const t of singles) {
-    if (!STOPLIST.has(t.toLowerCase())) return t;
+  const known = loadGenera();
+  const cladeKeys = new Set(Object.keys(ALIASES));
+  const tokens = title.match(/[A-Za-z][A-Za-z-]*/g) ?? [];
+  for (const raw of tokens) {
+    const t = raw.toLowerCase();
+    if (known.has(t) || cladeKeys.has(t)) return raw.charAt(0).toUpperCase() + t.slice(1);
   }
   return null;
 }
