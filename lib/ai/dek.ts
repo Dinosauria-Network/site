@@ -1,9 +1,12 @@
 /**
  * AI-generated news deks for publisher-blocked papers (abstract unavailable).
  *
- * One honest sentence, grounded ONLY in the title + journal + year — the
- * model is forbidden from inventing numbers, methods, specimen details or
- * results it cannot see. Used by propose as a fallback when the abstract
+ * One honest sentence, grounded PRIMARILY in the title + journal + year.
+ * The model MAY add general context it is highly confident is associated
+ * with this specific, well-documented paper (e.g. what it found and why it
+ * matters) — but must NEVER invent numbers, methods, specimens, institutions
+ * or results, and must fall back to the title's implications when unsure or
+ * the paper is obscure to it. Used by propose as a fallback when the abstract
  * resolver comes back empty; a machine-written dek is marked with
  * body.dekGenerated so review can spot and replace it. Never overwrites a
  * human- or abstract-derived dek.
@@ -26,7 +29,7 @@ export async function generateDek(input: { title: string; journal?: string | nul
     input.journal ? `Journal: ${input.journal}` : null,
     input.year ? `Year: ${input.year}` : null,
   ].filter(Boolean).join(' | ');
-  const system = 'You write news deks for a dinosaur palaeontology news site. Given only a paper title, journal and year, write ONE sentence (max 220 characters), neutral and declarative, summarizing what the paper reports. Never invent numbers, methods, specimens, institutions or results beyond what the title implies. Output only the dek text — no quotes, no markdown, no "This paper…" filler.';
+  const system = 'You write news deks for a dinosaur palaeontology news site. Given only a paper title, journal and year, write ONE sentence (max 220 characters), neutral and declarative, summarizing what the paper reports and why it matters.\n\nYou may draw on your general knowledge of this specific, well-documented paper to add context — for example what the paper found or how it changed the field — but ONLY when that context is widely reported and you are highly confident it belongs to this exact paper. If the paper is obscure to you, or you are unsure whether a detail belongs to this work, stay strictly with what the title implies.\n\nNEVER invent numbers, percentages, dates, localities, specimen IDs, methods, institutions or results. A conservative, true sentence beats a rich, invented one. Output only the dek text — no quotes, no markdown, no "This paper…" filler.';
 
   const groqKey = process.env.GROQ_API_KEY || process.env.GROK_API_KEY || '';
   if (groqKey) {
@@ -100,7 +103,7 @@ async function callChatCompletions(args: {
           { role: 'system', content: args.system },
           { role: 'user', content: args.ctx },
         ],
-        max_tokens: 512,
+        max_tokens: 2048,
         temperature: 0.2,
       }),
       signal: AbortSignal.timeout(args.timeoutMs),
