@@ -1728,9 +1728,28 @@ picture {
   color: #6b6459;
 }
 
-.post-image .responsive-image:hover + .card-image-credit {
+/* Reveal triggers: mouse hover, and keyboard focus within the figure (the
+   image link is focusable — without this, keyboard users never see the
+   credit). On hover-less/coarse-pointer devices (phones/tablets) the credit
+   is always visible — hover is a progressive enhancement there, never the
+   only way in. */
+.post-image .responsive-image:hover + .card-image-credit,
+.post-image:focus-within .card-image-credit {
   visibility: visible;
   transform: translateY(0);
+}
+
+@media (hover: none) {
+  .post-image .card-image-credit {
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-image-credit {
+    transition: none;
+  }
 }
 
 .card-image-credit {
