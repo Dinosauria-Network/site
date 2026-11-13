@@ -59,7 +59,7 @@ if "site" in existing:
     out = {**existing, "postTypes": {"genus": genera}}
 else:
     out = {
-        "site": existing.get("site", {"name":"Dinosauria Network","title":"Dinosauria Network","url":"https://dinosauria.network","description":"Dinosauria Network"}),
+        "site": existing.get("site", {"name":"Dinosauria Network","title":"Dinosauria Network","url":"https://dinosauria.net","description":"Dinosauria Network"}),
         "postTypes": {"genus": genera}
     }
 Path("_data/genus-data.json").write_text(json.dumps(out, indent=2, ensure_ascii=False))
