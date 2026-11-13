@@ -12,6 +12,7 @@ export function normalizeCrossrefRecord(raw: unknown): IngestionRecord {
       author?: Array<unknown>;
       'published-print'?: { 'date-parts'?: number[][] };
       'published-online'?: { 'date-parts'?: number[][] };
+      created?: { 'date-time'?: string };
       'container-title'?: string[];
       publisher?: string;
       type?: string;
@@ -21,8 +22,24 @@ export function normalizeCrossrefRecord(raw: unknown): IngestionRecord {
     const title = Array.isArray(item.title) ? item.title[0] : (item.title || 'Untitled');
     const abstract = item.abstract || undefined;
     const authors = (item.author || []).map(normalizeAuthor);
-    const pubDate = item['published-print']?.['date-parts']?.[0] || item['published-online']?.['date-parts']?.[0];
-    const publicationDate = pubDate ? new Date(pubDate[0], (pubDate[1] || 1) - 1, pubDate[2] || 1) : undefined;
+    const online = item['published-online']?.['date-parts']?.[0];
+    const print = item['published-print']?.['date-parts']?.[0];
+    const toDate = (p?: number[]) => (p && p.length ? new Date(p[0], (p[1] || 1) - 1, p[2] || 1) : undefined);
+    const onlineDate = toDate(online);
+    const printDate = toDate(print);
+    const created = item.created?.['date-time'];
+    const createdDate = created && !isNaN(new Date(created).getTime()) ? new Date(created) : undefined;
+    // Prefer the online / version-of-record date over the print issue date.
+    // Elsevier's issue-ahead records (e.g. Cretaceous Research's 2027-print
+    // issue deposited in late 2026) deposit no published-online, only a future
+    // published-print — there the Crossref `created` timestamp (registration
+    // ≈ online availability, within days of OpenAlex's publication_date) is
+    // the honest site date. A print date already in the past is kept as-is.
+    let publicationDate: Date | undefined;
+    if (onlineDate) publicationDate = onlineDate;
+    else if (printDate && printDate <= new Date()) publicationDate = printDate;
+    else if (createdDate) publicationDate = createdDate;
+    else publicationDate = printDate;
     const journalName = Array.isArray(item['container-title']) ? item['container-title'][0] : item['container-title'];
     const peerReviewStatus: IngestionRecord['peerReviewStatus'] = item.type === 'preprint' ? 'preprint' : (item.type === 'journal-article' ? 'peer_reviewed' : 'unknown');
     return {
