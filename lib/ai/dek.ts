@@ -9,11 +9,14 @@
  * human- or abstract-derived dek.
  *
  * Providers (first match wins, with automatic fallback):
- *   1. GEMINI_API_KEY → Google AI Studio Gemini API, OpenAI-compatible
- *      endpoint, Flash-Lite model by default (GEMINI_MODEL to override).
- *      Free tier, no credit card. https://aistudio.google.com/apikey
- *   2. OPENROUTER_API_KEY → OpenRouter (OPENROUTER_MODEL to override).
- *   Neither configured (or both fail) → null, propose degrades to the
+ *   1. GROQ_API_KEY (or the misspelt GROK_API_KEY) → Groq, OpenAI-compatible
+ *      endpoint, gpt-oss-120b by default (GROQ_MODEL to override).
+ *      Free tier, no credit card. https://console.groq.com/keys
+ *   2. GEMINI_API_KEY → Google AI Studio Gemini API (GEMINI_MODEL to
+ *      override). NOTE: the current AI Studio project is NOT entitled to the
+ *      free tier (403 — needs billing, see 6b860dd).
+ *   3. OPENROUTER_API_KEY → OpenRouter (OPENROUTER_MODEL to override).
+ *   None configured (or all fail) → null, propose degrades to the
  *   headline fallback with a logged reason.
  */
 export async function generateDek(input: { title: string; journal?: string | null; year?: number | null }, opts: { apiKey?: string; model?: string; timeoutMs?: number } = {}): Promise<string | null> {
@@ -24,6 +27,22 @@ export async function generateDek(input: { title: string; journal?: string | nul
     input.year ? `Year: ${input.year}` : null,
   ].filter(Boolean).join(' | ');
   const system = 'You write news deks for a dinosaur palaeontology news site. Given only a paper title, journal and year, write ONE sentence (max 220 characters), neutral and declarative, summarizing what the paper reports. Never invent numbers, methods, specimens, institutions or results beyond what the title implies. Output only the dek text — no quotes, no markdown, no "This paper…" filler.';
+
+  const groqKey = process.env.GROQ_API_KEY || process.env.GROK_API_KEY || '';
+  if (groqKey) {
+    const model = opts.model ?? process.env.GROQ_MODEL ?? 'openai/gpt-oss-120b';
+    const dek = await callChatCompletions({
+      url: 'https://api.groq.com/openai/v1/chat/completions',
+      headers: { Authorization: `Bearer ${groqKey}` },
+      model,
+      system,
+      ctx,
+      label: 'Groq',
+      timeoutMs,
+    });
+    if (dek) return dek;
+    console.warn('dek: Groq failed — trying Gemini fallback');
+  }
 
   const geminiKey = process.env.GEMINI_API_KEY ?? '';
   if (geminiKey) {
@@ -81,7 +100,7 @@ async function callChatCompletions(args: {
           { role: 'system', content: args.system },
           { role: 'user', content: args.ctx },
         ],
-        max_tokens: 120,
+        max_tokens: 512,
         temperature: 0.2,
       }),
       signal: AbortSignal.timeout(args.timeoutMs),
