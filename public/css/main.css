@@ -1709,6 +1709,17 @@ picture {
   margin: 1rem 0;
 }
 
+.post-image {
+  position: relative;
+  margin-bottom: 1em;
+  overflow: hidden;
+}
+
+.post-image .responsive-image,
+.responsive-image img {
+  display: block;
+}
+
 .post-image-attribution {
   display: block;
   margin: 0.35rem 0 0;
@@ -1717,12 +1728,24 @@ picture {
   color: #6b6459;
 }
 
+.post-image .responsive-image:hover + .card-image-credit {
+  visibility: visible;
+  transform: translateY(0);
+}
+
 .card-image-credit {
-  margin: 0.2rem 0 0;
+  padding: 0.625em;
   font-size: 0.625rem;
   line-height: 1.35;
-  color: #6b6459;
   word-break: break-word;
+  background-color: #e7e6e3;
+  color: #120f0d;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  visibility: hidden;
+  transform: translateY(100%);
+  transition: 0.15s all 0s ease-in-out;
 }
 
 .card-image-credit a {
