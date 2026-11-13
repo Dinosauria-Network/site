@@ -13,6 +13,16 @@ const run = async () => {
     .orderBy(asc(editorialStories.createdAt))
     .limit(50);
 
+  // Re-sort by original publication date (publishedAt), falling back to createdAt.
+  rows.sort((a, b) => {
+    const aDate = a.publishedAt ?? a.createdAt;
+    const bDate = b.publishedAt ?? b.createdAt;
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1;
+    if (!bDate) return -1;
+    return aDate > bDate ? 1 : aDate < bDate ? -1 : 0;
+  });
+
   if (json) { console.log(JSON.stringify(rows, null, 2)); return; }
   if (!rows.length) { console.log(`No ${showAll ? 'pending' : 'draft'} stories.`); return; }
 
