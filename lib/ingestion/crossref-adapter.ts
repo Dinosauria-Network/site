@@ -1,4 +1,5 @@
 import { SourceAdapter, IngestionRecord } from './types';
+import { stripTags } from '../license';
 
 /**
  * Normalize a raw Crossref `works` item. Shared by the keyword adapter and the
@@ -19,7 +20,7 @@ export function normalizeCrossrefRecord(raw: unknown): IngestionRecord {
       URL?: string;
     };
     const doi = item.DOI || undefined;
-    const title = Array.isArray(item.title) ? item.title[0] : (item.title || 'Untitled');
+    const title = stripTags(Array.isArray(item.title) ? item.title[0] : (item.title || 'Untitled')) || 'Untitled';
     const abstract = item.abstract || undefined;
     const authors = (item.author || []).map(normalizeAuthor);
     const online = item['published-online']?.['date-parts']?.[0];
@@ -40,7 +41,7 @@ export function normalizeCrossrefRecord(raw: unknown): IngestionRecord {
     else if (printDate && printDate <= new Date()) publicationDate = printDate;
     else if (createdDate) publicationDate = createdDate;
     else publicationDate = printDate;
-    const journalName = Array.isArray(item['container-title']) ? item['container-title'][0] : item['container-title'];
+    const journalName = stripTags(Array.isArray(item['container-title']) ? item['container-title'][0] : item['container-title']);
     const peerReviewStatus: IngestionRecord['peerReviewStatus'] = item.type === 'preprint' ? 'preprint' : (item.type === 'journal-article' ? 'peer_reviewed' : 'unknown');
     return {
       source: 'crossref',

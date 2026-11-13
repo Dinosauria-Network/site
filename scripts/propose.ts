@@ -72,7 +72,9 @@ const slugify = (s: string) => {
   return slug || `story-${Date.now()}`;
 };
 
-const cleanTitle = (t: string) => t.split(' | ').slice(0, 1).join('').trim();
+// Paper titles arrive with JATS markup (<i>…</i>), embedded newlines and
+// entities (&amp;) — normalize before using anywhere user-facing (slug, headline).
+const cleanTitle = (t: string) => stripTags(t.split(' | ').slice(0, 1).join(''));
 const uniqueSentence = (s: string, n: number) => {
   const max = n;
   if (!s) return '';
