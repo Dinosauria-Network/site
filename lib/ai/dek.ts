@@ -15,10 +15,7 @@
  *   1. GROQ_API_KEY (or the misspelt GROK_API_KEY) → Groq, OpenAI-compatible
  *      endpoint, gpt-oss-120b by default (GROQ_MODEL to override).
  *      Free tier, no credit card. https://console.groq.com/keys
- *   2. GEMINI_API_KEY → Google AI Studio Gemini API (GEMINI_MODEL to
- *      override). NOTE: the current AI Studio project is NOT entitled to the
- *      free tier (403 — needs billing, see 6b860dd).
- *   3. OPENROUTER_API_KEY → OpenRouter (OPENROUTER_MODEL to override).
+ *   2. OPENROUTER_API_KEY → OpenRouter (OPENROUTER_MODEL to override).
  *   None configured (or all fail) → null, propose degrades to the
  *   headline fallback with a logged reason.
  */
@@ -44,23 +41,7 @@ export async function generateDek(input: { title: string; journal?: string | nul
       timeoutMs,
     });
     if (dek) return dek;
-    console.warn('dek: Groq failed — trying Gemini fallback');
-  }
-
-  const geminiKey = process.env.GEMINI_API_KEY ?? '';
-  if (geminiKey) {
-    const model = opts.model ?? process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite';
-    const dek = await callChatCompletions({
-      url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-      headers: { Authorization: `Bearer ${geminiKey}` },
-      model,
-      system,
-      ctx,
-      label: 'Gemini',
-      timeoutMs,
-    });
-    if (dek) return dek;
-    console.warn('dek: Gemini failed — trying OpenRouter fallback');
+    console.warn('dek: Groq failed — trying OpenRouter fallback');
   }
 
   const openrouterKey = opts.apiKey ?? process.env.OPENROUTER_API_KEY ?? '';
