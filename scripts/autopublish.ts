@@ -88,7 +88,9 @@ const run = async () => {
 
     if (!dryRun) {
       await db.update(editorialStories)
-        .set({ status: 'published', publishedAt: new Date(), updatedAt: new Date() })
+        // Keep the story's date (paper/feed publication date set at propose);
+        // now() only for rows created before that behaviour.
+        .set({ status: 'published', publishedAt: story.publishedAt ?? new Date(), updatedAt: new Date() })
         .where(eq(editorialStories.id, story.id));
       await db.insert(publicationEvents).values({
         storyId: story.id,

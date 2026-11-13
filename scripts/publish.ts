@@ -44,8 +44,8 @@ const run = async () => {
   }
 
   // publishedAt: --date wins; then --use-paper-date (paper pub date clamped to
-  // today — an article can never go live before it exists); default now.
-  let publishedAt = new Date();
+  // today — an article can never go live before it exists); default preserves the story date set at propose time (the paper's publication date), falling back to now for drafts created before that behaviour.
+  let publishedAt = story.publishedAt ?? new Date();
   let dateOverride = false;
   if (explicitDate) { publishedAt = parseDate(explicitDate); dateOverride = true; }
   else if (usePaperDate && story.paperId) {

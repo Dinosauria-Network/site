@@ -240,6 +240,12 @@ const run = async () => {
         author: SITE_NAME,
         sourcePostId: nextPostId,
         editorialScore: paper.editorialScore,
+        // The story keeps its original publication date — a paper from 2025-10
+        // stays 2025-10, not "today". Papers with no deposited date fall back
+        // to createdAt as before; future-dated sweep results clamp to today.
+        publishedAt: paper.publicationDate && paper.publicationDate > new Date()
+          ? new Date()
+          : paper.publicationDate ?? null,
       },
       status: 'draft',
       publishingMode: 'auto',
