@@ -45,5 +45,5 @@ docker exec -d <container> sh -c 'cd /app && npm run scrape'
 ## Check results
 ```bash
 npm run build            # Static site builds from updated JSON
-curl https://dinosauria.network/api/genus   # Verify new posts visible
+curl https://dinosauria.net/api/genus   # Verify new posts visible
 ```
