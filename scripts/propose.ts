@@ -170,7 +170,12 @@ const run = async () => {
     while (await exists(slug)) { slug = `${base}-${n}`; n++; }
 
     const meta = (paper.metadata ?? {}) as any;
-    const url = paper.doi ? `https://doi.org/${paper.doi}` : (meta.url ?? meta.sourceUrl ?? '');
+    // RSS/blog records carry the article URL as a plain string in metadata.link.
+    // (Crossref, by contrast, deposits `link` as an ARRAY of text-miner URLs —
+    // only trust it when it's a string.) Without this, RSS-sourced papers
+    // proposed with url='' → no og:image scrape, no source link on the story.
+    const metaLink = typeof meta.link === 'string' && meta.link.trim() ? meta.link.trim() : undefined;
+    const url = paper.doi ? `https://doi.org/${paper.doi}` : (metaLink ?? meta.url ?? meta.sourceUrl ?? '');
     const rawAbstract = typeof paper.abstract === 'string' ? paper.abstract : '';
     const abstract = stripTags(rawAbstract).replace(/^abstract[:\s—–-]+/i, '');
     let description = sentencePrefix(abstract, 240);
