@@ -54,7 +54,8 @@ const run = async () => {
     const body = (s.body ?? {}) as any;
     const img = body.image ? 'img ok' : 'NEEDS IMAGE';
     const score = body.editorialScore ?? 'n/a';
-    console.log(`[${s.status}] ${s.slug}\n  ${img} | score=${score} | postId=${body.sourcePostId ?? 'n/a'}${licenseLine(s, body)}\n  ${s.headline}\n  ${body.url ?? ''}\n`);
+    const ai = body.dekGenerated ? ' | dek=AI-GENERATED (review)' : '';
+    console.log(`[${s.status}] ${s.slug}\n  ${img} | score=${score} | postId=${body.sourcePostId ?? 'n/a'}${licenseLine(s, body)}${ai}\n  ${s.headline}\n  ${body.url ?? ''}\n`);
   }
 
   if (needsImage.length) {

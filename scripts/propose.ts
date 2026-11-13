@@ -1,6 +1,7 @@
 import { db } from '../lib/db/client';
 import { researchPapers, editorialStories, mediaAssets } from '../lib/db/schema';
 import { scrapeArticleMeta } from '../lib/article-scraper';
+import { generateDek } from '../lib/ai/dek';
 import { writeDerivatives } from '../lib/image-derivatives';
 import { taxonQuery, findCommonsMatch } from '../lib/images/commons';
 import { extractLicense, stripTags, sentencePrefix } from '../lib/license';
@@ -181,9 +182,25 @@ const run = async () => {
     const rawAbstract = typeof paper.abstract === 'string' ? paper.abstract : '';
     const abstract = stripTags(rawAbstract).replace(/^abstract[:\s—–-]+/i, '');
     let description = sentencePrefix(abstract, 240);
+    let dekGenerated = false;
     if (!description.trim()) {
-      description = headline; // honest fallback — never store a blank excerpt
-      console.warn('WARN:', slug, 'has no abstract; description falls back to headline');
+      // Publisher blocked the abstract — try an honest, title-grounded AI dek
+      // instead of repeating the headline (marked dekGenerated for review).
+      // Skip generation in --dry-run — free-model rate limits are tight and a
+      // dry run creates nothing, so the dek would never be used.
+      const aiDek = dryRun ? null : await generateDek({
+        title: headline,
+        journal: paper.journalName,
+        year: paper.publicationDate ? paper.publicationDate.getUTCFullYear() : null,
+      });
+      if (aiDek) {
+        description = aiDek;
+        dekGenerated = true;
+        console.log('dek: AI-generated for', slug, '→', aiDek.slice(0, 80));
+      } else {
+        description = headline; // honest fallback — never store a blank excerpt
+        console.warn('WARN:', slug, dryRun ? 'no abstract — would attempt AI dek outside dry-run' : 'has no abstract and no AI dek; description falls back to headline');
+      }
     }
     // License hint from EPMC isOpenAccess / Crossref license[] — used only for asset metadata, never to block.
     const license = extractLicense(meta);
@@ -247,6 +264,7 @@ const run = async () => {
         author: SITE_NAME,
         sourcePostId: nextPostId,
         editorialScore: paper.editorialScore,
+        ...(dekGenerated ? { dekGenerated: true } : {}),
         // The story keeps its original publication date — a paper from 2025-10
         // stays 2025-10, not "today". Papers with no deposited date fall back
         // to createdAt as before; future-dated sweep results clamp to today.
