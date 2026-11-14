@@ -16,7 +16,7 @@ const raw = JSON.parse(fs.readFileSync('_data/news-posts.json', 'utf-8'));
       `);
       console.log('Backfilled image:', title.slice(0, 50));
     } catch (e) {
-      console.log('Skip:', title.slice(0, 50));
+      console.log('Skip:', title.slice(0, 50), '—', String(e).slice(0, 160));
     }
   }
 })();

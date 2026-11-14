@@ -1,6 +1,7 @@
 import { db } from '../lib/db/client';
 import { researchPapers, editorialStories } from '../lib/db/schema';
 import { classifyDinosaur } from '../lib/ai/jev-style';
+import { and, desc, eq, gte, isNull, lt, sql } from 'drizzle-orm';
 
 /**
  * Classify unscored papers and persist editorial_score.
@@ -106,5 +107,4 @@ const run = async () => {
   }
 };
 
-import { and, desc, eq, gte, isNull, lt, sql } from 'drizzle-orm';
 run().catch((e) => { console.error(e); process.exit(1); });

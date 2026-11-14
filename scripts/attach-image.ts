@@ -1,5 +1,6 @@
 import { db } from '../lib/db/client';
 import { editorialStories, mediaAssets } from '../lib/db/schema';
+import { getStoryBySlug } from './lib/story';
 import { and, eq } from 'drizzle-orm';
 import { writeDerivatives } from '../lib/image-derivatives';
 import sharp from 'sharp';
@@ -18,22 +19,32 @@ if (!slug || !source) {
   process.exit(1);
 }
 
+// Slugs name a file inside public/images/news/ — never allow path traversal.
+if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+  console.error('Invalid slug (lowercase letters, digits, hyphens only):', slug);
+  process.exit(1);
+}
 const writeBytes = (buf: Buffer, ext: string) => {
   const dir = path.join(process.cwd(), 'public', 'images', 'news');
-  fs.mkdirSync(dir, { recursive: true });
+  const resolvedDir = path.join(path.resolve(dir), '');
   const file = `${slug}.${ext}`;
+  const target = path.join(resolvedDir, file);
+  if (!target.startsWith(resolvedDir)) {
+    console.error('Refusing to write outside images/news:', target);
+    process.exit(1);
+  }
+  fs.mkdirSync(resolvedDir, { recursive: true });
   const storagePath = `/images/news/${file}`;
-  fs.writeFileSync(path.join(dir, file), buf);
+  fs.writeFileSync(target, buf);
   return storagePath;
 };
 
 const run = async () => {
-  const [story] = await db.select().from(editorialStories).where(eq(editorialStories.slug, slug)).limit(1);
-  if (!story) { console.error('No story:', slug); process.exit(1); }
+  const story = await getStoryBySlug(slug);
 
   let bytes: Buffer;
   if (/^https?:\/\//.test(source)) {
-    const res = await fetch(source, { headers: { 'user-agent': 'DinosauriaNetwork/1.0 (mailto:research@dinosauria.network)' } });
+    const res = await fetch(source, { headers: { 'user-agent': 'DinosauriaNetwork/1.0 (mailto:research@dinosauria.net)' } });
     if (!res.ok) { console.error('Fetch failed:', res.status, source); process.exit(1); }
     const ct = res.headers.get('content-type') ?? '';
     if (!ct.startsWith('image/')) { console.error('Not an image content-type:', ct); process.exit(1); }

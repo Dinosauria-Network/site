@@ -236,7 +236,8 @@ function loadPosts(): NewsPost[] {
     const rawData = JSON.parse(raw) as any[];
     cachedPosts = rawData.map(mapWpPost).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return cachedPosts;
-  } catch {
+  } catch (e) {
+    console.warn('genus-data: failed to load news-posts.json, using built-in fallback posts —', String(e).slice(0, 200));
     cachedPosts = FALLBACK_POSTS;
     return FALLBACK_POSTS;
   }
@@ -265,7 +266,7 @@ export function getPostsPaginated(page: number, perPage: number): {
   };
 }
 
-export function getPostById(id: number): NewsPost | null {
+function getPostById(id: number): NewsPost | null {
   return loadPosts().find((p) => p.id === id) ?? null;
 }
 
@@ -363,7 +364,10 @@ export async function getEnrichedPostById(id: number): Promise<EnrichedPost | nu
     const cacheFile = fs.readFileSync(path.join(process.cwd(), "_data", "enriched-cache.json"), "utf-8");
     const cacheData = JSON.parse(cacheFile);
     if (cacheData[String(id)]) { const normalized = mapWpPost(cacheData[String(id)]) as EnrichedPost; enrichedCache.set(id, normalized); return normalized; }
-  } catch { /* no build-time cache */ }
+  } catch (e) {
+    // Missing/corrupt build-time cache — expected on fresh checkouts, but never silent.
+    console.warn('genus-data: enriched-cache.json unreadable, will re-scrape or fall back —', String(e).slice(0, 160));
+  }
   const post = getPostById(id);
   if (!post || !post.url) { enrichedCache.set(id, post as EnrichedPost | null); return post as EnrichedPost | null; }
   const enriched = await enrichPostMetadata(post);

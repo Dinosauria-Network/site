@@ -27,7 +27,7 @@ const OUTLETS = [
   { name: 'Noticias de la Ciencia y la Tecnología', url: 'https://noticiasdelaciencia.com/coverrss' },
 ] as const;
 
-const UA = 'DinosauriaNetwork/1.0 (mailto:research@dinosauria.network)';
+const UA = 'DinosauriaNetwork/1.0 (mailto:research@dinosauria.net)';
 const TIMEOUT_MS = 15_000;
 
 const parser = new Parser({ timeout: TIMEOUT_MS, headers: { 'User-Agent': UA } });

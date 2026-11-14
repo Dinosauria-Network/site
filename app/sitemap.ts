@@ -2,6 +2,9 @@ import { MetadataRoute } from "next";
 import { getAllGenera, getAllPosts } from "@/lib/genus-data";
 import { SITE_URL } from "@/lib/site";
 
+// Revalidate weekly — static paths only; JSON dates are real dates.
+export const revalidate = 86400;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL;
   const genera = getAllGenera();

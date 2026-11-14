@@ -9,7 +9,7 @@ interface NewsPost {
 
 const cleanTitle = (t: string) => t.split(' | ').slice(0, 1).join('').trim();
 
-const parseDate = (d: string): Date | null => { try { const dt = new Date(d); return isNaN(dt.getTime()) ? null : dt; } catch { return null; } };
+const parseDate = (d: string): Date | null => { try { const dt = new Date(d); if (isNaN(dt.getTime())) { console.warn('migrate-json-stories: ignoring unparseable date:', d); return null; } return dt; } catch (e) { console.warn('migrate-json-stories: ignoring unparseable date:', d, '—', String(e)); return null; } };
 
 const run = async () => {
   const raw = JSON.parse(fs.readFileSync('_data/news-posts.json', 'utf-8')) as NewsPost[];

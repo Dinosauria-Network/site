@@ -38,8 +38,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/auth-helpers-nextjs": "^0.15.0",
-    "@supabase/supabase-js": "^2.109.0",
     "article-parser": "^7.2.6-rc1",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.3",
@@ -48,8 +46,7 @@
     "react-dom": "19.3.0",
     "rss": "^1.2.2",
     "rss-parser": "^3.13.0",
-    "sharp": "^0.35.5",
-    "zod": "^4.6.7"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

@@ -1,18 +1,15 @@
 import { db } from '../lib/db/client';
 import { editorialStories, publicationEvents, researchPapers } from '../lib/db/schema';
+import { getStoryBySlug, argValue } from './lib/story';
 import { eq } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 
 const all = process.argv.slice(2);
-const argValue = (flag: string) => {
-  const i = all.indexOf(flag);
-  return i >= 0 ? all[i + 1] : undefined;
-};
-const explicitDate = argValue('--date');
+const explicitDate = argValue(all, '--date');
 const usePaperDate = all.includes('--use-paper-date');
 const positional = all.filter((a, i) => !a.startsWith('--') && a !== explicitDate);
-const slug = (argValue('--slug') ?? positional[0]);
+const slug = (argValue(all, '--slug') ?? positional[0]);
 if (!slug) { console.error('usage: npm run editorial:publish -- <slug> [--date YYYY-MM-DD | --use-paper-date]'); process.exit(1); }
 const parseDate = (s: string) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
@@ -23,8 +20,7 @@ const parseDate = (s: string) => {
 };
 
 const run = async () => {
-  const [story] = await db.select().from(editorialStories).where(eq(editorialStories.slug, slug)).limit(1);
-  if (!story) { console.error('No story:', slug); process.exit(1); }
+  const story = await getStoryBySlug(slug);
   if (story.status === 'published') { console.log('Already published:', slug); return; }
 
   const body = (story.body ?? {}) as { image?: string | null };

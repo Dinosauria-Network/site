@@ -1,5 +1,6 @@
 import { db } from '../lib/db/client';
 import { editorialStories, publicationEvents } from '../lib/db/schema';
+import { getStoryBySlug } from './lib/story';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -11,8 +12,7 @@ const slug = process.argv.slice(2).find((a) => !a.startsWith('--'));
 if (!slug) { console.error('usage: npm run editorial:unpublish -- <slug>'); process.exit(1); }
 
 const run = async () => {
-  const [story] = await db.select().from(editorialStories).where(eq(editorialStories.slug, slug)).limit(1);
-  if (!story) { console.error('No story:', slug); process.exit(1); }
+  const story = await getStoryBySlug(slug);
   if (story.status !== 'published') { console.error('Not published:', slug, '(status:', story.status + ')'); process.exit(1); }
 
   await db.update(editorialStories)

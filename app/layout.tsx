@@ -3,7 +3,6 @@ import { getSiteMetadata } from "@/lib/genus-data";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Script from "next/script";
-import { ThemeProvider } from "@/app/providers/ThemeProvider";
 import "@/app/styles/globals.scss";
 import SkipLink from "@/components/SkipLink";
 import PreviewBanner from "@/components/PreviewBanner";
@@ -42,7 +41,8 @@ export default function RootLayout({
         <link rel="stylesheet" href="/css/main.css" />
       </head>
       <body className="home blog">
-        <ThemeProvider>
+        {/* Static theme root: SCSS modules scope styles under .theme-light. No client state needed. */}
+        <div className="theme-light" style={{ minHeight: "100vh" }}>
         <Suspense fallback={null}>
           <PreviewBanner />
         </Suspense>
@@ -59,22 +59,23 @@ export default function RootLayout({
           </div>
         </header>
 
-        <div className="wrap container" role="document">
+        <div className="wrap container" role="document" id="main-content">
           <div className="content row">{children}</div>
         </div>
 
         <footer className="site-footer" role="contentinfo">
           <Footer />
         </footer>
-        </ThemeProvider>
+        </div>
 
+        {/* Only masonry pages need these; MasonryGrid polls for window.Masonry, tolerating late arrival. */}
         <Script
           src="/js/imagesloaded.pkgd.min.js"
-          strategy="beforeInteractive"
+          strategy="lazyOnload"
         />
         <Script
           src="/js/masonry.pkgd.min.js"
-          strategy="beforeInteractive"
+          strategy="lazyOnload"
         />
       </body>
     </html>

@@ -13,6 +13,7 @@ export default async function SearchPage({
 }) {
   const sp = await searchParams;
   const term = (sp.q || "").toLowerCase();
+  const RESULT_CAP = 50;
   const posts = getAllPosts();
   const genera = getAllGenera();
 
@@ -30,6 +31,8 @@ export default async function SearchPage({
           (g.post_content || "").toLowerCase().includes(term)
       )
     : genera;
+  const cappedPostResults = postResults.slice(0, RESULT_CAP);
+  const cappedGenusResults = genusResults.slice(0, RESULT_CAP);
 
   return (
     <div className="search-page">
@@ -45,14 +48,14 @@ export default async function SearchPage({
       </form>
       {term && (
         <>
-          <h2>News ({postResults.length})</h2>
-          {postResults.map((p) => (
+          <h2>News ({postResults.length}{postResults.length > cappedPostResults.length ? ` — showing first ${RESULT_CAP}` : ""})</h2>
+          {cappedPostResults.map((p) => (
             <div key={p.id}>
               <Link href={`/news/${p.id}`}>{p.title}</Link>
             </div>
           ))}
-          <h2>Genera ({genusResults.length})</h2>
-          {genusResults.map((g) => (
+          <h2>Genera ({genusResults.length}{genusResults.length > cappedGenusResults.length ? ` — showing first ${RESULT_CAP}` : ""})</h2>
+          {cappedGenusResults.map((g) => (
             <div key={g.id}>
               <Link href={`/genus/${g.post_name}`}>{g.post_title}</Link>
             </div>

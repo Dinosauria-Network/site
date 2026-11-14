@@ -76,7 +76,7 @@ export const crossrefAdapter: SourceAdapter = {
     url.searchParams.set('filter', 'type:journal-article');
     url.searchParams.set('mailto', 'admin@dinosauria.net'); // polite
 
-    const res = await fetch(url.toString(), { headers: { 'User-Agent': 'Dinosauria-Science-Pub/1.0' } });
+    const res = await fetch(url.toString(), { headers: { 'User-Agent': 'Dinosauria-Science-Pub/1.0' }, signal: AbortSignal.timeout(20_000) });
     if (!res.ok) throw new Error(`Crossref error ${res.status}`);
     const data = await res.json() as { message?: { items?: Array<unknown>; 'total-results'?: number } };
     const items = data.message?.items || [];

@@ -13,7 +13,11 @@ async function run() {
       const prob = (cls as any).answers?.dinosaur?.noul ?? (cls as any).questions?.dinosaur?.probability ?? 0;
       console.log(prob.toFixed(3), '|', (p.post_title || p.title || '').slice(0, 60));
       if (prob >= 0.25) keep.push(p);
-    } catch { keep.push(p); }
+    } catch (e) {
+      // Keep the item on classifier failure, but record that it happened.
+      console.warn('prune-json-dinosaur: classifier failed, keeping', (p.post_title || p.title || '').slice(0, 60), '—', String(e).slice(0, 160));
+      keep.push(p);
+    }
   }
   fs.writeFileSync('_data/news-posts.json', JSON.stringify(keep, null, 2));
   console.log('Kept', keep.length, 'of', raw.length);

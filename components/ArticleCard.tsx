@@ -43,7 +43,7 @@ export default function ArticleCard({ post, index, preview }: ArticleCardProps) 
     const isUrl = a ? /^https?:\/\//i.test(a) : false;
     let label = a ?? '';
     if (a && isUrl) {
-      try { label = new URL(a).hostname.replace(/^www\./, ''); } catch { /* keep full string */ }
+      try { label = new URL(a).hostname.replace(/^www\./, ''); } catch { console.warn('ArticleCard: unparseable imageAttribution URL, keeping full string:', a.slice(0, 120)); }
     } else if (label.length > 80) {
       label = label.slice(0, 77) + '…';
     }

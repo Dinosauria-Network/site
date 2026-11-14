@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cache } from "react";
 import { getEnrichedPostById, getSourceFavicon, formatTimeAgo, getAllPosts } from "@/lib/genus-data";
 import { notFound } from "next/navigation";
 import { getPublishedStoryByNumericId } from "@/lib/db/stories";
@@ -22,10 +23,13 @@ interface DetailPost {
   ogImage?: string;
 }
 
-async function getDetailPost(
-  id: number,
-  includeDrafts = false
-): Promise<DetailPost | null> {
+// React cache(): generateMetadata and the page both call getDetailPost in one
+// render — memoize so the DB lookup (and any JSON-fallback scrape) happens once.
+const getDetailPost = cache(
+  async function getDetailPost(
+    id: number,
+    includeDrafts = false
+  ): Promise<DetailPost | null> {
   // DB first: pipeline stories (postIds issued from max+1) collide with
   // retired JSON ids — the DB story wins for its own id.
   const story = await getPublishedStoryByNumericId(id, includeDrafts);
@@ -63,21 +67,30 @@ async function getDetailPost(
   }
 
   const jsonPost = await getEnrichedPostById(id);
-  return jsonPost as unknown as DetailPost | null;
-}
+  // EnrichedPost ⊃ DetailPost; only `image` differs (optional → required).
+  return jsonPost ? { ...jsonPost, image: jsonPost.image ?? "" } as DetailPost : null;
+});
 
 interface PageParams {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+// Accept any base-10 integer prefix ("007" → 7) as before; NaN stays null.
+function parsePostId(raw: string): number | null {
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
 export async function generateMetadata({
   params,
   searchParams,
 }: PageParams) {
-  const { id } = await params;
+  const { id: rawId } = await params;
   const sp = await searchParams;
-  const post = await getDetailPost(parseInt(id, 10), isPreviewEnabled(sp));
+  const id = parsePostId(rawId);
+  if (id === null) return { title: pageTitle("Dinosaur News") };
+  const post = await getDetailPost(id, isPreviewEnabled(sp));
   if (!post) return { title: pageTitle("Dinosaur News") };
   return {
     title: post.ogTitle || post.title || SITE_NAME,
@@ -101,9 +114,11 @@ export default async function NewsDetailPage({
   params,
   searchParams,
 }: PageParams) {
-  const { id } = await params;
+  const { id: rawId } = await params;
   const sp = await searchParams;
-  const post = await getDetailPost(parseInt(id, 10), isPreviewEnabled(sp));
+  const id = parsePostId(rawId);
+  if (id === null) notFound();
+  const post = await getDetailPost(id, isPreviewEnabled(sp));
 
   if (!post) {
     notFound();
@@ -128,7 +143,7 @@ export default async function NewsDetailPage({
             {paperUrl ? (
               <a
                 href={paperUrl}
-                rel="author"
+                rel="author noopener noreferrer"
                 className="fn"
                 target="_blank"
                 title="opens new window"
@@ -152,7 +167,8 @@ export default async function NewsDetailPage({
       {post.image && (
         <div className="post-image alignleft">
           <picture className="responsive-image">
-            <img className="wp-post-image" src={post.image} alt={post.title} />
+            {/* Legacy JSON images may be any ratio — no fixed width/height to avoid distortion. */}
+            <img className="wp-post-image" src={post.image} alt={post.title} decoding="async" />
           </picture>
           {post.imageAttribution && (
             <figcaption className="post-image-attribution">

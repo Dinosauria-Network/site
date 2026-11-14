@@ -55,7 +55,7 @@ export default function MasonryGrid({
   }, []);
 
   return (
-    <main id="main" ref={gridRef} className="main grid" role="main">
+    <main ref={gridRef} className="main grid">
       {children}
     </main>
   );

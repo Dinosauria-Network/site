@@ -4,8 +4,7 @@ import { useSearchParams } from 'next/navigation';
 
 /**
  * Site-wide preview banner rendered at the very top of the page (root layout).
- * Development-only: production previews require the PREVIEW_TOKEN env var,
- * which must not leak to the client — so prod shows nothing.
+ * Development-only: production previews are fully disabled, so prod shows nothing.
  */
 export default function PreviewBanner() {
   const sp = useSearchParams();

@@ -14,11 +14,22 @@ const TOLERANCE = 0.005;
  * Idempotent for bases already on-ratio; derivatives are rewritten
  * from the (possibly cropped) base.
  */
+/** Resolve storagePath inside public/ and refuse anything that escapes it. */
+function publicPath(storagePath: string): string {
+  const pubRoot = path.resolve(process.cwd(), 'public');
+  // Strip leading slashes so "/images/news/x.jpg" stays relative to public/.
+  const base = path.join(pubRoot, storagePath.replace(/^[/\\]+/, ''));
+  if (!base.startsWith(pubRoot + path.sep)) {
+    throw new Error(`storagePath escapes public/: ${storagePath}`);
+  }
+  return base;
+}
+
 export async function normalizeCardImage(storagePath: string): Promise<{
   croppedBase: boolean;
   derivatives: string[];
 }> {
-  const base = path.join(process.cwd(), 'public', storagePath);
+  const base = publicPath(storagePath);
   const ext = path.extname(base).toLowerCase();
   const stem = base.slice(0, base.length - ext.length);
 

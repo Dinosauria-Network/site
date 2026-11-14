@@ -1,4 +1,5 @@
 import { pgTable, serial, text, timestamp, jsonb, pgEnum, integer, boolean, uuid, index, unique, real } from 'drizzle-orm/pg-core';
+import { desc } from 'drizzle-orm';
 
 export const peerReviewStatus = pgEnum('peer_review_status', ['peer_reviewed', 'preprint', 'unknown']);
 export const retractionStatus = pgEnum('retraction_status', ['not_retracted', 'retracted', 'under_review', 'unknown']);
@@ -89,6 +90,7 @@ export const editorialStories = pgTable('editorial_stories', {
   index('stories_slug_idx').on(table.slug),
   unique('stories_paper_unique').on(table.paperId),
   index('stories_status_idx').on(table.status),
+  index('stories_status_published_at_idx').on(table.status, desc(table.publishedAt)),
 ]);
 
 export const paperSources = pgTable('paper_sources', {

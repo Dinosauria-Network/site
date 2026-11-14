@@ -62,7 +62,7 @@ const run = async () => {
           publicationDate: r.publicationDate ?? null,
           journalName: r.journalName || null,
           publisher: r.publisher || null,
-          peerReviewStatus: (r.peerReviewStatus as any) || 'unknown',
+          peerReviewStatus: r.peerReviewStatus ?? 'unknown',
           studyType: null,
           metadata: (r.rawMetadata || {}) as any,
         }).onConflictDoNothing();
@@ -81,14 +81,20 @@ const run = async () => {
               const why = result.attempts.filter((a) => a.outcome !== 'skipped').map((a) => `${a.provider}:${a.outcome}`).join(', ');
               console.log(`  abstract: ${result.status} (${why})`);
             }
-          } catch { /* enrichment is optional */ }
+          } catch (e) {
+            // Optional path, but failures must be visible (fail-loud).
+            console.warn('  WARN abstract enrichment failed for', r.doi ?? r.title?.slice(0, 40) ?? '(untitled)', '—', String(e).slice(0, 160));
+          }
         }
         // Optional Jev-Style classification (Vercel-compatible remote)
         if (process.env.JEVSTYLE_API_KEY && r.title) {
           try {
             const cls = await classifyDinosaur(r.title + ' ' + (r.abstract || ''), process.env.JEVSTYLE_API_KEY);
             console.log('  classified:', r.title?.slice(0, 40), 'dinosaur prob:', cls?.answers?.dinosaur?.noul ?? cls?.questions?.dinosaur?.probability);
-          } catch (e) { /* silent. classification is optional */ }
+          } catch (e) {
+            // Optional path, but failures must be visible (fail-loud).
+            console.warn('  WARN classification failed for', r.doi ?? r.title?.slice(0, 40) ?? '(untitled)', '—', String(e).slice(0, 160));
+          }
         }
       }
 

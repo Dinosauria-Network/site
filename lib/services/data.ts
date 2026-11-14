@@ -73,7 +73,8 @@ export function getAllPosts(): NewsPost[] {
       const dateB = new Date(b.post_date || b.date || b.pubDate || b.meta?.scrapedAt || 0).getTime();
       return dateB - dateA; // newest first
     });
-  } catch {
+  } catch (e) {
+    console.warn('services/data: failed to load news-posts.json —', String(e).slice(0, 200));
     return [];
   }
 }

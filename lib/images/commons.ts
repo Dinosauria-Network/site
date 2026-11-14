@@ -18,11 +18,11 @@ export interface CommonsCandidate {
   licenseShort: string;
 }
 
-const UA = 'DinosauriaNetwork/1.0 (mailto:research@dinosauria.network)';
+import { stripTags } from '../license';
+
+const UA = 'DinosauriaNetwork/1.0 (mailto:research@dinosauria.net)';
 const TIMEOUT_MS = 12_000;
 const MIN_WIDTH = 1200;
-
-const clean = (s: string) => (s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 function fetchJson(url: string): Promise<any> {
   const controller = new AbortController();
@@ -70,7 +70,7 @@ export async function searchCommons(tokens: string[], limit = 10): Promise<Commo
       if (seen.has(title)) continue;
       const ii = (p.imageinfo || [])[0];
       if (!ii || ii.width < MIN_WIDTH) continue;
-      const licenseShort = clean(ii.extmetadata?.LicenseShortName?.value);
+      const licenseShort = stripTags(ii.extmetadata?.LicenseShortName?.value);
       if (!isAllowedLicense(licenseShort)) continue;
       const tl = title.toLowerCase();
       if (!terms.some((t) => tl.includes(t))) continue;
@@ -103,7 +103,9 @@ export async function findCommonsMatch(token: string): Promise<CommonsCandidate 
   try {
     const hits = await searchCommons([token, ...(ALIASES[token.toLowerCase()] ?? [])], 10);
     return hits[0] ?? null;
-  } catch {
+  } catch (e) {
+    // A Commons outage must be distinguishable from "no matching file".
+    console.warn('commons: findCommonsMatch failed for', JSON.stringify(token), '—', String(e).slice(0, 200));
     return null;
   }
 }

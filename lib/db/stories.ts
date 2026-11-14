@@ -83,18 +83,21 @@ export async function getPublishedStoriesPaginated(
     const where = visibleStatuses(opts?.includeDrafts);
     const offset = Math.max(0, (page - 1) * perPage);
 
-    const [{ value: total }] = await db
-      .select({ value: count() })
-      .from(editorialStories)
-      .where(where);
-
-    const rows = await db
-      .select()
-      .from(editorialStories)
-      .where(where)
-      .orderBy(desc(editorialStories.publishedAt), desc(editorialStories.createdAt))
-      .limit(perPage)
-      .offset(offset);
+    const [countRows, rows] = await Promise.all([
+      db.select({ value: count() }).from(editorialStories).where(where),
+      db
+        .select()
+        .from(editorialStories)
+        .where(where)
+        // NULLS LAST: undated drafts must not jump ahead of dated stories under DESC.
+        .orderBy(
+          sql`${editorialStories.publishedAt} DESC NULLS LAST`,
+          desc(editorialStories.createdAt),
+        )
+        .limit(perPage)
+        .offset(offset),
+    ]);
+    const total = countRows[0]?.value ?? 0;
 
     return {
       posts: rows.map(storyToNewsPost),

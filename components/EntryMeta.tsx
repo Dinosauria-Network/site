@@ -25,7 +25,7 @@ export default function EntryMeta({ post, href }: EntryMetaProps) {
             {paperUrl ? (
                 <a
                 href={paperUrl}
-                rel="author"
+                rel="author noopener noreferrer"
                 className={styles.fn}
                 target="_blank"
                 title="opens new window"

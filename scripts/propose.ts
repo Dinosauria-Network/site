@@ -86,17 +86,20 @@ const isCcLicense = (name?: string) => /^cC/i.test(name || '');
 
 const downloadImage = async (imageUrl: string, slug: string): Promise<string | null> => {
   try {
-    const res = await fetch(imageUrl, { headers: { 'user-agent': 'DinosauriaBot/1.0' } });
-    if (!res.ok) return null;
+    const res = await fetch(imageUrl, { headers: { 'user-agent': 'DinosauriaBot/1.0' }, signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) { console.warn('propose: image download HTTP', res.status, imageUrl.slice(0, 160)); return null; }
     const ctype = res.headers.get('content-type') || '';
-    if (!ctype.startsWith('image/')) return null;
+    if (!ctype.startsWith('image/')) { console.warn('propose: not an image content-type:', ctype || '(none)', imageUrl.slice(0, 160)); return null; }
     const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length > 5 * 1024 * 1024) return null;
+    if (buf.length > 5 * 1024 * 1024) { console.warn('propose: image too large (>5MB), refusing:', imageUrl.slice(0, 160)); return null; }
     const ext = (ctype.split('/')[1] || 'jpeg').replace('jpeg', 'jpg').replace('+xml', '').replace('svg', 'svg');
     const file = `${slug}.${ext}`;
     fs.writeFileSync(path.join(process.cwd(), 'public', 'images', 'news', file), buf);
     return `/images/news/${file}`;
-  } catch { return null; }
+  } catch (e) {
+    console.warn('propose: image download failed for', imageUrl.slice(0, 160), '—', String(e).slice(0, 160));
+    return null;
+  }
 };
 
 const run = async () => {
@@ -265,13 +268,13 @@ const run = async () => {
         sourcePostId: nextPostId,
         editorialScore: paper.editorialScore,
         ...(dekGenerated ? { dekGenerated: true } : {}),
-        // The story keeps its original publication date — a paper from 2025-10
-        // stays 2025-10, not "today". Papers with no deposited date fall back
-        // to createdAt as before; future-dated sweep results clamp to today.
-        publishedAt: paper.publicationDate && paper.publicationDate > new Date()
-          ? new Date()
-          : paper.publicationDate ?? null,
       },
+      // The story keeps its original publication date — a paper from 2025-10
+      // stays 2025-10, not "today". Papers with no deposited date keep NULL and
+      // sort after dated stories in the feed; future-dated sweep results clamp to today.
+      publishedAt: paper.publicationDate && paper.publicationDate > new Date()
+        ? new Date()
+        : paper.publicationDate ?? null,
       status: 'draft',
       publishingMode: 'auto',
       featured: false,
