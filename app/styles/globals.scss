@@ -1,0 +1,21 @@
+@use "_colors.scss";
+
+h1, h2, h3, h4, h5, h6 {
+    font-feature-settings: "titl", "case";
+}
+
+body {
+    font-feature-settings: "lnum", "sups", "hist", "liga", "dlig", "calt";
+}
+
+@media (width >= 1280px) {
+    .main {
+        margin-right: 240px;
+    }
+}
+
+@media (width >= 1600px) {
+    .main {
+        margin-right: 25%;
+    }
+}

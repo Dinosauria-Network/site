@@ -1,0 +1,155 @@
+{
+  "site": {
+    "name": "Dinosauria Network",
+    "url": "https://dinosauria.net",
+    "generatedAt": "2026-10-25T16:30:44.323Z"
+  },
+  "postTypes": {
+    "genus": [
+      {
+        "id": 3090,
+        "post_author": 1,
+        "post_date": "2015-02-04 00:18:07",
+        "post_date_gmt": "2015-02-04 08:18:07",
+        "post_content": null,
+        "post_title": "Adelolophus",
+        "post_excerpt": null,
+        "post_status": "publish",
+        "comment_status": "closed",
+        "ping_status": "closed",
+        "post_password": null,
+        "post_name": "adelolophus",
+        "to_ping": null,
+        "pinged": null,
+        "post_modified": "2023-02-10 11:52:15",
+        "post_modified_gmt": "2023-02-10 19:52:15",
+        "post_content_filtered": null,
+        "post_parent": 0,
+        "guid": "http://dinosaurianetwork.com/?post_type=genus&#038;p=3090",
+        "menu_order": 0,
+        "post_type": "genus",
+        "post_mime_type": null,
+        "comment_count": 0,
+        "meta": {
+          "_edit_last": 1,
+          "period": "cretaceous",
+          "_period": "field_54d16cc737053",
+          "description-date": 20141201,
+          "_description-date": "field_54d16ebf6df9e",
+          "author": "Gates et al.",
+          "_author": "field_54d170e96b461",
+          "_edit_lock": "1676058735:1",
+          "genus_authority__author": "Gates et al.",
+          "genus_authority__paleodb": null,
+          "genus_authority__gbif": null,
+          "genus_authority__irmng": null,
+          "genus_authority__eol": null
+        },
+        "taxonomy": [
+          {
+            "term_id": 1136,
+            "name": "Cretaceous",
+            "slug": "cretaceous",
+            "taxonomy": "geological_time"
+          }
+        ]
+      },
+      {
+        "id": 3091,
+        "post_author": 1,
+        "post_date": "2015-02-04 00:15:40",
+        "post_date_gmt": "2015-02-04 08:15:40",
+        "post_content": null,
+        "post_title": "Alamosaurus",
+        "post_excerpt": null,
+        "post_status": "publish",
+        "comment_status": "closed",
+        "ping_status": "closed",
+        "post_password": null,
+        "post_name": "alamosaurus",
+        "to_ping": null,
+        "pinged": null,
+        "post_modified": "2023-02-10 11:52:15",
+        "post_modified_gmt": "2023-02-10 19:52:15",
+        "post_content_filtered": null,
+        "post_parent": 0,
+        "guid": "http://dinosaurianetwork.com/?post_type=genus&#038;p=3091",
+        "menu_order": 0,
+        "post_type": "genus",
+        "post_mime_type": null,
+        "comment_count": 0,
+        "meta": {
+          "_edit_last": 1,
+          "period": "creaceous",
+          "_period": "field_54d16cc737053",
+          "description-date": 20141201,
+          "_description-date": "field_54d16ebf6df9e",
+          "author": "Lehman",
+          "_author": "field_54d170e96b461",
+          "_edit_lock": "1676058735:1",
+          "genus_authority__author": "Lehman",
+          "genus_authority__paleodb": null,
+          "genus_authority__gbif": null,
+          "genus_authority__irmng": null,
+          "genus_authority__eol": null
+        },
+        "taxonomy": [
+          {
+            "term_id": 1137,
+            "name": "Late Cretaceous",
+            "slug": "late-cretaceous",
+            "taxonomy": "geological_time"
+          }
+        ]
+      },
+      {
+        "id": 3092,
+        "post_author": 1,
+        "post_date": "2015-02-04 00:12:25",
+        "post_date_gmt": "2015-02-04 08:12:25",
+        "post_content": null,
+        "post_title": "Stegosaurus",
+        "post_excerpt": null,
+        "post_status": "publish",
+        "comment_status": "closed",
+        "ping_status": "closed",
+        "post_password": null,
+        "post_name": "stegosaurus",
+        "to_ping": null,
+        "pinged": null,
+        "post_modified": "2023-02-10 11:52:15",
+        "post_modified_gmt": "2023-02-10 19:52:15",
+        "post_content_filtered": null,
+        "post_parent": 0,
+        "guid": "http://dinosaurianetwork.com/?post_type=genus&#038;p=3092",
+        "menu_order": 0,
+        "post_type": "genus",
+        "post_mime_type": null,
+        "comment_count": 0,
+        "meta": {
+          "_edit_last": 1,
+          "period": "jurassic",
+          "_period": "field_54d16cc737053",
+          "description-date": 20141201,
+          "_description-date": "field_54d16ebf6df9e",
+          "author": "Marsh",
+          "_author": "field_54d170e96b461",
+          "_edit_lock": "1676058735:1",
+          "genus_authority__author": "Marsh",
+          "genus_authority__paleodb": null,
+          "genus_authority__gbif": null,
+          "genus_authority__irmng": null,
+          "genus_authority__eol": null
+        },
+        "taxonomy": [
+          {
+            "term_id": 1138,
+            "name": "Jurassic",
+            "slug": "jurassic",
+            "taxonomy": "geological_time"
+          }
+        ]
+      }
+    ]
+  }
+}

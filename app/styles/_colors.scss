@@ -1,0 +1,65 @@
+// =============================================================================
+// REFINED GEOLOGICAL PRIMITIVES & THEME MAPS
+// =============================================================================
+
+$salt: #fffefb;
+
+// Light Strata
+$chalk-bright:    #e7e6e3; // Viewport canvas light
+$chalk-powder:    #d0cdc9; // Surface-1 light
+$limestone:       #b8b6ad; // Surface-2 light
+
+// Silt & Slate Strata (Harmonized Mid-tones)
+$silt-warm:       #807d76; // Subtle border / inner shadow
+$clay-sandy:      #7f7c79; // Default border
+$slate-warm:      #706c65; // Dark mode border / ambient shadow
+
+// Deep Shale & Fossil Strata (Harmonized Dark Tones)
+$shale-charcoal:  #48413a; // Muted dark text / dark surface-2
+$shale-iron:      #4f362a; // Recessed dark surface / active border
+$fossil-bed:      #3d2b20; // Surface-1 dark
+$obsidian:        #120f0d; // Viewport canvas dark / light primary text
+
+// Mineral Vein Accents
+$gold-ore:        #bf9c5a; // Button fills / focus rings
+$gold-text:       #a17f42; // WCAG AA text variant on light canvas
+$terracotta:      #92644d; // Secondary accent / badges
+$raw-umber:       #6d492e; // Accent hover / active
+
+$required: #0aa801;
+
+// LIGHT THEME MAP
+$theme-light-map: (
+  canvas:           $chalk-bright,
+  surface-1:        $chalk-powder,
+  surface-2:        $limestone,
+  text-primary:     $obsidian,
+  text-secondary:   $shale-charcoal,
+  border:           $clay-sandy,
+  border-subtle:    $silt-warm,
+  accent-primary:   $gold-ore,
+  accent-text:      $gold-text,
+  accent-secondary: $terracotta,
+  accent-hover:     $raw-umber,
+  shadow-highlight: -2px -2px 6px 0px rgba(255, 255, 255, 0.65),
+  shadow-ambient:   3px 5px 12px 0px rgba($slate-warm, 0.30),
+  shadow-deep:      1px 2px 4px 0px rgba($obsidian, 0.15)
+);
+
+// DARK THEME MAP
+$theme-dark-map: (
+  canvas:           $obsidian,
+  surface-1:        $fossil-bed,
+  surface-2:        $shale-charcoal,
+  text-primary:     $chalk-bright,
+  text-secondary:   $limestone,
+  border:           $slate-warm,
+  border-subtle:    $shale-iron,
+  accent-primary:   $gold-ore,
+  accent-text:      $gold-ore,
+  accent-secondary: $terracotta,
+  accent-hover:     $raw-umber,
+  shadow-highlight: -1px -1px 3px 0px rgba($chalk-powder, 0.12),
+  shadow-ambient:   4px 6px 16px 0px rgba(0, 0, 0, 0.50),
+  shadow-deep:      1px 2px 4px 0px rgba($obsidian, 0.80)
+);

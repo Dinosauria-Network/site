@@ -1,0 +1,107 @@
+/**
+ * AI-generated news deks for publisher-blocked papers (abstract unavailable).
+ *
+ * One honest sentence, grounded PRIMARILY in the title + journal + year.
+ * The model MAY add general context it is highly confident is associated
+ * with this specific, well-documented paper (e.g. what it found and why it
+ * matters) — but must NEVER invent numbers, methods, specimens, institutions
+ * or results, and must fall back to the title's implications when unsure or
+ * the paper is obscure to it. Used by propose as a fallback when the abstract
+ * resolver comes back empty; a machine-written dek is marked with
+ * body.dekGenerated so review can spot and replace it. Never overwrites a
+ * human- or abstract-derived dek.
+ *
+ * Providers (first match wins, with automatic fallback):
+ *   1. GROQ_API_KEY (or the misspelt GROK_API_KEY) → Groq, OpenAI-compatible
+ *      endpoint, gpt-oss-120b by default (GROQ_MODEL to override).
+ *      Free tier, no credit card. https://console.groq.com/keys
+ *   2. OPENROUTER_API_KEY → OpenRouter (OPENROUTER_MODEL to override).
+ *   None configured (or all fail) → null, propose degrades to the
+ *   headline fallback with a logged reason.
+ */
+export async function generateDek(input: { title: string; journal?: string | null; year?: number | null }, opts: { apiKey?: string; model?: string; timeoutMs?: number } = {}): Promise<string | null> {
+  const timeoutMs = opts.timeoutMs ?? 30_000;
+  const ctx = [
+    `Title: ${input.title}`,
+    input.journal ? `Journal: ${input.journal}` : null,
+    input.year ? `Year: ${input.year}` : null,
+  ].filter(Boolean).join(' | ');
+  const system = 'You write news deks for a dinosaur palaeontology news site. Given only a paper title, journal and year, write ONE sentence (max 220 characters), neutral and declarative, summarizing what the paper reports and why it matters.\n\nVary your sentence openings. NEVER start with "The study", "The paper", "The research", "This study", "This paper", "Researchers", "Scientists", "A study" or any similar stock phrase — lead with the subject itself (the animal, clade, rock unit, method, finding or field question). Two deks from this prompt must never open the same way.\n\nYou may draw on your general knowledge of this specific, well-documented paper to add context — for example what the paper found or how it changed the field — but ONLY when that context is widely reported and you are highly confident it belongs to this exact paper. If the paper is obscure to you, or you are unsure whether a detail belongs to this work, stay strictly with what the title implies.\n\nNEVER invent numbers, percentages, dates, localities, specimen IDs, methods, institutions or results. A conservative, true sentence beats a rich, invented one. Output only the dek text — no quotes, no markdown, no "This paper…" filler.';
+
+  const groqKey = process.env.GROQ_API_KEY || process.env.GROK_API_KEY || '';
+  if (groqKey) {
+    const model = opts.model ?? process.env.GROQ_MODEL ?? 'openai/gpt-oss-120b';
+    const dek = await callChatCompletions({
+      url: 'https://api.groq.com/openai/v1/chat/completions',
+      headers: { Authorization: `Bearer ${groqKey}` },
+      model,
+      system,
+      ctx,
+      label: 'Groq',
+      timeoutMs,
+    });
+    if (dek) return dek;
+    console.warn('dek: Groq failed — trying OpenRouter fallback');
+  }
+
+  const openrouterKey = opts.apiKey ?? process.env.OPENROUTER_API_KEY ?? '';
+  if (openrouterKey) {
+    const model = opts.model ?? process.env.OPENROUTER_MODEL ?? 'google/gemma-4-31b-it:free';
+    return callChatCompletions({
+      url: 'https://openrouter.ai/api/v1/chat/completions',
+      headers: {
+        Authorization: `Bearer ${openrouterKey}`,
+        'HTTP-Referer': 'https://dinosauria.net',
+        'X-Title': 'Dinosauria Network',
+      },
+      model,
+      system,
+      ctx,
+      label: 'OpenRouter',
+      timeoutMs,
+    });
+  }
+
+  return null; // no provider configured — degrade to headline
+}
+
+async function callChatCompletions(args: {
+  url: string;
+  headers: Record<string, string>;
+  model: string;
+  system: string;
+  ctx: string;
+  label: string;
+  timeoutMs: number;
+}): Promise<string | null> {
+  try {
+    const res = await fetch(args.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...args.headers },
+      body: JSON.stringify({
+        model: args.model,
+        messages: [
+          { role: 'system', content: args.system },
+          { role: 'user', content: args.ctx },
+        ],
+        max_tokens: 2048,
+        temperature: 0.2,
+      }),
+      signal: AbortSignal.timeout(args.timeoutMs),
+    });
+    if (!res.ok) {
+      const detail = String(await res.text().catch(() => '')).slice(0, 120);
+      console.warn(`dek: ${args.label} HTTP`, res.status, detail || '(no body)');
+      return null;
+    }
+    const j: any = await res.json();
+    let dek = String(j?.choices?.[0]?.message?.content ?? '').trim();
+    // Strip accidental wrapper quotes / trailing punctuation artifacts.
+    dek = dek.replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').replace(/\s+/g, ' ').trim();
+    if (dek.length < 20) return null; // model misfired — use the fallback instead
+    return dek.slice(0, 300);
+  } catch (e) {
+    console.warn(`dek: ${args.label} request failed:`, String(e).slice(0, 120));
+    return null;
+  }
+}
