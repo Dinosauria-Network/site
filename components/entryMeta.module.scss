@@ -1,0 +1,56 @@
+.entry-meta {
+    line-height: 1.28571429;
+    padding: 0 1.9%;
+    font-size: 13px;
+    font-size: .8125rem;
+
+    @media (width >= 640px) {
+        padding: 0;
+    }
+}
+
+:global(.first) .entry-meta {
+    display: inline-block;
+    padding: 1.166666667em;
+    border-bottom: 2px groove #e6e6cf;
+}
+
+.byline {
+    img {
+        vertical-align: text-top;
+    }
+
+    @media (width >= 640px) {
+        display: inline;
+    }
+}
+
+:global(.blog) .fn {
+    font-size: 14px;
+    font-size: .875rem;
+}
+
+.sep {
+    padding: 0 1em;
+    display: none;
+
+    @media (width >= 640px) {
+        display: inherit;
+    }
+}
+
+.updated {
+    color: #7f7c79;
+
+    .extra {
+        display: none;
+
+        @media (width >= 960px) {
+            display: inherit;
+        }
+    }
+
+    a {
+        color: #46423B
+    }
+}

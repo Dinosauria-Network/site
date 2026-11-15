@@ -1,0 +1,92 @@
+name: News pipeline
+
+# Daily at 06:15 UTC: ingest → classify → propose → auto-publish gate → status,
+# then update a pinned "News pipeline digest" issue. NEVER runs on push — every
+# step writes to the same production database the site serves.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   DATABASE_URL       transaction-pooler URL used by the site build/scripts
+#   JEVSTYLE_API_KEY   classifier API key (editorial:classify)
+#   ELSEVIER_API_KEY   optional — multi-provider abstract resolver's last resort
+#
+# The digest is an issue so it doubles as history; published stories stay
+# listed there with their reasons. Anything that held stays in draft.
+
+on:
+  schedule:
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: news-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JEVSTYLE_API_KEY: ${{ secrets.JEVSTYLE_API_KEY }}
+      ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Ingest RSS outlets
+        run: npm run ingest:rss -- --limit 15
+      - name: Ingest watched journals
+        run: npm run ingest:journals -- --limit 15
+      - name: Ingest Europe PMC
+        run: npm run ingest:europe-pmc -- --limit 10
+      - name: Ingest Crossref keyword
+        run: npm run ingest:crossref
+
+      - name: Classify (Jev-Style)
+        run: npm run editorial:classify
+
+      - name: Propose drafts
+        run: npm run editorial:propose
+
+      - name: Auto-publish gate
+        run: npm run editorial:autopublish | tee autopublish.log
+
+      - name: Editorial status
+        run: npm run editorial:status | tee status.log
+
+      - name: Update digest issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="News pipeline digest"
+          {
+            echo "## News pipeline — $(date -u +%Y-%m-%d) run"
+            echo
+            echo "Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo "### Auto-publish gate"
+            if [ -s autopublish.log ]; then echo '```'; cat autopublish.log; echo '```'; else echo "(gate did not run — an earlier step failed)"; fi
+            echo
+            echo "### Corpus status"
+            if [ -s status.log ]; then echo '```'; cat status.log; echo '```'; else echo "(status did not run — an earlier step failed)"; fi
+            echo
+            echo "Auto-published stories carry \`pending_verification\` licences by design; flip them to verified in \`media_assets\` during your usual review. Anything held above stays draft with the reason shown. Wrong auto-publish? \`npm run editorial:unpublish -- <slug>\`."
+          } > digest.md
+          ISSUE=$(gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number // ""')
+          if [ -n "$ISSUE" ]; then
+            gh issue comment "$ISSUE" --body-file digest.md
+            echo "commented on issue #$ISSUE"
+          else
+            gh issue create --title "$TITLE" --body-file digest.md
+          fi
