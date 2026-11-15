@@ -11,6 +11,7 @@ const navItems = [
   { href: "/mesozoic", label: "Mesozoic Era" },
   { href: "/phylogeny", label: "Phylogeny" },
   { href: "/genera", label: "Genera" },
+  { href: "/topics", label: "Topics" },
   { href: "/about", label: "About" },
   { href: "/search", label: "News" },
 ];
