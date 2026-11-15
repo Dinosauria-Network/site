@@ -97,7 +97,7 @@ export default function Navigation() {
         onTransitionEnd={handleTransitionEnd}
       >
         <div className={styles["drawer-header"]}>
-          <h5 className={styles["drawer-title"]} id="navbarDrawerLabel">Sections</h5>
+          <h5 className={styles["drawer-title"]} id="navbarDrawerLabel">§ Sections</h5>
           <button
             type="button"
             className={styles["close-btn"]}
