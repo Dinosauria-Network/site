@@ -3,6 +3,7 @@ import { getSiteMetadata } from "@/lib/genus-data";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Script from "next/script";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "@/app/styles/globals.scss";
 import SkipLink from "@/components/SkipLink";
 import PreviewBanner from "@/components/PreviewBanner";
@@ -77,6 +78,8 @@ export default function RootLayout({
           src="/js/masonry.pkgd.min.js"
           strategy="lazyOnload"
         />
+
+        <GoogleAnalytics />
       </body>
     </html>
   );
