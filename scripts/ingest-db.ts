@@ -1,6 +1,7 @@
 import { db } from '../lib/db/client';
 import { ingestionRuns, sourceCursors, researchPapers } from '../lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { parseSinceArg } from '../lib/ingestion/crossref-adapter';
 import { classifyDinosaur } from '../lib/ai/jev-style';
 import { europePmcAdapter } from '../lib/ingestion/europe-pmc';
 import { arxivAdapter } from '../lib/ingestion/arxiv';
@@ -37,7 +38,12 @@ const run = async () => {
     try {
       const cursorRow = await db.select().from(sourceCursors).where(eq(sourceCursors.source, adapter.sourceName)).limit(1);
       const cursor = cursorRow[0]?.cursor || undefined;
-      const { records, nextCursor, done } = await adapter.discover(cursor);
+
+      // Crossref keyword sweep: deposit-date window (default last 3 days).
+      // --since YYYY-MM-DD (also YYYY / YYYY-MM accepted) · --since all to disable.
+      const since = parseSinceArg(process.argv, 3);
+
+      const { records, nextCursor, done } = await adapter.discover(cursor, since);
 
       // Dedup BEFORE capping — otherwise duplicate rows swallow the --limit budget.
       const capFlag = process.argv.indexOf('--limit');

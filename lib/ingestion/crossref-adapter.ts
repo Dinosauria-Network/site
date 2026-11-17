@@ -2,6 +2,27 @@ import { SourceAdapter, IngestionRecord } from './types';
 import { stripTags } from '../license';
 
 /**
+ * Shared --since parser for the Crossref sweeps.
+ * Returns a date string (YYYY-MM-DD) or undefined when disabled (--since all).
+ * Default is N days ago (defaultDays=3). Throws on invalid input.
+ */
+export function parseSinceArg(argv: string[], defaultDays = 3): string | undefined {
+  const i = argv.indexOf('--since');
+  if (i >= 0) {
+    const v = (argv[i + 1] || '').trim().toLowerCase();
+    if (v === 'all') return undefined;
+    const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/.exec(v);
+    if (!m) throw new Error(`bad --since value: ${argv[i + 1]} (expected YYYY, YYYY-MM, YYYY-MM-DD or "all")`);
+    const d = new Date(Date.UTC(+m[1], (+(m[2] || '1')) - 1, +(m[3] || '1')));
+    if (isNaN(d.getTime())) throw new Error(`bad --since date: ${v}`);
+    return d.toISOString().split('T')[0];
+  }
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - defaultDays);
+  return d.toISOString().split('T')[0];
+}
+
+/**
  * Normalize a raw Crossref `works` item. Shared by the keyword adapter and the
  * watched-journals adapter (same schema, same DOI uniqueness).
  */
@@ -67,13 +88,28 @@ function normalizeAuthor(a: unknown): { fullName: string; orcid?: string; instit
 
 export const crossrefAdapter: SourceAdapter = {
   sourceName: 'crossref',
-  async discover(cursor) {
-    const offset = cursor ? parseInt(cursor, 10) : 0;
+  /**
+   * Daily sweep: only deposits from `fromDate` onward (default last 3 days —
+   * see parseSinceArg). `created` is the deposit/registration date, so a
+   * late-arriving print-issue record (e.g. a 2027 issue deposited this week)
+   * still matches, and older works deposited now still get ingested — both
+   * desired for a daily cron.
+   * `sort=published desc` keeps the newest papers first within the window,
+   * which pairs with ingest-db.ts's cap + dedup-before-cap early stop.
+   */
+  async discover(cursor, fromDate, toDate) {
+    const parsedOffset = cursor ? parseInt(cursor, 10) : 0;
+    const offset = Number.isNaN(parsedOffset) ? 0 : parsedOffset;
     const url = new URL('https://api.crossref.org/works');
     url.searchParams.set('query', 'dinosaur');
-    url.searchParams.set('rows', '20');
+    url.searchParams.set('rows', '100');
     url.searchParams.set('offset', String(offset));
-    url.searchParams.set('filter', 'type:journal-article');
+    url.searchParams.set('sort', 'published');
+    url.searchParams.set('order', 'desc');
+    let filter = 'type:journal-article';
+    if (fromDate) filter += `,from-created-date:${fromDate}`;
+    if (toDate) filter += `,to-created-date:${toDate}`;
+    url.searchParams.set('filter', filter);
     url.searchParams.set('mailto', 'admin@dinosauria.net'); // polite
 
     const res = await fetch(url.toString(), { headers: { 'User-Agent': 'Dinosauria-Science-Pub/1.0' }, signal: AbortSignal.timeout(20_000) });
