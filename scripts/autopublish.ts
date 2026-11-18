@@ -28,14 +28,14 @@ const dryRun = args.includes('--dry-run');
 const minScoreIdx = args.indexOf('--min-score');
 const minScore = minScoreIdx >= 0 ? Number(args[minScoreIdx + 1]) || 0.75 : 0.75;
 
-/** CC BY / CC BY-SA (no NC, no ND), CC0, Public domain. Accepts short ("CC BY-SA 4.0") and long ("Creative Commons Attribution-Share Alike 4.0 International") forms. */
+/** CC BY family (BY / BY-SA / BY-ND, any version), CC0, and Public domain. Accepts short ("CC BY-ND 4.0") and long ("Creative Commons Attribution-Share Alike 4.0 International") forms. The full BY family is accepted — ND records a derivative constraint to audit, an unknown licence does not. */
 const isMachineKnownCc = (lic?: string | null): boolean => {
   if (!lic) return false;
   const s = lic.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
-  if (/\b(nc|nd)\b/.test(s) || /noncommercial|no derivatives/.test(s)) return false;
+  if (/noncommercial|nc\b|nc,|creative commons noncommercial/.test(s)) return false; // NC — unconfirmed reuse rights
   if (/\bcc0\b|creative commons zero/.test(s)) return true;
   if (/public domain/.test(s)) return true;
-  return /cc\s?by(\b|$| )/.test(s) || /creative commons attribution/.test(s);
+  return /cc\s?by/.test(s) || /creative commons attribution/.test(s);
 };
 
 const ERRATUM_RE = /^(correction|erratum|corrigendum|errata|addendum|note added)\b/i;
