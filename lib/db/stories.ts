@@ -74,6 +74,28 @@ export async function getPublishedStoryByNumericId(id: number, includeDrafts = f
  * newest first. Falls back to the legacy JSON reader if the DB can't be reached
  * (e.g. build environments without DATABASE_URL) so pages still render.
  */
+/** All published editorial stories, newest first (used for topic pages). */
+export async function getPublishedStories(): Promise<NewsPost[]> {
+  try {
+    const rows = await db
+      .select()
+      .from(editorialStories)
+      .where(eq(editorialStories.status, 'published'))
+      .orderBy(
+        sql`${editorialStories.publishedAt} DESC NULLS LAST`,
+        desc(editorialStories.createdAt),
+      );
+    return rows.map(storyToNewsPost);
+  } catch (error) {
+    console.error(
+      'Failed to fetch editorial_stories from DB; falling back to JSON posts:',
+      error,
+    );
+    const { getAllPosts: getJsonPosts } = await import('@/lib/genus-data');
+    return getJsonPosts();
+  }
+}
+
 export async function getPublishedStoriesPaginated(
   page: number,
   perPage: number,

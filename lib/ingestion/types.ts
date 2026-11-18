@@ -23,6 +23,8 @@ export interface IngestionResult {
 
 export interface SourceAdapter {
   sourceName: string;
-  discover(cursor?: string): Promise<{ records: IngestionRecord[]; nextCursor?: string; done: boolean }>;
+  // fromDate/toDate are optional (YYYY-MM-DD, deposit-side filters); adapters
+  // that don't support them must ignore them — extra args are fine to accept.
+  discover(cursor?: string, fromDate?: string, toDate?: string): Promise<{ records: IngestionRecord[]; nextCursor?: string; done: boolean }>;
   normalize(raw: unknown): IngestionRecord;
 }

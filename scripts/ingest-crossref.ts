@@ -1,10 +1,13 @@
 import { db } from '../lib/db/client';
 import { researchPapers, paperSources, ingestionRuns } from '../lib/db/schema';
-import { crossrefAdapter } from '../lib/ingestion/crossref-adapter';
+import { crossrefAdapter, parseSinceArg } from '../lib/ingestion/crossref-adapter';
 import { eq } from 'drizzle-orm';
 
 async function main() {
   console.log('Starting Crossref ingestion...');
+  // Deposit-date window — default last 3 days; --since YYYY-MM-DD / --since all.
+  const since = parseSinceArg(process.argv, 3);
+  console.log(`Date window: from ${since ?? '(disabled — full corpus walk)'}`);
   let cursor: string | undefined;
   let discovered = 0;
   let imported = 0;
@@ -12,7 +15,7 @@ async function main() {
 
   try {
     do {
-      const { records, nextCursor, done } = await crossrefAdapter.discover(cursor);
+      const { records, nextCursor, done } = await crossrefAdapter.discover(cursor, since);
       discovered += records.length;
       console.log(`Batch: ${records.length} records (cursor ${cursor || 'start'})`);
 

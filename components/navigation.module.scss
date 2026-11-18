@@ -51,6 +51,10 @@
     mask-position: 50%;
     mask-size: contain;
     mask-repeat: no-repeat;
+
+    @media (width >= 1280px) {
+        display: none;
+    }
 }
 
 .nav-btn {
