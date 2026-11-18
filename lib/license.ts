@@ -9,8 +9,10 @@ export function extractLicense(metadata: unknown): { name?: string; url?: string
   if (Array.isArray(m.license) && m.license.length > 0) {
     const lic = m.license[0];
     const url = lic?.URL || lic?.url || '';
-    // Map CC URLs to friendly names
-    const name = ccName(url) || lic?.content_version || lic?.contentVersion || 'License';
+    // Map CC URLs to friendly names; fall back to the deposit's own declared
+    // version string (contentVersion / content / name) so a known licence like
+    // "CC BY-ND 4.0" is surfaced instead of collapsing to the generic "License".
+    const name = ccName(url) || lic?.content_version || lic?.contentVersion || lic?.content || lic?.name || 'License';
     return { name, url };
   }
   // Europe PMC open-access without explicit licence URL

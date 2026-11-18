@@ -49,8 +49,14 @@ const PALE = [
 ];
 const paleoScore = (title: string) => (PALE.some((p) => title.toLowerCase().includes(p)) ? 1 : 0);
 
+/** Very conservative stem: drop a trailing 's' from plurals (>4 chars). */
+function stem(t: string): string {
+  return t.length > 4 && t.endsWith('s') ? t.slice(0, -1) : t;
+}
+
 export async function searchCommons(tokens: string[], limit = 10): Promise<CommonsCandidate[]> {
-  const terms = [...new Set(tokens.map((t) => t.trim().toLowerCase()).filter(Boolean))];
+  const base = [...new Set(tokens.map((t) => t.trim().toLowerCase()).filter(Boolean))];
+  const terms = [...new Set([...base, ...base.map((t) => stem(t))].filter(Boolean))];
   const seen = new Map<string, CommonsCandidate>();
   for (const term of terms) {
     const params = new URLSearchParams({
