@@ -28,6 +28,14 @@
 .main-navigation {
     li {
         display: block;
+
+        @media (width >= 1280px) {
+            font-size: 1.3125em;
+        }
+
+        a {
+            display: block;
+        }
     }
 
     [class*="drawer"] {
@@ -173,6 +181,10 @@
         align-items: center;
         display: flex;
 
+        @media (width >= 1280px) {
+            padding-inline-end: 2vw;
+        }
+
         .close-btn {
             margin-block: calc(-0.5 * 1rem);
             margin-inline-start: auto;
@@ -183,6 +195,12 @@
         line-height: 1.5;
         margin-top: 0;
         margin-bottom: 0;
+
+        @media (width >= 1280px) {
+            text-align: end;
+            width: 100%;
+            font-size: 1.5em;
+        }
     }
 
     &-body {
@@ -198,6 +216,10 @@
 
         @media (width >= 768px) {
             margin-block-end: 0;
+        }
+
+        @media (width >= 1280px) {
+            padding-inline-end: 2vw;
         }
     }
 }
@@ -220,5 +242,9 @@
         list-style-type: "";
         display: flex;
         margin-inline-end: auto;
+
+        @media (width >= 1280px) {
+            margin-inline-end: 0;
+        }
     }
 }
