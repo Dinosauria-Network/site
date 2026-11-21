@@ -1725,8 +1725,18 @@ picture {
   border-radius: 4px;
 }
 
-.genus-fossil-map-btn:hover {
+.genus-fossil-map-btn:hover:not(:disabled) {
   background: #e9e6de;
+}
+
+.genus-fossil-map-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.genus-fossil-map svg:focus {
+  outline: 2px solid #2f271d;
+  outline-offset: -2px;
 }
 
 .genus-fossil-map-loading,

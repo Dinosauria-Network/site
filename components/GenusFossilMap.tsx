@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FossilLocation } from "@/lib/genus-data";
 
 interface GenusFossilMapProps {
@@ -48,6 +48,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
   const svgHostRef = useRef<HTMLDivElement | null>(null);
   const zoomRef = useRef<any>(null);
   const svgRef = useRef<any>(null);
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -57,6 +58,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
 
     const build = async () => {
       if (svgHostRef.current) svgHostRef.current.innerHTML = "";
+      setScale(1);
 
       try {
         const [d3geo, d3zoom, d3select, topo, atlas110] = await Promise.all([
@@ -99,9 +101,12 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           .attr("width", "100%")
           .attr("height", "100%")
           .attr("role", "img")
+          .attr("tabindex", "0")
           .attr("aria-label", `Map of fossil find locations for ${genusName}`)
+          .attr("aria-describedby", "genus-fossil-map-hint")
           .style("background", "#e9e6de")
-          .style("touch-action", "none");
+          .style("touch-action", "none")
+          .style("outline", "none");
 
         const zoomLayer = svg.append("g").attr("class", "zoom-layer");
 
@@ -195,6 +200,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
             zoomLayer.attr("transform", event.transform);
             const k = event.transform.k || 1;
             markers.attr("r", (d: any) => d.r / k);
+            setScale(k);
             // Upgrade detail based on zoom level.
             if (k >= 4 && currentLevel !== "10m") upgradeDetail("10m");
             else if (k >= 2 && currentLevel === "110m") upgradeDetail("50m");
@@ -205,11 +211,12 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
         zoomRef.current = zoom;
 
         svg.append("text")
+          .attr("id", "genus-fossil-map-hint")
           .attr("x", 8)
           .attr("y", height - 8)
           .attr("font-size", 10)
           .attr("fill", "#555")
-          .text("Drag to pan · scroll to zoom");
+          .text("Drag to pan · scroll to zoom · arrow keys to pan");
 
         cleanupZoom = () => {
           svg.on(".zoom", null);
@@ -254,6 +261,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           type="button"
           className="genus-fossil-map-btn"
           aria-label="Zoom in"
+          disabled={scale >= 8}
           onClick={() => {
             if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1.5);
           }}
@@ -264,6 +272,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           type="button"
           className="genus-fossil-map-btn"
           aria-label="Zoom out"
+          disabled={scale <= 1}
           onClick={() => {
             if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1 / 1.5);
           }}
