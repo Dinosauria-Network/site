@@ -31,12 +31,6 @@ const PERIODS = [
   { name: "Cretaceous", start: 143.1, end: 66.0, color: "#82cc73" },
 ];
 
-const ERAS = [
-  { name: "Paleozoic", start: 541.0, end: 252.17, color: "#97c8a9" },
-  { name: "Mesozoic", start: 252.17, end: 66.0, color: "#67C5CA" },
-  { name: "Cenozoic", start: 66.0, end: 0, color: "#ffe951" },
-];
-
 const MIN_MA = 252.17;
 const MAX_MA = 66.0;
 const RANGE = MIN_MA - MAX_MA;
@@ -48,16 +42,14 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
   const gap = 4;
   const topPad = 18; // period labels above mesozoic row
   const bottomPad = 22; // axis
-  const rows = 3;
+  const rows = 2;
   const height = topPad + rows * rowH + (rows - 1) * gap + bottomPad;
 
   // y positions of each row (top-down)
-  const yPhan = topPad;
-  const yMeso = yPhan + rowH + gap;
+  const yMeso = topPad;
   const yEpoch = yMeso + rowH + gap;
 
   const xMeso = (ma: number) => ((MIN_MA - ma) / RANGE) * width;
-  const xPhan = (ma: number) => ((541 - ma) / (541 - 0)) * width;
   const xEpoch = (ma: number) => xMeso(ma); // same scale as mesozoic
 
   // dominant period for highlighting
@@ -93,36 +85,8 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         width="100%"
         height={height}
         role="img"
-        aria-label="Geologic time chart showing Phanerozoic, Mesozoic periods, epochs, and occurrence ages"
+        aria-label="Geologic time chart showing Mesozoic periods, epochs, and occurrence ages"
       >
-        {/* Row 0: Phanerozoic eras */}
-        {ERAS.map((e) => (
-          <g key={e.name}>
-            <rect
-              x={xPhan(e.start)}
-              y={yPhan}
-              width={xPhan(e.end) - xPhan(e.start)}
-              height={rowH}
-              fill={e.color}
-              stroke="#fff"
-              strokeWidth={0.5}
-              opacity={e.name === "Mesozoic" ? 1 : 0.55}
-            />
-            {xPhan(e.end) - xPhan(e.start) > 40 && (
-              <text
-                x={(xPhan(e.start) + xPhan(e.end)) / 2}
-                y={yPhan + rowH / 2 + 5}
-                textAnchor="middle"
-                fontSize={14}
-                fontWeight={700}
-                fill="#000"
-              >
-                {e.name}
-              </text>
-            )}
-          </g>
-        ))}
-
         {/* Row 1: Mesozoic periods */}
         {PERIODS.map((p) => (
           <g key={p.name}>
@@ -141,7 +105,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
                 x={(xMeso(p.start) + xMeso(p.end)) / 2}
                 y={yMeso + rowH / 2 + 4}
                 textAnchor="middle"
-                fontSize={12}
+                fontSize={13}
                 fontWeight={600}
                 fill={p.name === "Jurassic" || p.name === "Triassic" ? "#fff" : "#000"}
               >
