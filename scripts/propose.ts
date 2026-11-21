@@ -212,7 +212,15 @@ const run = async () => {
     let image = null;
     if (imageCandidateUrl && !dryRun) {
       image = await downloadImage(imageCandidateUrl, slug);
-      if (image) await writeDerivatives(image);
+      if (image) {
+        await writeDerivatives(image);
+        // Verify the base file + derivatives actually landed on disk
+        const imagePath = path.join(process.cwd(), 'public', 'images', 'news', image.replace('/images/news/', ''));
+        if (!fs.existsSync(imagePath)) {
+          console.error(`propose: image file missing after write for ${slug}: ${imagePath}`);
+          image = null; // abort image for this story
+        }
+      }
       if (image && !isCcLicense(license?.name)) {
         console.warn('WARN: fetching og:image from a work with unknown/non-CC licence — licence risk is yours, not the pipeline\'s');
       }
@@ -234,8 +242,14 @@ const run = async () => {
             if (stored) {
               image = stored;
               await writeDerivatives(image);
-              autoMatch = { genus, title: hit.title, url: hit.url, pageUrl: hit.pageUrl, licenseShort: hit.licenseShort };
-              console.log(`Commons auto-attach: ${slug} ← ${hit.title} (${hit.licenseShort})`);
+              const imagePath = path.join(process.cwd(), 'public', 'images', 'news', image.replace('/images/news/', ''));
+              if (!fs.existsSync(imagePath)) {
+                console.error(`propose: Commons image file missing after write for ${slug}: ${imagePath}`);
+                image = null;
+              } else {
+                autoMatch = { genus, title: hit.title, url: hit.url, pageUrl: hit.pageUrl, licenseShort: hit.licenseShort };
+                console.log(`Commons auto-attach: ${slug} ← ${hit.title} (${hit.licenseShort})`);
+              }
             }
           }
         } else if (dryRun) {

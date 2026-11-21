@@ -1,6 +1,8 @@
 import { db } from '../lib/db/client';
 import { editorialStories, mediaAssets, researchPapers, publicationEvents } from '../lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * editorial:autopublish — the daily-cron publish gate.
@@ -78,6 +80,12 @@ const run = async () => {
       const lic = mine[0]?.licenseName;
       if (!mine.length) reasons.push('image has no media_assets row');
       else if (!isMachineKnownCc(lic)) reasons.push(`licence not machine-known CC (${lic ?? 'unknown'})`);
+      else if (image) {
+        const imagePath = path.join(process.cwd(), 'public', 'images', 'news', image);
+        if (!fs.existsSync(imagePath)) {
+          reasons.push('image file missing on disk');
+        }
+      }
     }
     if (ERRATUM_RE.test((story.headline || '').trim())) reasons.push('erratum-type headline');
 
