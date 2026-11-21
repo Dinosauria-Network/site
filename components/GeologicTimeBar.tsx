@@ -25,10 +25,55 @@ const EPOCHS = [
   { name: "Late", period: "Cretaceous", start: 100.5, end: 66.0, color: "#abd671" },
 ];
 
+// Ages per period (from app/mesozoic/page.tsx), oldest->youngest (high Ma -> low Ma).
+const AGES: Record<string, { name: string; start: number; end: number; color: string }[]> = {
+  Triassic: [
+    { name: "Induan", start: 252.17, end: 250.8, color: "#A4469F" },
+    { name: "Olenekian", start: 250.8, end: 247.0, color: "#B051A5" },
+    { name: "Anisian", start: 247.0, end: 241.464, color: "#BC75B7" },
+    { name: "Ladinian", start: 241.464, end: 237.0, color: "#C983BF" },
+    { name: "Carnian", start: 237.0, end: 227.3, color: "#C99BCB" },
+    { name: "Norian", start: 227.3, end: 205.7, color: "#D6AAD3" },
+    { name: "Rhaetian", start: 205.7, end: 201.4, color: "#D6AAD3" },
+  ],
+  Jurassic: [
+    { name: "Hettangian", start: 201.4, end: 192.9, color: "#4EB3D3" },
+    { name: "Sinemurian", start: 192.9, end: 184.2, color: "#67BCD8" },
+    { name: "Pliensbachian", start: 184.2, end: 174.7, color: "#80C5DD" },
+    { name: "Toarcian", start: 174.7, end: 168.2, color: "#99CEE3" },
+    { name: "Aalenian", start: 168.2, end: 165.3, color: "#9AD9DD" },
+    { name: "Bajocian", start: 165.3, end: 161.5, color: "#A6DDE0" },
+    { name: "Bathonian", start: 161.5, end: 154.8, color: "#B3E2E3" },
+    { name: "Callovian", start: 154.8, end: 149.2, color: "#BFE7E5" },
+    { name: "Oxfordian", start: 149.2, end: 143.1, color: "#BFE7F1" },
+    { name: "Kimmeridgian", start: 143.1, end: 143.1, color: "#CCECF4" },
+  ],
+  Cretaceous: [
+    { name: "Berriasian", start: 143.1, end: 137.05, color: "#8ed184" },
+    { name: "Valanginian", start: 137.05, end: 132.6, color: "#9ad58d" },
+    { name: "Hauterivian", start: 132.6, end: 125.77, color: "#a7d996" },
+    { name: "Barremian", start: 125.77, end: 121.4, color: "#b4de9f" },
+    { name: "Aptian", start: 121.4, end: 113.2, color: "#c1e2a8" },
+    { name: "Albian", start: 113.2, end: 100.5, color: "#cee7b1" },
+    { name: "Cenomanian", start: 100.5, end: 93.9, color: "#b8da7a" },
+    { name: "Turonian", start: 93.9, end: 89.8, color: "#c5df83" },
+    { name: "Coniacian", start: 89.8, end: 85.7, color: "#d2e38c" },
+    { name: "Santonian", start: 85.7, end: 83.6, color: "#dfe895" },
+    { name: "Campanian", start: 83.6, end: 72.2, color: "#ebec9e" },
+    { name: "Maastrichtian", start: 72.2, end: 66.0, color: "#f9f1a8" },
+  ],
+};
+
 const PERIODS = [
   { name: "Triassic", start: 252.17, end: 201.4, color: "#812B92" },
   { name: "Jurassic", start: 201.4, end: 143.1, color: "#34B2C9" },
   { name: "Cretaceous", start: 143.1, end: 66.0, color: "#82cc73" },
+];
+
+const ERAS = [
+  { name: "Paleozoic", start: 541.0, end: 252.17, color: "#97c8a9" },
+  { name: "Mesozoic", start: 252.17, end: 66.0, color: "#67C5CA" },
+  { name: "Cenozoic", start: 66.0, end: 0, color: "#ffe951" },
 ];
 
 const MIN_MA = 252.17;
@@ -37,32 +82,29 @@ const RANGE = MIN_MA - MAX_MA;
 
 export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
   const width = 800;
-  // rows: phanerozoic (top), mesozoic, period epochs (bottom)
-  const rowH = 22;
+  const rowH = 20;
   const gap = 4;
-  const topPad = 18; // period labels above mesozoic row
-  const bottomPad = 22; // axis
-  const rows = 2;
+  const topPad = 16;
+  const bottomPad = 22;
+  const rows = 4;
   const height = topPad + rows * rowH + (rows - 1) * gap + bottomPad;
 
-  // y positions of each row (top-down)
-  const yMeso = topPad;
+  const yPhan = topPad;
+  const yMeso = yPhan + rowH + gap;
   const yEpoch = yMeso + rowH + gap;
+  const yAge = yEpoch + rowH + gap;
 
   const xMeso = (ma: number) => ((MIN_MA - ma) / RANGE) * width;
-  const xEpoch = (ma: number) => xMeso(ma); // same scale as mesozoic
+  const xPhan = (ma: number) => ((541 - ma) / (541 - 0)) * width;
 
-  // dominant period for highlighting
   const periodCounts: Record<string, number> = {};
   for (const loc of locations) {
     if (loc.period) periodCounts[loc.period] = (periodCounts[loc.period] || 0) + (loc.count ?? 1);
   }
-  const dominantPeriod = Object.entries(periodCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const dominantPeriod = Object.entries(periodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "Cretaceous";
 
   const epochRow = EPOCHS.filter((e) => e.period === dominantPeriod);
-  const epochRange = epochRow.length
-    ? { start: epochRow[0].start, end: epochRow[epochRow.length - 1].end }
-    : { start: MIN_MA, end: MAX_MA };
+  const ageRow = AGES[dominantPeriod] || [];
 
   const markers = locations
     .map((loc, i) => {
@@ -85,8 +127,36 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         width="100%"
         height={height}
         role="img"
-        aria-label="Geologic time chart showing Mesozoic periods, epochs, and occurrence ages"
+        aria-label="Geologic time chart showing Phanerozoic, Mesozoic periods, epochs, ages, and occurrence ages"
       >
+        {/* Row 0: Phanerozoic eras */}
+        {ERAS.map((e) => (
+          <g key={e.name}>
+            <rect
+              x={xPhan(e.start)}
+              y={yPhan}
+              width={xPhan(e.end) - xPhan(e.start)}
+              height={rowH}
+              fill={e.color}
+              stroke="#fff"
+              strokeWidth={0.5}
+              opacity={e.name === "Mesozoic" ? 1 : 0.45}
+            />
+            {xPhan(e.end) - xPhan(e.start) > 50 && (
+              <text
+                x={(xPhan(e.start) + xPhan(e.end)) / 2}
+                y={yPhan + rowH / 2 + 4}
+                textAnchor="middle"
+                fontSize={12}
+                fontWeight={700}
+                fill="#000"
+              >
+                {e.name}
+              </text>
+            )}
+          </g>
+        ))}
+
         {/* Row 1: Mesozoic periods */}
         {PERIODS.map((p) => (
           <g key={p.name}>
@@ -98,14 +168,14 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
               fill={p.color}
               stroke="#fff"
               strokeWidth={0.5}
-              opacity={p.name === dominantPeriod ? 1 : 0.6}
+              opacity={p.name === dominantPeriod ? 1 : 0.55}
             />
             {xMeso(p.end) - xMeso(p.start) > 30 && (
               <text
                 x={(xMeso(p.start) + xMeso(p.end)) / 2}
                 y={yMeso + rowH / 2 + 4}
                 textAnchor="middle"
-                fontSize={13}
+                fontSize={11}
                 fontWeight={600}
                 fill={p.name === "Jurassic" || p.name === "Triassic" ? "#fff" : "#000"}
               >
@@ -115,24 +185,24 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           </g>
         ))}
 
-        {/* Row 2: epochs of the dominant period */}
+        {/* Row 2: epochs of dominant period */}
         {epochRow.map((e) => (
           <g key={`${e.period}-${e.name}`}>
             <rect
-              x={xEpoch(e.start)}
+              x={xMeso(e.start)}
               y={yEpoch}
-              width={xEpoch(e.end) - xEpoch(e.start)}
+              width={xMeso(e.end) - xMeso(e.start)}
               height={rowH}
               fill={e.color}
               stroke="#fff"
               strokeWidth={0.5}
             />
-            {xEpoch(e.end) - xEpoch(e.start) > 24 && (
+            {xMeso(e.end) - xMeso(e.start) > 24 && (
               <text
-                x={(xEpoch(e.start) + xEpoch(e.end)) / 2}
+                x={(xMeso(e.start) + xMeso(e.end)) / 2}
                 y={yEpoch + rowH / 2 + 4}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={9}
                 fill="#000"
               >
                 {e.name}
@@ -140,17 +210,40 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
             )}
           </g>
         ))}
-        {/* epoch row label */}
         {dominantPeriod && (
-          <text
-            x={-4}
-            y={yEpoch + rowH / 2 + 4}
-            textAnchor="end"
-            fontSize={10}
-            fontWeight={600}
-            fill="#444"
-          >
+          <text x={-4} y={yEpoch + rowH / 2 + 4} textAnchor="end" fontSize={9} fontWeight={600} fill="#444">
             {dominantPeriod}
+          </text>
+        )}
+
+        {/* Row 3: ages of dominant period */}
+        {ageRow.map((a) => (
+          <g key={a.name}>
+            <rect
+              x={xMeso(a.start)}
+              y={yAge}
+              width={Math.max(1, xMeso(a.end) - xMeso(a.start))}
+              height={rowH}
+              fill={a.color}
+              stroke="#fff"
+              strokeWidth={0.3}
+            />
+            {xMeso(a.end) - xMeso(a.start) > 18 && (
+              <text
+                x={(xMeso(a.start) + xMeso(a.end)) / 2}
+                y={yAge + rowH / 2 + 3}
+                textAnchor="middle"
+                fontSize={7}
+                fill="#000"
+              >
+                {a.name}
+              </text>
+            )}
+          </g>
+        ))}
+        {dominantPeriod && (
+          <text x={-4} y={yAge + rowH / 2 + 3} textAnchor="end" fontSize={9} fontWeight={600} fill="#444">
+            ages
           </text>
         )}
 
@@ -158,7 +251,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         {markers.map((m) => (
           <circle
             key={m.i}
-            cx={xEpoch(m.mid)}
+            cx={xMeso(m.mid)}
             cy={yEpoch - 6}
             r={Math.min(6, 2 + Math.sqrt(m.count))}
             fill={m.color}
