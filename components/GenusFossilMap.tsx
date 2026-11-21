@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { FossilLocation } from "@/lib/genus-data";
+import { epochColorForMa } from "@/components/GeologicTimeBar";
 
 const PERIOD_COLORS: Record<string, string> = {
   Triassic: "#812B92",
@@ -203,7 +204,10 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           const r = Math.min(8, 3 + Math.sqrt(weight) * 1.2);
           const place = [loc?.state, loc?.country].filter(Boolean).join(", ");
           const title = `${genusName} — ${place}${weight > 1 ? ` (${weight} occurrences)` : ""}`;
-          return { lng, lat, r, title, period: loc?.period };
+          const lo = loc?.minMa ?? loc?.maxMa;
+          const hi = loc?.maxMa ?? loc?.minMa;
+          const mid = lo !== undefined && hi !== undefined ? (lo + hi) / 2 : undefined;
+          return { lng, lat, r, title, period: loc?.period, midMa: mid };
         });
 
         const markers = zoomLayer.selectAll("circle.marker")
@@ -220,7 +224,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
             return xy ? xy[1] : 0;
           })
           .attr("r", (d: any) => d.r)
-          .attr("fill", (d: any) => PERIOD_COLORS[d.period] || "#999")
+          .attr("fill", (d: any) => (d.midMa !== undefined ? epochColorForMa(d.midMa) : (PERIOD_COLORS[d.period] || "#999")))
           .attr("fill-opacity", 0.85)
           .attr("stroke", "#2f271d")
           .attr("stroke-width", 1)

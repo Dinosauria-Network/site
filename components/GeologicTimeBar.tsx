@@ -6,14 +6,6 @@ interface GeologicTimeBarProps {
 }
 
 // Colors from app/mesozoic/page.tsx.
-const PERIOD_COLORS: Record<string, string> = {
-  Triassic: "#812B92",
-  Jurassic: "#34B2C9",
-  Cretaceous: "#82cc73",
-  Permian: "#f04c23",
-  Cenozoic: "#ffe951",
-};
-
 const EPOCHS = [
   { name: "Early", period: "Triassic", start: 252.17, end: 247.0, color: "#983999" },
   { name: "Middle", period: "Triassic", start: 247.0, end: 237.0, color: "#B168B1" },
@@ -70,6 +62,17 @@ const PERIODS = [
   { name: "Cretaceous", start: 143.1, end: 66.0, color: "#82cc73" },
 ];
 
+export function epochColorForMa(ma: number): string {
+  for (const e of EPOCHS) {
+    if (ma <= e.start && ma >= e.end) return e.color;
+  }
+  // fallback by period color
+  if (ma >= 201.4) return "#812B92";
+  if (ma >= 143.1) return "#34B2C9";
+  if (ma >= 66.0) return "#82cc73";
+  return "#999";
+}
+
 const MIN_MA = 252.17;
 const MAX_MA = 66.0;
 const RANGE = MIN_MA - MAX_MA;
@@ -109,10 +112,9 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
       const mid = (lo + hi) / 2;
       const clamped = Math.max(MAX_MA, Math.min(MIN_MA, mid));
       const period = loc.period || "Cretaceous";
-      const color = PERIOD_COLORS[period] || "#999";
-      return { i, mid: clamped, color, period, count: loc.count ?? 1 };
+      return { i, mid: clamped, period, count: loc.count ?? 1 };
     })
-    .filter(Boolean) as { i: number; mid: number; color: string; period: string; count: number }[];
+    .filter(Boolean) as { i: number; mid: number; period: string; count: number }[];
 
   return (
     <div className="genus-geotime">
@@ -264,7 +266,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
             cx={xMeso(m.mid)}
             cy={yEpoch - 6}
             r={Math.min(6, 2 + Math.sqrt(m.count))}
-            fill={m.color}
+            fill={epochColorForMa(m.mid)}
             stroke="#2f271d"
             strokeWidth={0.8}
           >
