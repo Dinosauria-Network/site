@@ -9,13 +9,13 @@ body {
 }
 
 @media (width >= 1280px) {
-    .main {
+    .wrap.container {
         margin-right: 240px;
     }
 }
 
 @media (width >= 1600px) {
-    .main {
+    .wrap.container {
         margin-right: 25%;
     }
 }
