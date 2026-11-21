@@ -38,6 +38,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# PBDB enrichment cache (regenerated; final data lives in _data/genus-data.json)
+_data/pbdb-cache.json
 next-env.d.ts
 
 # AI

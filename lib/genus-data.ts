@@ -13,10 +13,21 @@ export interface TaxonomyTerm {
   taxonomy: string;
 }
 
+export interface FossilLocation {
+  lat: number;
+  lng: number;
+  country: string;
+  state?: string;
+  count?: number;
+}
+
 export interface GenusMeta {
   period?: string;
   author?: string;
   description_date?: number;
+  /** Fossil find bubbles from the Paleobiology Database (see scripts/enrich-genus-locations.ts). */
+  fossilLocations?: FossilLocation[];
+  fossilSource?: string;
   [key: string]: unknown;
 }
 

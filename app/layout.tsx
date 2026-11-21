@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import Script from "next/script";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "@/app/styles/globals.scss";
+import "leaflet/dist/leaflet.css";
 import SkipLink from "@/components/SkipLink";
 import PreviewBanner from "@/components/PreviewBanner";
 import { Suspense } from "react";

@@ -49,6 +49,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Production: preview is **completely disabled** — unpublished stories can never be loaded via query params in a prod build (dev-only feature). Review for publish happens via `editorial:pending`; publish applies the gates.
 - `/news/[id]` passes `includeDrafts=true` only in preview mode; `getPublishedStoryByNumericId(id, includeDrafts)` is the shared lookup. Gated by `lib/preview.ts::previewValue`.
 
+### Genus pages & fossil maps
+- `/genus/[slug]` renders a Leaflet/OpenStreetMap map when `genus.meta.fossilLocations` is non-empty, plus a text list of localities and a PBDB link. Leaflet is imported dynamically inside `components/GenusFossilMap.tsx` (client-only) with `leaflet/dist/leaflet.css` imported in `app/layout.tsx`.
+- `npm run enrich:locations` (`scripts/enrich-genus-locations.ts`) populates `meta.fossilLocations` on every genus in `_data/genus-data.json` from the Paleobiology Database (PBDB `occs/list.json`, `show=loc,coords`). Queried by **`base_name`**, not `taxon_name` — occurrences are mostly identified to species, so `taxon_name` matched only 335/1,550 genera vs. 1,461 with `base_name`. Taxon names are normalised before the request (wrapping quotes/punctuation stripped, diacritics folded) because PBDB rejects e.g. `“Gspsaurus”`/`Troödon` with HTTP 400. Occurrences are aggregated into ~0.5° bubbles (top 60 per genus). Per-taxon results are cached in `_data/pbdb-cache.json` (gitignored, resumable, entries tagged `CACHE_VERSION` — bump it when the query or aggregation changes); `--limit N`, `--genus <Name>`, `--force` supported. Genera with no PBDB records are left untouched (no map section, no placeholder), and a transport failure is never cached as "has no fossils".
+
 ### Housekeeping
 - Don't commit `IMPLEMENTATION_CHECKLIST.md`, `skills-lock.json`, or `.agents/` — user request. Committing the two listed files is never desired.
 - `ArticleCard.tsx` reading-time label (`< 10 min`) is hardcoded on purpose; should become computed eventually.

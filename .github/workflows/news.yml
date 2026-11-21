@@ -1,8 +1,9 @@
 name: News pipeline
 
 # Daily at 06:15 UTC: ingest → classify → propose → auto-publish gate → status,
-# then update a pinned "News pipeline digest" issue. NEVER runs on push — every
-# step writes to the same production database the site serves.
+# then update a pinned "News pipeline digest" issue. NEVER runs on push — the
+# pipeline writes to the production DB and persists new images back to the
+# development branch so they survive the ephemeral runner.
 #
 # Required repo secrets (Settings → Secrets and variables → Actions):
 #   DATABASE_URL       transaction-pooler URL used by the site build/scripts
@@ -19,7 +20,7 @@ on:
 
 permissions:
   issues: write
-  contents: read
+  contents: write
 
 concurrency:
   group: news-pipeline
@@ -63,6 +64,20 @@ jobs:
 
       - name: Editorial status
         run: npm run editorial:status | tee status.log
+
+      - name: Commit new pipeline images
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout development
+          git add public/images/news
+          if git diff --cached --quiet; then
+            echo "No new images to commit."
+          else
+            git commit -m "chore(news): persist pipeline-attached images from $GITHUB_SHA"
+            git push origin development
+          fi
 
       - name: Update digest issue
         if: always()
