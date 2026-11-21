@@ -8,13 +8,25 @@ interface GenusFossilMapProps {
   genusName: string;
 }
 
-// Cached so the world atlas is loaded only once per session.
-let atlasPromise: Promise<any> | null = null;
-function loadAtlas() {
-  if (!atlasPromise) {
-    atlasPromise = import("@/lib/data/world-110m.json").then((m: any) => m.default ?? m);
+// Bundled low-res atlas for instant first paint.
+let atlas110Promise: Promise<any> | null = null;
+function loadAtlas110() {
+  if (!atlas110Promise) {
+    atlas110Promise = import("@/lib/data/world-110m.json").then((m: any) => m.default ?? m);
   }
-  return atlasPromise;
+  return atlas110Promise;
+}
+
+// Higher-res atlases fetched on demand when the user zooms in.
+const atlasCache: Record<string, Promise<any>> = {};
+function loadAtlasRes(res: "50m" | "10m") {
+  if (!atlasCache[res]) {
+    atlasCache[res] = fetch(`https://cdn.jsdelivr.net/npm/world-atlas@2/countries-${res}.json`).then((r) => {
+      if (!r.ok) throw new Error(`atlas ${res} HTTP ${r.status}`);
+      return r.json();
+    });
+  }
+  return atlasCache[res];
 }
 
 function escapeXml(s: string) {
@@ -29,6 +41,7 @@ function escapeXml(s: string) {
 /**
  * Client-only world map in the Natural Earth projection (d3.geoNaturalEarth1),
  * with one circle per fossil-find bubble. Supports pan and zoom via d3-zoom.
+ * Coastline detail increases as the user zooms in (110m -> 50m -> 10m).
  */
 export default function GenusFossilMap({ locations, genusName }: GenusFossilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -40,16 +53,15 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
     let cleanupZoom: (() => void) | null = null;
 
     const build = async () => {
-      // Tear down any previous render.
       container.innerHTML = "";
 
       try {
-        const [d3geo, d3zoom, d3select, topo, atlas] = await Promise.all([
+        const [d3geo, d3zoom, d3select, topo, atlas110] = await Promise.all([
           import("d3-geo"),
           import("d3-zoom"),
           import("d3-selection"),
           import("topojson-client"),
-          loadAtlas(),
+          loadAtlas110(),
         ]);
         if (cancelled || !containerRef.current) return;
         const node = containerRef.current;
@@ -59,8 +71,6 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
 
         const projection = d3geo.geoNaturalEarth1();
         const path = d3geo.geoPath(projection);
-
-        const countries = (topo as any).feature(atlas, atlas.objects.countries) as { features: any[] };
 
         const pts = locations
           .map((l) => [l.lng, l.lat] as [number, number])
@@ -93,16 +103,16 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
         const zoomLayer = svg.append("g").attr("class", "zoom-layer");
 
         // Sphere outline (ocean).
-        zoomLayer.append("path")
+        const spherePath = zoomLayer.append("path")
           .attr("d", path({ type: "Sphere" } as any) || "")
           .attr("fill", "#f4f1e8")
           .attr("stroke", "#808080")
           .attr("stroke-width", 0.8)
           .attr("vector-effect", "non-scaling-stroke");
 
-        // Countries.
-        zoomLayer.selectAll("path.country")
-          .data(countries.features)
+        // Countries (swappable for higher-res versions on zoom).
+        const countrySel = zoomLayer.selectAll("path.country")
+          .data((topo as any).feature(atlas110, atlas110.objects.countries).features)
           .enter()
           .append("path")
           .attr("class", "country")
@@ -113,12 +123,10 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           .attr("vector-effect", "non-scaling-stroke");
 
         // Markers.
-        const radii: number[] = [];
         const markerData = pts.map(([lng, lat]) => {
           const loc = locations.find((l) => l.lng === lng && l.lat === lat);
           const weight = loc?.count ?? 1;
           const r = Math.min(8, 3 + Math.sqrt(weight) * 1.2);
-          radii.push(r);
           const place = [loc?.state, loc?.country].filter(Boolean).join(", ");
           const title = `${genusName} — ${place}${weight > 1 ? ` (${weight} occurrences)` : ""}`;
           return { lng, lat, r, title };
@@ -147,6 +155,36 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
 
         markers.append("title").text((d: any) => d.title);
 
+        // Detail indicator.
+        const detailText = svg.append("text")
+          .attr("x", width - 8)
+          .attr("y", height - 8)
+          .attr("text-anchor", "end")
+          .attr("font-size", 10)
+          .attr("fill", "#555")
+          .text("detail: 110m");
+
+        // Progressive detail loader.
+        let currentLevel: "110m" | "50m" | "10m" = "110m";
+        let loadingDetail = false;
+        const upgradeDetail = async (target: "50m" | "10m") => {
+          if (loadingDetail || currentLevel === target || (target === "50m" && currentLevel === "10m")) return;
+          loadingDetail = true;
+          detailText.text("loading detail…");
+          try {
+            const atlas = await loadAtlasRes(target);
+            if (cancelled) return;
+            const features = (topo as any).feature(atlas, atlas.objects.countries).features;
+            countrySel.data(features).attr("d", (d: any) => path(d) || "");
+            currentLevel = target;
+            detailText.text(`detail: ${target}`);
+          } catch {
+            detailText.text(`detail: ${currentLevel}`);
+          } finally {
+            loadingDetail = false;
+          }
+        };
+
         // Pan & zoom.
         const zoom = d3zoom.zoom()
           .scaleExtent([1, 8])
@@ -154,16 +192,19 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
             zoomLayer.attr("transform", event.transform);
             const k = event.transform.k || 1;
             markers.attr("r", (d: any) => d.r / k);
+            // Upgrade detail based on zoom level.
+            if (k >= 4 && currentLevel !== "10m") upgradeDetail("10m");
+            else if (k >= 2 && currentLevel === "110m") upgradeDetail("50m");
           });
 
         svg.call(zoom as any);
 
-        // Hint text.
         svg.append("text")
           .attr("x", 8)
           .attr("y", height - 8)
           .attr("font-size", 10)
           .attr("fill", "#555")
+          .text("Drag to pan · scroll to zoom");
 
         cleanupZoom = () => {
           svg.on(".zoom", null);
@@ -176,7 +217,6 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
 
     build();
 
-    // Rebuild (debounced) on resize for responsive sizing.
     let resizeTimer: ReturnType<typeof setTimeout> | null = null;
     const onResize = () => {
       if (resizeTimer) clearTimeout(resizeTimer);
