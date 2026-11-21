@@ -19,13 +19,16 @@ function loadAtlas110() {
 
 // Higher-res atlases fetched on demand when the user zooms in.
 const atlasCache: Record<string, Promise<any>> = {};
-// US state borders (admin-1) loaded on demand when zoomed in.
-let statesPromise: Promise<any> | null = null;
-function loadStates() {
-  if (!statesPromise) {
-    statesPromise = import("@/lib/data/us-states-10m.json").then((m: any) => m.default ?? m);
+// Global admin-1 (state/province) borders (Natural Earth 50m) fetched on demand.
+let admin1Promise: Promise<any> | null = null;
+function loadAdmin1() {
+  if (!admin1Promise) {
+    admin1Promise = fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces.geojson").then((r) => {
+      if (!r.ok) throw new Error(`admin-1 HTTP ${r.status}`);
+      return r.json();
+    });
   }
-  return statesPromise;
+  return admin1Promise;
 }
 function loadAtlasRes(res: "50m" | "10m") {
   if (!atlasCache[res]) {
@@ -138,8 +141,8 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           .attr("stroke-width", 0.5)
           .attr("vector-effect", "non-scaling-stroke");
 
-        // US state borders container (populated on zoom).
-        const statesGroup = zoomLayer.append("g").attr("class", "states").style("display", "none");
+        // Sub-country (admin-1) borders container (populated on zoom).
+        const admin1Group = zoomLayer.append("g").attr("class", "admin1").style("display", "none");
 
         // Markers.
         const markerData = pts.map(([lng, lat]) => {
@@ -215,31 +218,35 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
             // Upgrade detail based on zoom level.
             if (k >= 4 && currentLevel !== "10m") upgradeDetail("10m");
             else if (k >= 2 && currentLevel === "110m") upgradeDetail("50m");
-            // Show US state borders when zoomed in.
+            // Show sub-country (admin-1) borders when zoomed in.
             if (k >= 2) {
-              statesGroup.style("display", null);
-              if (!statesGroup.attr("data-loaded")) {
-                statesGroup.attr("data-loaded", "1");
-                loadStates().then((atlas) => {
+              admin1Group.style("display", null);
+              if (!admin1Group.attr("data-loaded")) {
+                admin1Group.attr("data-loaded", "1");
+                detailText.text("loading regions…");
+                loadAdmin1().then((geo) => {
                   if (cancelled) return;
-                  const features = (topo as any).feature(atlas, atlas.objects.states).features;
-                  statesGroup.selectAll("path.state")
+                  const features = geo.features;
+                  admin1Group.selectAll("path.region")
                     .data(features)
                     .enter()
                     .append("path")
-                    .attr("class", "state")
+                    .attr("class", "region")
                     .attr("d", (d: any) => path(d) || "")
                     .attr("fill", "none")
                     .attr("stroke", "#808080")
                     .attr("stroke-width", 0.4)
                     .attr("vector-effect", "non-scaling-stroke")
-                    .attr("opacity", 0.7);
+                    .attr("opacity", 0.6);
+                  detailText.text(`detail: ${currentLevel} + regions`);
                 }).catch(() => {
-                  statesGroup.style("display", "none");
+                  admin1Group.style("display", "none");
+                  admin1Group.attr("data-loaded", null);
+                  detailText.text(`detail: ${currentLevel}`);
                 });
               }
             } else {
-              statesGroup.style("display", "none");
+              admin1Group.style("display", "none");
             }
           });
 
