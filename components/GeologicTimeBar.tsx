@@ -70,12 +70,6 @@ const PERIODS = [
   { name: "Cretaceous", start: 143.1, end: 66.0, color: "#82cc73" },
 ];
 
-const ERAS = [
-  { name: "Paleozoic", start: 541.0, end: 252.17, color: "#97c8a9" },
-  { name: "Mesozoic", start: 252.17, end: 66.0, color: "#67C5CA" },
-  { name: "Cenozoic", start: 66.0, end: 0, color: "#ffe951" },
-];
-
 const MIN_MA = 252.17;
 const MAX_MA = 66.0;
 const RANGE = MIN_MA - MAX_MA;
@@ -129,33 +123,46 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         role="img"
         aria-label="Geologic time chart showing Phanerozoic, Mesozoic periods, epochs, ages, and occurrence ages"
       >
-        {/* Row 0: Phanerozoic eras */}
-        {ERAS.map((e) => (
-          <g key={e.name}>
-            <rect
-              x={xPhan(e.start)}
-              y={yPhan}
-              width={xPhan(e.end) - xPhan(e.start)}
-              height={rowH}
-              fill={e.color}
-              stroke="#fff"
-              strokeWidth={0.5}
-              opacity={e.name === "Mesozoic" ? 1 : 0.45}
-            />
-            {xPhan(e.end) - xPhan(e.start) > 50 && (
-              <text
-                x={(xPhan(e.start) + xPhan(e.end)) / 2}
-                y={yPhan + rowH / 2 + 4}
-                textAnchor="middle"
-                fontSize={12}
-                fontWeight={700}
-                fill="#000"
-              >
-                {e.name}
-              </text>
-            )}
-          </g>
-        ))}
+        {/* Row 0: Phanerozoic (single segment, Mesozoic highlighted) */}
+        <rect
+          x={xPhan(541)}
+          y={yPhan}
+          width={xPhan(0) - xPhan(541)}
+          height={rowH}
+          fill="#e9e6de"
+          stroke="#fff"
+          strokeWidth={0.5}
+        />
+        <rect
+          x={xPhan(252.17)}
+          y={yPhan}
+          width={xPhan(66) - xPhan(252.17)}
+          height={rowH}
+          fill="#67C5CA"
+          stroke="#fff"
+          strokeWidth={0.5}
+          opacity={0.9}
+        />
+        <text
+          x={(xPhan(541) + xPhan(0)) / 2}
+          y={yPhan + rowH / 2 + 4}
+          textAnchor="middle"
+          fontSize={12}
+          fontWeight={700}
+          fill="#000"
+        >
+          Phanerozoic
+        </text>
+        <text
+          x={(xPhan(252.17) + xPhan(66)) / 2}
+          y={yPhan + rowH / 2 + 4}
+          textAnchor="middle"
+          fontSize={10}
+          fontWeight={600}
+          fill="#000"
+        >
+          Mesozoic
+        </text>
 
         {/* Row 1: Mesozoic periods */}
         {PERIODS.map((p) => (
