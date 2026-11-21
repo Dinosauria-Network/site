@@ -26,29 +26,28 @@ const AGES = [
   { name: "Carnian", start: 237.0, end: 227.3, color: "#C99BCB" },
   { name: "Norian", start: 227.3, end: 205.7, color: "#D6AAD3" },
   { name: "Rhaetian", start: 205.7, end: 201.4, color: "#D6AAD3" },
-  { name: "Hettangian", start: 201.4, end: 199.5, color: "#4EB3D3" },
-  { name: "Sinemurian", start: 199.5, end: 192.9, color: "#67BCD8" },
-  { name: "Pliensbachian", start: 192.9, end: 184.2, color: "#80C5DD" },
-  { name: "Toarcian", start: 184.2, end: 174.7, color: "#99CEE3" },
-  { name: "Aalenian", start: 174.7, end: 170.9, color: "#9AD9DD" },
-  { name: "Bajocian", start: 170.9, end: 168.2, color: "#A6DDE0" },
-  { name: "Bathonian", start: 168.2, end: 165.3, color: "#B3E2E3" },
-  { name: "Callovian", start: 165.3, end: 161.5, color: "#BFE7E5" },
-  { name: "Oxfordian", start: 161.5, end: 154.8, color: "#BFE7F1" },
-  { name: "Kimmeridgian", start: 154.8, end: 149.2, color: "#CCECF4" },
-  { name: "Tithonian", start: 149.2, end: 143.1, color: "#D9F1F7" },
-  { name: "Berriasian", start: 143.1, end: 137.05, color: "#8ed184" },
-  { name: "Valanginian", start: 137.05, end: 132.6, color: "#9ad58d" },
-  { name: "Hauterivian", start: 132.6, end: 125.77, color: "#a7d996" },
-  { name: "Barremian", start: 125.77, end: 121.4, color: "#b4de9f" },
-  { name: "Aptian", start: 121.4, end: 113.2, color: "#c1e2a8" },
-  { name: "Albian", start: 113.2, end: 100.5, color: "#cee7b1" },
-  { name: "Cenomanian", start: 100.5, end: 93.9, color: "#b8da7a" },
-  { name: "Turonian", start: 93.9, end: 89.8, color: "#c5df83" },
-  { name: "Coniacian", start: 89.8, end: 85.7, color: "#d2e38c" },
-  { name: "Santonian", start: 85.7, end: 83.6, color: "#dfe895" },
-  { name: "Campanian", start: 83.6, end: 72.2, color: "#ebec9e" },
-  { name: "Maastrichtian", start: 72.2, end: 66.0, color: "#f9f1a8" },
+  { name: "Hettangian", start: 201.4, end: 192.9, color: "#67BCD8" },
+  { name: "Sinemurian", start: 192.9, end: 184.2, color: "#80CFD8" },
+  { name: "Pliensbachian", start: 184.2, end: 174.7, color: "#99CEE3" },
+  { name: "Toarcian", start: 174.7, end: 168.2, color: "#99CEE3" },
+  { name: "Aalenian", start: 168.2, end: 165.3, color: "#9AD9DD" },
+  { name: "Bajocian", start: 165.3, end: 161.5, color: "#A6DDE0" },
+  { name: "Bathonian", start: 161.5, end: 154.8, color: "#B3E2E3" },
+  { name: "Callovian", start: 154.8, end: 149.2, color: "#BFE7E5" },
+  { name: "Oxfordian", start: 149.2, end: 143.1, color: "#CCECF4" },
+  { name: "Kimmeridgian", start: 143.1, end: 137.05, color: "#8ed184" },
+  { name: "Tithonian", start: 137.05, end: 132.6, color: "#9ad58d" },
+  { name: "Valanginian", start: 132.6, end: 137.05, color: "#9ad58d" },
+  { name: "Hauterivian", start: 137.05, end: 139.5, color: "#9ad58d" },
+  { name: "Barremian", start: 139.5, end: 143.1, color: "#d2e38c" },
+  { name: "Aptian", start: 143.1, end: 145.5, color: "#d2e38c" },
+  { name: "Albian", start: 145.5, end: 154.8, color: "#d2e38c" },
+  { name: "Cenomanian", start: 154.8, end: 100.5, color: "#b8da7a" },
+  { name: "Turonian", start: 100.5, end: 89.8, color: "#c5df83" },
+  { name: "Coniacian", start: 89.8, end: 83.6, color: "#d2e38c" },
+  { name: "Santonian", start: 83.6, end: 72.2, color: "#ebec9e" },
+  { name: "Campanian", start: 72.2, end: 70.7, color: "#ebec9e" },
+  { name: "Maastrichtian", start: 70.7, end: 66.0, color: "#f9f1a8" },
 ];
 
 const PERIODS = [
@@ -70,17 +69,60 @@ export function epochColorForMa(ma: number): string {
 
 const MIN_MA = 252.17;
 const MAX_MA = 66.0;
-const RANGE = MIN_MA - MAX_MA;
 
-export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
-  const width = 800;
+function getDomainFromLocations(locations: FossilLocation[]): { visStart: number; visEnd: number } {
+  const presentPeriods = new Set<string>();
+  for (const loc of locations) {
+    const lo = loc.minMa ?? loc.maxMa;
+    const hi = loc.maxMa ?? loc.minMa;
+    if (lo !== undefined && hi !== undefined) {
+      for (const p of PERIODS) {
+        if (hi >= p.end && lo <= p.start) {
+          presentPeriods.add(p.name);
+        }
+      }
+    } else if (loc.period) {
+      presentPeriods.add(loc.period);
+    }
+  }
+  if (presentPeriods.size === 0) {
+    return { visStart: 252.17, visEnd: 66.0 };
+  }
+  const visStart = Math.max(...Array.from(presentPeriods).map(p => PERIODS.find(p => p.name === p)!.start));
+  const visEnd = Math.min(...Array.from(presentPeriods).map(p => PERIODS.find(p => p.name === p)!.end));
+  return { visStart, visEnd };
+}
+
+export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
+  const { visStart, visEnd } = getDomainFromLocations(locations);
+  const visRange = visStart - visEnd;
+
+  const xMeso = (ma: number) => ((visStart - ma) / visRange) * 800;
+  const xPhan = (ma: number) => ((541 - ma) / (541 - 0)) * 800;
+
+  const labelPos = (center: number, text: string, fontSize: number) => {
+    const half = (text.length * fontSize * 0.55) / 2;
+    if (center - half < 0) return { x: 1, anchor: "start" as const };
+    if (center + half > 800) return { x: 799, anchor: "end" as const };
+    return { x: center, anchor: "middle" as const };
+  };
+
+  const ticks: { x: number; label: string; anchor: "start" | "middle" | "end" }[] = [
+    { x: 0, label: `${Math.round(visStart)} Ma`, anchor: "start" },
+  ];
+  const candidates = [237, 201, 175, 143, 100];
+  for (const c of candidates) {
+    if (c < visStart - 18 && c > visEnd + 18) {
+      ticks.push({ x: xMeso(c), label: `${c} Ma`, anchor: "middle" });
+    }
+  }
+  ticks.push({ x: 800, label: `${Math.round(visEnd)} Ma`, anchor: "end" });
+
+  const topPad = 6;
   const rowH = 20;
   const gap = 0;
-  const topPad = 6;
-  const ageLabelH = 58; // vertical (rotated) age labels below the age band
-  const axisH = 20;
   const rows = 5;
-  const height = topPad + rows * rowH + (rows - 1) * gap + 4 + ageLabelH + axisH;
+  const height = topPad + rows * rowH + (rows - 1) * gap + 4 + 58 + 20;
 
   const yPhan = topPad;
   const yMesoEra = yPhan + rowH + gap;
@@ -88,40 +130,29 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
   const yEpoch = yPeriod + rowH + gap;
   const yAge = yEpoch + rowH + gap;
   const ageLabelY = yAge + rowH + 4;
-  const axisY = ageLabelY + ageLabelH;
-
-  const xMeso = (ma: number) => ((MIN_MA - ma) / RANGE) * width;
-  const xPhan = (ma: number) => ((541 - ma) / (541 - 0)) * width;
-
-  // Center a label, but keep edge labels inside the chart.
-  const labelPos = (center: number, text: string, fontSize: number) => {
-    const half = (text.length * fontSize * 0.55) / 2;
-    if (center - half < 0) return { x: 1, anchor: "start" as const };
-    if (center + half > width) return { x: width - 1, anchor: "end" as const };
-    return { x: center, anchor: "middle" as const };
-  };
+  const axisY = ageLabelY + 58;
 
   return (
     <div className="genus-geotime">
       <h3 className="genus-geotime-title">Geologic time of fossil occurrences</h3>
       <svg
-        viewBox={`0 0 ${width} ${height}`}
+        viewBox={`0 0 800 ${height}`}
         className="genus-geotime-svg"
         role="img"
         aria-label="Mesozoic geologic time scale showing periods, epochs, and ages"
       >
-        {/* Row 0: Phanerozoic (single band) */}
+        {/* Row 0: Phanerozoic (full width) */}
         <rect
-          x={xPhan(541)}
+          x={xPhan(visStart)}
           y={yPhan}
-          width={xPhan(0) - xPhan(541)}
+          width={xPhan(visEnd) - xPhan(visStart)}
           height={rowH}
-          fill="#9AD9DD"
+          fill="#e9e6de"
           stroke="#fff"
           strokeWidth={0.5}
         />
         <text
-          x={(xPhan(541) + xPhan(0)) / 2}
+          x={(xPhan(visStart) + xPhan(visEnd)) / 2}
           y={yPhan + rowH / 2 + 4}
           textAnchor="middle"
           fontSize={12}
@@ -131,11 +162,11 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
           Phanerozoic
         </text>
 
-        {/* Row 1: Mesozoic (single band) */}
+        {/* Row 1: Mesozoic (clamped to visible window) */}
         <rect
-          x={xMeso(252.17)}
+          x={xMeso(visStart)}
           y={yMesoEra}
-          width={xMeso(66) - xMeso(252.17)}
+          width={xMeso(visEnd) - xMeso(visStart)}
           height={rowH}
           fill="#67C5CA"
           stroke="#fff"
@@ -143,7 +174,7 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
           opacity={0.9}
         />
         <text
-          x={(xMeso(252.17) + xMeso(66)) / 2}
+          x={(xMeso(visStart) + xMeso(visEnd)) / 2}
           y={yMesoEra + rowH / 2 + 4}
           textAnchor="middle"
           fontSize={12}
@@ -154,7 +185,7 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
         </text>
 
         {/* Row 2: Mesozoic periods */}
-        {PERIODS.map((p) => {
+        {activePeriods.map((p) => {
           const w = xMeso(p.end) - xMeso(p.start);
           const lp = labelPos((xMeso(p.start) + xMeso(p.end)) / 2, p.name, 11);
           return (
@@ -185,7 +216,7 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
         })}
 
         {/* Row 3: epochs */}
-        {EPOCHS.map((e) => {
+        {activeEpochs.map((e) => {
           const w = xMeso(e.end) - xMeso(e.start);
           const lp = labelPos((xMeso(e.start) + xMeso(e.end)) / 2, e.name, 9);
           return (
@@ -215,7 +246,7 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
         })}
 
         {/* Row 4: ages */}
-        {AGES.map((a) => {
+        {activeAges.map((a) => {
           const x0 = xMeso(a.start);
           const x1 = xMeso(a.end);
           const w = Math.max(1, x1 - x0);
@@ -236,7 +267,8 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
                   y={ageLabelY}
                   transform={`rotate(-90 ${(x0 + x1) / 2 + 2.5} ${ageLabelY})`}
                   textAnchor="end"
-                  fontSize={7}
+                  fontSize={isAgeActive ? 8 : 7}
+                  fontWeight={isAgeActive ? 700 : 400}
                   fill="#000"
                 >
                   {a.name}
@@ -250,33 +282,33 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
         <line
           x1={0}
           y1={axisY}
-          x2={width}
+          x2={800}
           y2={axisY}
           stroke="#444"
           strokeWidth={1}
         />
-        {[252, 201, 143, 66].map((ma) => (
-          <g key={ma}>
+        {ticks.map((t, idx) => (
+          <g key={idx}>
             <line
-              x1={xMeso(ma)}
+              x1={t.x}
               y1={axisY}
-              x2={xMeso(ma)}
+              x2={t.x}
               y2={axisY + 4}
               stroke="#444"
               strokeWidth={1}
             />
             <text
-              x={xMeso(ma)}
+              x={t.x}
               y={axisY + 15}
-              textAnchor={ma === 252 ? "start" : ma === 66 ? "end" : "middle"}
+              textAnchor={t.anchor}
               fontSize={10}
               fill="#444"
             >
-              {ma} Ma
+              {t.label}
             </text>
           </g>
         ))}
-      </svg>
+      </div>
     </div>
   );
 }
