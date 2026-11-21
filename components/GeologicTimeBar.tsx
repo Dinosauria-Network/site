@@ -80,12 +80,13 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
   const gap = 4;
   const topPad = 16;
   const bottomPad = 22;
-  const rows = 4;
+  const rows = 5;
   const height = topPad + rows * rowH + (rows - 1) * gap + bottomPad;
 
   const yPhan = topPad;
-  const yMeso = yPhan + rowH + gap;
-  const yEpoch = yMeso + rowH + gap;
+  const yMesoEra = yPhan + rowH + gap;
+  const yPeriod = yMesoEra + rowH + gap;
+  const yEpoch = yPeriod + rowH + gap;
   const yAge = yEpoch + rowH + gap;
 
   const xMeso = (ma: number) => ((MIN_MA - ma) / RANGE) * width;
@@ -123,7 +124,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         role="img"
         aria-label="Geologic time chart showing Phanerozoic, Mesozoic periods, epochs, ages, and occurrence ages"
       >
-        {/* Row 0: Phanerozoic (single segment, Mesozoic highlighted) */}
+        {/* Row 0: Phanerozoic (single band) */}
         <rect
           x={xPhan(541)}
           y={yPhan}
@@ -132,16 +133,6 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           fill="#e9e6de"
           stroke="#fff"
           strokeWidth={0.5}
-        />
-        <rect
-          x={xPhan(252.17)}
-          y={yPhan}
-          width={xPhan(66) - xPhan(252.17)}
-          height={rowH}
-          fill="#67C5CA"
-          stroke="#fff"
-          strokeWidth={0.5}
-          opacity={0.9}
         />
         <text
           x={(xPhan(541) + xPhan(0)) / 2}
@@ -153,23 +144,35 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         >
           Phanerozoic
         </text>
+
+        {/* Row 1: Mesozoic (single band) */}
+        <rect
+          x={xMeso(252.17)}
+          y={yMesoEra}
+          width={xMeso(66) - xMeso(252.17)}
+          height={rowH}
+          fill="#67C5CA"
+          stroke="#fff"
+          strokeWidth={0.5}
+          opacity={0.9}
+        />
         <text
-          x={(xPhan(252.17) + xPhan(66)) / 2}
-          y={yPhan + rowH / 2 + 4}
+          x={(xMeso(252.17) + xMeso(66)) / 2}
+          y={yMesoEra + rowH / 2 + 4}
           textAnchor="middle"
-          fontSize={10}
-          fontWeight={600}
+          fontSize={12}
+          fontWeight={700}
           fill="#000"
         >
           Mesozoic
         </text>
 
-        {/* Row 1: Mesozoic periods */}
+        {/* Row 2: Mesozoic periods */}
         {PERIODS.map((p) => (
           <g key={p.name}>
             <rect
               x={xMeso(p.start)}
-              y={yMeso}
+              y={yPeriod}
               width={xMeso(p.end) - xMeso(p.start)}
               height={rowH}
               fill={p.color}
@@ -180,7 +183,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
             {xMeso(p.end) - xMeso(p.start) > 30 && (
               <text
                 x={(xMeso(p.start) + xMeso(p.end)) / 2}
-                y={yMeso + rowH / 2 + 4}
+                y={yPeriod + rowH / 2 + 4}
                 textAnchor="middle"
                 fontSize={11}
                 fontWeight={600}
@@ -192,7 +195,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           </g>
         ))}
 
-        {/* Row 2: epochs of dominant period */}
+        {/* Row 3: epochs of dominant period */}
         {epochRow.map((e) => (
           <g key={`${e.period}-${e.name}`}>
             <rect
@@ -223,7 +226,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           </text>
         )}
 
-        {/* Row 3: ages of dominant period */}
+        {/* Row 4: ages of dominant period */}
         {ageRow.map((a) => (
           <g key={a.name}>
             <rect
@@ -272,8 +275,8 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         {/* axis ticks on mesozoic row */}
         {[252, 201, 143, 66].map((ma) => (
           <g key={ma}>
-            <line x1={xMeso(ma)} y1={yMeso + rowH} x2={xMeso(ma)} y2={yMeso + rowH + 4} stroke="#444" strokeWidth={1} />
-            <text x={xMeso(ma)} y={yMeso + rowH + 16} textAnchor="middle" fontSize={10} fill="#444">
+            <line x1={xMeso(ma)} y1={yPeriod + rowH} x2={xMeso(ma)} y2={yPeriod + rowH + 4} stroke="#444" strokeWidth={1} />
+            <text x={xMeso(ma)} y={yPeriod + rowH + 16} textAnchor="middle" fontSize={10} fill="#444">
               {ma} Ma
             </text>
           </g>
