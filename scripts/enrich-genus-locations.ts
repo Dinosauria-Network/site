@@ -34,6 +34,11 @@ interface Bubble {
   country: string;
   state?: string;
   count: number;
+  /** Dominant geologic period for this bubble's occurrences. */
+  period?: string;
+  /** Age range (Ma) covered by the bubble's occurrences. */
+  minMa?: number;
+  maxMa?: number;
 }
 
 interface CacheEntry {
@@ -43,8 +48,8 @@ interface CacheEntry {
   locations: Bubble[];
 }
 
-/** 1 = taxon_name query (missed species-level occurrences); 2 = base_name. */
-const CACHE_VERSION = 2;
+/** 1 = taxon_name; 2 = base_name; 3 = + geologic period/age per bubble. */
+const CACHE_VERSION = 3;
 
 type Cache = Record<string, CacheEntry>;
 
@@ -84,12 +89,52 @@ const countryName = (code?: string) => {
   return COUNTRY_NAMES[key] ?? code;
 };
 
+/** Derive a Mesozoic period from a PBDB interval name (e.g. "Late Cretaceous"). */
+function periodFromInterval(name: string): string | undefined {
+  const n = name.toLowerCase();
+  if (n.includes('cretaceous')) return 'Cretaceous';
+  if (n.includes('jurassic')) return 'Jurassic';
+  if (n.includes('triassic')) return 'Triassic';
+  return undefined;
+}
+
+function dominantPeriod(counts: Record<string, number>): string | undefined {
+  let best: string | undefined;
+  let max = 0;
+  for (const [k, v] of Object.entries(counts)) {
+    if (v > max) { max = v; best = k; }
+  }
+  return best;
+}
+function periodFromMa(ma: number): string {
+  if (!Number.isFinite(ma)) return 'Unknown';
+  if (ma >= 201.4) return 'Triassic';
+  if (ma >= 143.1) return 'Jurassic';
+  if (ma >= 66.0) return 'Cretaceous';
+  if (ma >= 252.0) return 'Permian';
+  return 'Cenozoic';
+}
+
+function recordMa(r: PbdbRecord): number | null {
+  const eag = Number(r.eag);
+  const lag = Number(r.lag);
+  if (Number.isFinite(eag) && Number.isFinite(lag)) return (eag + lag) / 2;
+  if (Number.isFinite(eag)) return eag;
+  if (Number.isFinite(lag)) return lag;
+  return null;
+}
+
 /** Only the PBDB fields we actually read (`show=loc,coords`). */
 interface PbdbRecord {
   lat?: string | number;
   lng?: string | number;
   cc2?: string;
   stp?: string;
+  /** Early interval name, e.g. "Late Cretaceous". */
+  oei?: string;
+  /** Early/late age in Ma. */
+  eag?: string | number;
+  lag?: string | number;
 }
 
 /** The shape of one entry in _data/genus-data.json postTypes.genus. */
@@ -173,23 +218,48 @@ async function fetchLocations(taxon: string): Promise<Bubble[]> {
     const lng = Number(r.lng);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
     const key = `${lat.toFixed(1)},${lng.toFixed(1)}`;
+    const ma = recordMa(r);
+    const period = ma !== null ? periodFromMa(ma) : (r.oei ? periodFromInterval(r.oei) : undefined);
     const existing = buckets.get(key);
     if (existing) {
       existing.count += 1;
+      if (ma !== null) {
+        if (existing.minMa === undefined || ma < existing.minMa) existing.minMa = ma;
+        if (existing.maxMa === undefined || ma > existing.maxMa) existing.maxMa = ma;
+      }
+      // Keep the most common period: track counts.
+      if (period) {
+        (existing as any)._periodCounts = (existing as any)._periodCounts || {};
+        (existing as any)._periodCounts[period] = ((existing as any)._periodCounts[period] || 0) + 1;
+        existing.period = dominantPeriod((existing as any)._periodCounts);
+      }
     } else {
-      buckets.set(key, {
+      const pc: Record<string, number> = {};
+      if (period) pc[period] = 1;
+      const bubble: Bubble = {
         lat: Number(lat.toFixed(2)),
         lng: Number(lng.toFixed(2)),
         country: countryName(r.cc2),
         state: r.stp && r.stp !== '__' ? String(r.stp) : undefined,
         count: 1,
-      });
+        period,
+        minMa: ma !== null ? ma : undefined,
+        maxMa: ma !== null ? ma : undefined,
+      };
+      (bubble as any)._periodCounts = pc;
+      buckets.set(key, bubble);
     }
   }
 
-  return [...buckets.values()]
+  // Clean up helper fields before returning.
+  const result = [...buckets.values()]
+    .map((b) => {
+      delete (b as any)._periodCounts;
+      return b;
+    })
     .sort((a, b) => b.count - a.count)
     .slice(0, MAX_POINTS);
+  return result;
 }
 
 async function main() {

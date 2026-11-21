@@ -19,6 +19,11 @@ export interface FossilLocation {
   country: string;
   state?: string;
   count?: number;
+  /** Dominant geologic period for this bubble's occurrences (Mesozoic colors). */
+  period?: string;
+  /** Age range (Ma) covered by the bubble's occurrences. */
+  minMa?: number;
+  maxMa?: number;
 }
 
 export interface GenusMeta {
