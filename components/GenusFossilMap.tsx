@@ -19,6 +19,14 @@ function loadAtlas110() {
 
 // Higher-res atlases fetched on demand when the user zooms in.
 const atlasCache: Record<string, Promise<any>> = {};
+// US state borders (admin-1) loaded on demand when zoomed in.
+let statesPromise: Promise<any> | null = null;
+function loadStates() {
+  if (!statesPromise) {
+    statesPromise = import("@/lib/data/us-states-10m.json").then((m: any) => m.default ?? m);
+  }
+  return statesPromise;
+}
 function loadAtlasRes(res: "50m" | "10m") {
   if (!atlasCache[res]) {
     atlasCache[res] = fetch(`https://cdn.jsdelivr.net/npm/world-atlas@2/countries-${res}.json`).then((r) => {
@@ -130,6 +138,9 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           .attr("stroke-width", 0.5)
           .attr("vector-effect", "non-scaling-stroke");
 
+        // US state borders container (populated on zoom).
+        const statesGroup = zoomLayer.append("g").attr("class", "states").style("display", "none");
+
         // Markers.
         const markerData = pts.map(([lng, lat]) => {
           const loc = locations.find((l) => l.lng === lng && l.lat === lat);
@@ -204,6 +215,32 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
             // Upgrade detail based on zoom level.
             if (k >= 4 && currentLevel !== "10m") upgradeDetail("10m");
             else if (k >= 2 && currentLevel === "110m") upgradeDetail("50m");
+            // Show US state borders when zoomed in.
+            if (k >= 2) {
+              statesGroup.style("display", null);
+              if (!statesGroup.attr("data-loaded")) {
+                statesGroup.attr("data-loaded", "1");
+                loadStates().then((atlas) => {
+                  if (cancelled) return;
+                  const features = (topo as any).feature(atlas, atlas.objects.states).features;
+                  statesGroup.selectAll("path.state")
+                    .data(features)
+                    .enter()
+                    .append("path")
+                    .attr("class", "state")
+                    .attr("d", (d: any) => path(d) || "")
+                    .attr("fill", "none")
+                    .attr("stroke", "#808080")
+                    .attr("stroke-width", 0.4)
+                    .attr("vector-effect", "non-scaling-stroke")
+                    .attr("opacity", 0.7);
+                }).catch(() => {
+                  statesGroup.style("display", "none");
+                });
+              }
+            } else {
+              statesGroup.style("display", "none");
+            }
           });
 
         svg.call(zoom as any);
