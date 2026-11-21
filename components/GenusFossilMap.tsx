@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { FossilLocation } from "@/lib/genus-data";
 
 interface GenusFossilMapProps {
   locations: FossilLocation[];
   genusName: string;
 }
-
-type GeoModule = typeof import("d3-geo");
-type TopoModule = typeof import("topojson-client");
 
 // Cached so the world atlas is loaded only once per session.
 let atlasPromise: Promise<any> | null = null;
@@ -20,47 +17,55 @@ function loadAtlas() {
   return atlasPromise;
 }
 
+function escapeXml(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 /**
  * Client-only world map in the Natural Earth projection (d3.geoNaturalEarth1),
- * with one circle per fossil-find bubble. Replaces the previous Leaflet/Web
- * Mercator map so the page no longer depends on slippy tiles.
+ * with one circle per fossil-find bubble. Supports pan and zoom via d3-zoom.
  */
 export default function GenusFossilMap({ locations, genusName }: GenusFossilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [svg, setSvg] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     let cancelled = false;
+    let cleanupZoom: (() => void) | null = null;
 
-    const render = async () => {
+    const build = async () => {
+      // Tear down any previous render.
+      container.innerHTML = "";
+
       try {
-        const [d3geo, topo, atlas] = await Promise.all([
-          import("d3-geo") as Promise<GeoModule>,
-          import("topojson-client") as Promise<TopoModule>,
+        const [d3geo, d3zoom, d3select, topo, atlas] = await Promise.all([
+          import("d3-geo"),
+          import("d3-zoom"),
+          import("d3-selection"),
+          import("topojson-client"),
           loadAtlas(),
         ]);
-        if (cancelled) return;
+        if (cancelled || !containerRef.current) return;
+        const node = containerRef.current;
 
-        const width = Math.max(container.clientWidth || 640, 320);
-        const height = Math.max(container.clientHeight || 380, 240);
+        const width = Math.max(node.clientWidth || 640, 320);
+        const height = Math.max(node.clientHeight || 380, 240);
 
         const projection = d3geo.geoNaturalEarth1();
         const path = d3geo.geoPath(projection);
 
-        const countries = (topo as any).feature(
-          atlas,
-          atlas.objects.countries
-        ) as { features: any[] };
+        const countries = (topo as any).feature(atlas, atlas.objects.countries) as { features: any[] };
 
-        // Fit the projection to the marker points when there are at least two
-        // distinct locations; otherwise centre on the single point at a
-        // sensible scale.
         const pts = locations
           .map((l) => [l.lng, l.lat] as [number, number])
           .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
+
         const distinct = new Set(pts.map((p) => p.join(",")));
         if (pts.length && distinct.size >= 2) {
           projection.fitExtent(
@@ -76,44 +81,108 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           projection.scale(width / 6).translate([width / 2, height / 2]);
         }
 
-        const spherePath = path({ type: "Sphere" } as any) || "";
-        const countryPaths = countries.features
-          .map((f: any) => path(f))
-          .filter((d): d is string => Boolean(d))
-          .map((d: string) => `<path d="${d}" fill="#e9e6de" stroke="#808080" stroke-width="0.5" />`)
-          .join("");
+        const svg = d3select.select(node).append("svg")
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("width", "100%")
+          .attr("height", "100%")
+          .attr("role", "img")
+          .attr("aria-label", `Map of fossil find locations for ${genusName}`)
+          .style("background", "#e9e6de")
+          .style("touch-action", "none");
 
-        const markerSvg = pts
-          .map(([lng, lat]) => {
-            const xy = projection([lng, lat]);
-            if (!xy) return "";
-            const loc = locations.find((l) => l.lng === lng && l.lat === lat);
-            const weight = loc?.count ?? 1;
-            const r = Math.min(8, 3 + Math.sqrt(weight) * 1.2);
-            const place = [loc?.state, loc?.country].filter(Boolean).join(", ");
-            const title = `${genusName} — ${place}${weight > 1 ? ` (${weight} occurrences)` : ""}`;
-            return `<circle cx="${xy[0].toFixed(1)}" cy="${xy[1].toFixed(1)}" r="${r}" fill="#b07a24" fill-opacity="0.85" stroke="#2f271d" stroke-width="1"><title>${escapeXml(title)}</title></circle>`;
+        const zoomLayer = svg.append("g").attr("class", "zoom-layer");
+
+        // Sphere outline (ocean).
+        zoomLayer.append("path")
+          .attr("d", path({ type: "Sphere" } as any) || "")
+          .attr("fill", "#f4f1e8")
+          .attr("stroke", "#808080")
+          .attr("stroke-width", 0.8)
+          .attr("vector-effect", "non-scaling-stroke");
+
+        // Countries.
+        zoomLayer.selectAll("path.country")
+          .data(countries.features)
+          .enter()
+          .append("path")
+          .attr("class", "country")
+          .attr("d", (d: any) => path(d) || "")
+          .attr("fill", "#e9e6de")
+          .attr("stroke", "#808080")
+          .attr("stroke-width", 0.5)
+          .attr("vector-effect", "non-scaling-stroke");
+
+        // Markers.
+        const radii: number[] = [];
+        const markerData = pts.map(([lng, lat]) => {
+          const loc = locations.find((l) => l.lng === lng && l.lat === lat);
+          const weight = loc?.count ?? 1;
+          const r = Math.min(8, 3 + Math.sqrt(weight) * 1.2);
+          radii.push(r);
+          const place = [loc?.state, loc?.country].filter(Boolean).join(", ");
+          const title = `${genusName} — ${place}${weight > 1 ? ` (${weight} occurrences)` : ""}`;
+          return { lng, lat, r, title };
+        });
+
+        const markers = zoomLayer.selectAll("circle.marker")
+          .data(markerData)
+          .enter()
+          .append("circle")
+          .attr("class", "marker")
+          .attr("cx", (d: any) => {
+            const xy = projection([d.lng, d.lat]);
+            return xy ? xy[0] : 0;
           })
-          .join("");
+          .attr("cy", (d: any) => {
+            const xy = projection([d.lng, d.lat]);
+            return xy ? xy[1] : 0;
+          })
+          .attr("r", (d: any) => d.r)
+          .attr("fill", "#b07a24")
+          .attr("fill-opacity", 0.85)
+          .attr("stroke", "#2f271d")
+          .attr("stroke-width", 1)
+          .attr("vector-effect", "non-scaling-stroke")
+          .style("cursor", "pointer");
 
-        const out =
-          `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%" role="img" aria-label="Map of fossil find locations for ${escapeXml(genusName)}" style="background:#e9e6de;">` +
-          `<path d="${spherePath}" fill="#f4f1e8" stroke="#808080" stroke-width="0.8" />` +
-          `<g>${countryPaths}</g>` +
-          `<g>${markerSvg}</g>` +
-          `</svg>`;
+        markers.append("title").text((d: any) => d.title);
 
-        if (!cancelled) setSvg(out);
+        // Pan & zoom.
+        const zoom = d3zoom.zoom()
+          .scaleExtent([1, 8])
+          .on("zoom", (event: any) => {
+            zoomLayer.attr("transform", event.transform);
+            const k = event.transform.k || 1;
+            markers.attr("r", (d: any) => d.r / k);
+          });
+
+        svg.call(zoom as any);
+
+        // Hint text.
+        svg.append("text")
+          .attr("x", 8)
+          .attr("y", height - 8)
+          .attr("font-size", 10)
+          .attr("fill", "#555")
+
+        cleanupZoom = () => {
+          svg.on(".zoom", null);
+        };
       } catch (e) {
-        if (!cancelled) setError(String(e).slice(0, 200));
+        if (cancelled || !containerRef.current) return;
+        containerRef.current.innerHTML = `<p class="genus-fossil-map-error">Map unavailable: ${escapeXml(String(e).slice(0, 200))}</p>`;
       }
     };
 
-    render();
+    build();
 
+    // Rebuild (debounced) on resize for responsive sizing.
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
     const onResize = () => {
-      // Re-render on resize for responsive sizing.
-      if (containerRef.current) render();
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (!cancelled) build();
+      }, 200);
     };
     const ro = new ResizeObserver(onResize);
     ro.observe(container);
@@ -121,6 +190,9 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
     return () => {
       cancelled = true;
       ro.disconnect();
+      if (resizeTimer) clearTimeout(resizeTimer);
+      if (cleanupZoom) cleanupZoom();
+      if (containerRef.current) containerRef.current.innerHTML = "";
     };
   }, [locations, genusName]);
 
@@ -130,23 +202,6 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
       className="genus-fossil-map"
       role="region"
       aria-label={`Map of fossil find locations for ${genusName}`}
-    >
-      {error ? (
-        <p className="genus-fossil-map-error">Map unavailable: {error}</p>
-      ) : svg ? (
-        <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width: "100%", height: "100%" }} />
-      ) : (
-        <p className="genus-fossil-map-loading">Loading map…</p>
-      )}
-    </div>
+    />
   );
-}
-
-function escapeXml(s: string) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
