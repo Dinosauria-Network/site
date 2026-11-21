@@ -104,18 +104,6 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
   const epochRow = EPOCHS.filter((e) => e.period === dominantPeriod);
   const ageRow = AGES[dominantPeriod] || [];
 
-  const markers = locations
-    .map((loc, i) => {
-      const lo = loc.minMa ?? loc.maxMa;
-      const hi = loc.maxMa ?? loc.minMa;
-      if (lo === undefined || hi === undefined) return null;
-      const mid = (lo + hi) / 2;
-      const clamped = Math.max(MAX_MA, Math.min(MIN_MA, mid));
-      const period = loc.period || "Cretaceous";
-      return { i, mid: clamped, period, count: loc.count ?? 1 };
-    })
-    .filter(Boolean) as { i: number; mid: number; period: string; count: number }[];
-
   return (
     <div className="genus-geotime">
       <h3 className="genus-geotime-title">Geologic time of fossil occurrences</h3>
@@ -124,7 +112,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         width="100%"
         height={height}
         role="img"
-        aria-label="Geologic time chart showing Phanerozoic, Mesozoic periods, epochs, ages, and occurrence ages"
+        aria-label="Geologic time chart showing Phanerozoic, Mesozoic periods, epochs, and ages"
       >
         {/* Row 0: Phanerozoic (single band) */}
         <rect
@@ -259,26 +247,32 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           </text>
         )}
 
-        {/* occurrence markers on the epoch row */}
-        {markers.map((m) => (
-          <circle
-            key={m.i}
-            cx={xMeso(m.mid)}
-            cy={yEpoch - 6}
-            r={Math.min(6, 2 + Math.sqrt(m.count))}
-            fill={epochColorForMa(m.mid)}
-            stroke="#2f271d"
-            strokeWidth={0.8}
-          >
-            <title>{m.period} (~{Math.round(m.mid)} Ma)</title>
-          </circle>
-        ))}
-
-        {/* axis ticks on mesozoic row */}
+        {/* age axis at the bottom of the chart */}
+        <line
+          x1={0}
+          y1={yAge + rowH}
+          x2={width}
+          y2={yAge + rowH}
+          stroke="#444"
+          strokeWidth={1}
+        />
         {[252, 201, 143, 66].map((ma) => (
           <g key={ma}>
-            <line x1={xMeso(ma)} y1={yPeriod + rowH} x2={xMeso(ma)} y2={yPeriod + rowH + 4} stroke="#444" strokeWidth={1} />
-            <text x={xMeso(ma)} y={yPeriod + rowH + 16} textAnchor="middle" fontSize={10} fill="#444">
+            <line
+              x1={xMeso(ma)}
+              y1={yAge + rowH}
+              x2={xMeso(ma)}
+              y2={yAge + rowH + 4}
+              stroke="#444"
+              strokeWidth={1}
+            />
+            <text
+              x={xMeso(ma)}
+              y={yAge + rowH + 15}
+              textAnchor={ma === 252 ? "start" : ma === 66 ? "end" : "middle"}
+              fontSize={10}
+              fill="#444"
+            >
               {ma} Ma
             </text>
           </g>
