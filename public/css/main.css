@@ -1769,6 +1769,13 @@ picture {
   border-top: 1px solid #d8d5ce;
 }
 
+/* Match the map: fill the content column, scale height by aspect ratio. */
+.genus-geotime-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .genus-geotime-title {
   margin: 0 0 0.5rem;
   font-size: 1.05rem;
