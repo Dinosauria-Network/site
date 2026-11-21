@@ -198,16 +198,17 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
         const loaded10 = new Set<string>();
 
         // Markers.
-        const markerData = pts.map(([lng, lat]) => {
-          const loc = locations.find((l) => l.lng === lng && l.lat === lat);
-          const weight = loc?.count ?? 1;
+        const markerData = locations.map((loc, i) => {
+          const lng = loc.lng;
+          const lat = loc.lat;
+          const weight = loc.count ?? 1;
           const r = Math.min(8, 3 + Math.sqrt(weight) * 1.2);
-          const place = [loc?.state, loc?.country].filter(Boolean).join(", ");
+          const place = [loc.state, loc.country].filter(Boolean).join(", ");
           const title = `${genusName} — ${place}${weight > 1 ? ` (${weight} occurrences)` : ""}`;
-          const lo = loc?.minMa ?? loc?.maxMa;
-          const hi = loc?.maxMa ?? loc?.minMa;
+          const lo = loc.minMa ?? loc.maxMa;
+          const hi = loc.maxMa ?? loc.minMa;
           const mid = lo !== undefined && hi !== undefined ? (lo + hi) / 2 : undefined;
-          return { lng, lat, r, title, period: loc?.period, midMa: mid };
+          return { lng, lat, r, title, period: loc.period, midMa: mid };
         });
 
         const markers = zoomLayer.selectAll("circle.marker")
