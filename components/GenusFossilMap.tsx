@@ -80,7 +80,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
         const countryPaths = countries.features
           .map((f: any) => path(f))
           .filter((d): d is string => Boolean(d))
-          .map((d: string) => `<path d="${d}" fill="#e9e6de" stroke="#c9c6bd" stroke-width="0.5" />`)
+          .map((d: string) => `<path d="${d}" fill="#e9e6de" stroke="#808080" stroke-width="0.5" />`)
           .join("");
 
         const markerSvg = pts
@@ -98,7 +98,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
 
         const out =
           `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%" role="img" aria-label="Map of fossil find locations for ${escapeXml(genusName)}" style="background:#e9e6de;">` +
-          `<path d="${spherePath}" fill="#f4f1e8" stroke="#c9c6bd" stroke-width="0.8" />` +
+          `<path d="${spherePath}" fill="#f4f1e8" stroke="#808080" stroke-width="0.8" />` +
           `<g>${countryPaths}</g>` +
           `<g>${markerSvg}</g>` +
           `</svg>`;
