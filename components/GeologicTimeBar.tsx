@@ -75,7 +75,7 @@ const RANGE = MIN_MA - MAX_MA;
 export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
   const width = 800;
   const rowH = 20;
-  const gap = 4;
+  const gap = 0;
   const topPad = 6;
   const ageLabelH = 58; // vertical (rotated) age labels below the age band
   const axisH = 20;
@@ -116,7 +116,7 @@ export default function GeologicTimeBar(_props: GeologicTimeBarProps) {
           y={yPhan}
           width={xPhan(0) - xPhan(541)}
           height={rowH}
-          fill="#e9e6de"
+          fill="#9AD9DD"
           stroke="#fff"
           strokeWidth={0.5}
         />
