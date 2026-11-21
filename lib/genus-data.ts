@@ -94,12 +94,22 @@ interface GenusData {
 const DATA_PATH = path.join(process.cwd(), "_data", "genus-data.json");
 
 let cachedData: GenusData | null = null;
+let cachedMtimeMs = 0;
 
 function loadData(): GenusData {
-  if (cachedData) return cachedData;
+  // In dev the server process outlives `_data/genus-data.json` edits (the
+  // PBDB enrichment rewrites it), so re-read when the file's mtime changes.
+  let mtimeMs = 0;
+  try {
+    mtimeMs = fs.statSync(DATA_PATH).mtimeMs;
+  } catch {
+    // fall through to the read attempt below
+  }
+  if (cachedData && mtimeMs === cachedMtimeMs) return cachedData;
   try {
     const raw = fs.readFileSync(DATA_PATH, "utf-8");
     cachedData = JSON.parse(raw) as GenusData;
+    cachedMtimeMs = mtimeMs;
   } catch (e) {
     console.error("Failed to load data file:", DATA_PATH, e);
     cachedData = { site: { name: SITE_NAME, title: SITE_NAME, url: SITE_URL, description: SITE_DESCRIPTION, generatedAt: new Date().toISOString() }, postTypes: { genus: [] } } as unknown as GenusData;
