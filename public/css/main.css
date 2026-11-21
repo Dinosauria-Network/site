@@ -1694,11 +1694,39 @@ picture {
 }
 
 .genus-fossil-map {
+  position: relative;
   width: 100%;
   height: 380px;
   border: 1px solid #c9c6bd;
   background: #e9e6de;
   z-index: 0;
+  overflow: hidden;
+}
+
+.genus-fossil-map-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1;
+}
+
+.genus-fossil-map-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #808080;
+  background: #f4f1e8;
+  color: #2f271d;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.genus-fossil-map-btn:hover {
+  background: #e9e6de;
 }
 
 .genus-fossil-map-loading,

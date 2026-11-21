@@ -45,6 +45,9 @@ function escapeXml(s: string) {
  */
 export default function GenusFossilMap({ locations, genusName }: GenusFossilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const svgHostRef = useRef<HTMLDivElement | null>(null);
+  const zoomRef = useRef<any>(null);
+  const svgRef = useRef<any>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -53,7 +56,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
     let cleanupZoom: (() => void) | null = null;
 
     const build = async () => {
-      container.innerHTML = "";
+      if (svgHostRef.current) svgHostRef.current.innerHTML = "";
 
       try {
         const [d3geo, d3zoom, d3select, topo, atlas110] = await Promise.all([
@@ -63,8 +66,8 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           import("topojson-client"),
           loadAtlas110(),
         ]);
-        if (cancelled || !containerRef.current) return;
-        const node = containerRef.current;
+        if (cancelled || !svgHostRef.current) return;
+        const node = svgHostRef.current;
 
         const width = Math.max(node.clientWidth || 640, 320);
         const height = Math.max(node.clientHeight || 380, 240);
@@ -198,6 +201,8 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           });
 
         svg.call(zoom as any);
+        svgRef.current = svg;
+        zoomRef.current = zoom;
 
         svg.append("text")
           .attr("x", 8)
@@ -210,8 +215,8 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           svg.on(".zoom", null);
         };
       } catch (e) {
-        if (cancelled || !containerRef.current) return;
-        containerRef.current.innerHTML = `<p class="genus-fossil-map-error">Map unavailable: ${escapeXml(String(e).slice(0, 200))}</p>`;
+        if (cancelled || !svgHostRef.current) return;
+        svgHostRef.current.innerHTML = `<p class="genus-fossil-map-error">Map unavailable: ${escapeXml(String(e).slice(0, 200))}</p>`;
       }
     };
 
@@ -232,7 +237,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
       ro.disconnect();
       if (resizeTimer) clearTimeout(resizeTimer);
       if (cleanupZoom) cleanupZoom();
-      if (containerRef.current) containerRef.current.innerHTML = "";
+      if (svgHostRef.current) svgHostRef.current.innerHTML = "";
     };
   }, [locations, genusName]);
 
@@ -242,6 +247,30 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
       className="genus-fossil-map"
       role="region"
       aria-label={`Map of fossil find locations for ${genusName}`}
-    />
+    >
+      <div ref={svgHostRef} style={{ width: "100%", height: "100%" }} />
+      <div className="genus-fossil-map-controls">
+        <button
+          type="button"
+          className="genus-fossil-map-btn"
+          aria-label="Zoom in"
+          onClick={() => {
+            if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1.5);
+          }}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="genus-fossil-map-btn"
+          aria-label="Zoom out"
+          onClick={() => {
+            if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1 / 1.5);
+          }}
+        >
+          −
+        </button>
+      </div>
+    </div>
   );
 }
