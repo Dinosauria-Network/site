@@ -1701,8 +1701,16 @@ picture {
   z-index: 0;
 }
 
-.genus-fossil-list {
+.genus-fossil-map-loading,
+.genus-fossil-map-error {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
   flex-wrap: wrap;
   gap: 0.35rem 1.25rem;
   margin: 0.9rem 0 0;

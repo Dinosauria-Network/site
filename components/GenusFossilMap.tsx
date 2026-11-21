@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FossilLocation } from "@/lib/genus-data";
 
 interface GenusFossilMapProps {
@@ -8,70 +8,119 @@ interface GenusFossilMapProps {
   genusName: string;
 }
 
+type GeoModule = typeof import("d3-geo");
+type TopoModule = typeof import("topojson-client");
+
+// Cached so the world atlas is loaded only once per session.
+let atlasPromise: Promise<any> | null = null;
+function loadAtlas() {
+  if (!atlasPromise) {
+    atlasPromise = import("@/lib/data/world-110m.json").then((m: any) => m.default ?? m);
+  }
+  return atlasPromise;
+}
+
 /**
- * Client-only Leaflet map for a genus's fossil find bubbles.
- * Leaflet is imported dynamically so the server render stays static.
+ * Client-only world map in the Natural Earth projection (d3.geoNaturalEarth1),
+ * with one circle per fossil-find bubble. Replaces the previous Leaflet/Web
+ * Mercator map so the page no longer depends on slippy tiles.
  */
 export default function GenusFossilMap({ locations, genusName }: GenusFossilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<{ remove: () => void } | null>(null);
+  const [svg, setSvg] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || mapRef.current) return;
+    if (!container) return;
     let cancelled = false;
 
-    (async () => {
-      const L = (await import("leaflet")).default;
-      if (cancelled || !containerRef.current) return;
+    const render = async () => {
+      try {
+        const [d3geo, topo, atlas] = await Promise.all([
+          import("d3-geo") as Promise<GeoModule>,
+          import("topojson-client") as Promise<TopoModule>,
+          loadAtlas(),
+        ]);
+        if (cancelled) return;
 
-      const map = L.map(containerRef.current, {
-        scrollWheelZoom: false,
-        worldCopyJump: true,
-        attributionControl: true,
-      });
-      mapRef.current = map;
+        const width = Math.max(container.clientWidth || 640, 320);
+        const height = Math.max(container.clientHeight || 380, 240);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 8,
-        minZoom: 1,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+        const projection = d3geo.geoNaturalEarth1();
+        const path = d3geo.geoPath(projection);
 
-      const points: [number, number][] = [];
-      for (const loc of locations) {
-        const weight = loc.count ?? 1;
-        const marker = L.circleMarker([loc.lat, loc.lng], {
-          radius: Math.min(16, 4 + Math.sqrt(weight) * 1.6),
-          weight: 1,
-          color: "#2f271d",
-          fillColor: "#b07a24",
-          fillOpacity: 0.78,
-        }).addTo(map);
+        const countries = (topo as any).feature(
+          atlas,
+          atlas.objects.countries
+        ) as { features: any[] };
 
-        const place = [loc.state, loc.country].filter(Boolean).join(", ");
-        const countLine = weight > 1 ? `<br/><span>${weight} occurrences</span>` : "";
-        marker.bindPopup(`<strong>${genusName}</strong><br/>${place}${countLine}`);
-        marker.bindTooltip(place, { direction: "top", opacity: 0.9 });
-        points.push([loc.lat, loc.lng]);
+        // Fit the projection to the marker points when there are at least two
+        // distinct locations; otherwise centre on the single point at a
+        // sensible scale.
+        const pts = locations
+          .map((l) => [l.lng, l.lat] as [number, number])
+          .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
+        const distinct = new Set(pts.map((p) => p.join(",")));
+        if (pts.length && distinct.size >= 2) {
+          projection.fitExtent(
+            [
+              [16, 16],
+              [width - 16, height - 16],
+            ],
+            { type: "FeatureCollection", features: pts.map((p) => ({ type: "Feature", geometry: { type: "Point", coordinates: p }, properties: {} })) } as any
+          );
+        } else if (pts.length === 1) {
+          projection.center(pts[0]).scale(400);
+        } else {
+          projection.scale(width / 6).translate([width / 2, height / 2]);
+        }
+
+        const spherePath = path({ type: "Sphere" } as any) || "";
+        const countryPaths = countries.features
+          .map((f: any) => path(f))
+          .filter((d): d is string => Boolean(d))
+          .map((d: string) => `<path d="${d}" fill="#e9e6de" stroke="#c9c6bd" stroke-width="0.5" />`)
+          .join("");
+
+        const markerSvg = pts
+          .map(([lng, lat]) => {
+            const xy = projection([lng, lat]);
+            if (!xy) return "";
+            const loc = locations.find((l) => l.lng === lng && l.lat === lat);
+            const weight = loc?.count ?? 1;
+            const r = Math.min(8, 3 + Math.sqrt(weight) * 1.2);
+            const place = [loc?.state, loc?.country].filter(Boolean).join(", ");
+            const title = `${genusName} — ${place}${weight > 1 ? ` (${weight} occurrences)` : ""}`;
+            return `<circle cx="${xy[0].toFixed(1)}" cy="${xy[1].toFixed(1)}" r="${r}" fill="#b07a24" fill-opacity="0.85" stroke="#2f271d" stroke-width="1"><title>${escapeXml(title)}</title></circle>`;
+          })
+          .join("");
+
+        const out =
+          `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%" role="img" aria-label="Map of fossil find locations for ${escapeXml(genusName)}" style="background:#e9e6de;">` +
+          `<path d="${spherePath}" fill="#f4f1e8" stroke="#c9c6bd" stroke-width="0.8" />` +
+          `<g>${countryPaths}</g>` +
+          `<g>${markerSvg}</g>` +
+          `</svg>`;
+
+        if (!cancelled) setSvg(out);
+      } catch (e) {
+        if (!cancelled) setError(String(e).slice(0, 200));
       }
+    };
 
-      if (points.length === 1) {
-        map.setView(points[0], 4);
-      } else if (points.length > 1) {
-        map.fitBounds(points, { padding: [28, 28], maxZoom: 4 });
-      } else {
-        map.setView([15, 0], 1);
-      }
-    })();
+    render();
+
+    const onResize = () => {
+      // Re-render on resize for responsive sizing.
+      if (containerRef.current) render();
+    };
+    const ro = new ResizeObserver(onResize);
+    ro.observe(container);
 
     return () => {
       cancelled = true;
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
+      ro.disconnect();
     };
   }, [locations, genusName]);
 
@@ -81,6 +130,23 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
       className="genus-fossil-map"
       role="region"
       aria-label={`Map of fossil find locations for ${genusName}`}
-    />
+    >
+      {error ? (
+        <p className="genus-fossil-map-error">Map unavailable: {error}</p>
+      ) : svg ? (
+        <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width: "100%", height: "100%" }} />
+      ) : (
+        <p className="genus-fossil-map-loading">Loading map…</p>
+      )}
+    </div>
   );
+}
+
+function escapeXml(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
