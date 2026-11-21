@@ -1763,9 +1763,21 @@ picture {
   font-size: 0.9rem;
 }
 
-.genus-fossil-more {
-  color: #666;
-  font-style: italic;
+.genus-geotime {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #d8d5ce;
+}
+
+.genus-geotime-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.genus-geotime-note {
+  margin: 0.4rem 0 0;
+  color: #555;
+  font-size: 0.85rem;
 }
 
 @media (max-width: 700px) {

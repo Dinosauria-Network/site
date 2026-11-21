@@ -3,6 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { FossilLocation } from "@/lib/genus-data";
 
+const PERIOD_COLORS: Record<string, string> = {
+  Triassic: "#812B92",
+  Jurassic: "#34B2C9",
+  Cretaceous: "#82cc73",
+  Permian: "#f04c23",
+  Cenozoic: "#ffe951",
+};
+
 interface GenusFossilMapProps {
   locations: FossilLocation[];
   genusName: string;
@@ -195,7 +203,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           const r = Math.min(8, 3 + Math.sqrt(weight) * 1.2);
           const place = [loc?.state, loc?.country].filter(Boolean).join(", ");
           const title = `${genusName} — ${place}${weight > 1 ? ` (${weight} occurrences)` : ""}`;
-          return { lng, lat, r, title };
+          return { lng, lat, r, title, period: loc?.period };
         });
 
         const markers = zoomLayer.selectAll("circle.marker")
@@ -212,7 +220,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
             return xy ? xy[1] : 0;
           })
           .attr("r", (d: any) => d.r)
-          .attr("fill", "#b07a24")
+          .attr("fill", (d: any) => PERIOD_COLORS[d.period] || "#999")
           .attr("fill-opacity", 0.85)
           .attr("stroke", "#2f271d")
           .attr("stroke-width", 1)

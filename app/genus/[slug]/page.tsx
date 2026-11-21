@@ -4,6 +4,7 @@ import type { FossilLocation } from "@/lib/genus-data";
 import { pageTitle, SITE_NAME } from "@/lib/site";
 import PageHeader from "@/components/PageHeader";
 import GenusFossilMap from "@/components/GenusFossilMap";
+import GeologicTimeBar from "@/components/GeologicTimeBar";
 
 export async function generateStaticParams() {
   const genera = getAllGenera();
@@ -101,6 +102,7 @@ export default async function GenusPage({
               .
             </p>
             <GenusFossilMap locations={fossilLocations} genusName={genus.post_title} />
+          <GeologicTimeBar locations={fossilLocations} />
             {regions && (
               <>
                 <p className="genus-fossil-summary">
