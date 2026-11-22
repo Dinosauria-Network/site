@@ -308,7 +308,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
             </text>
           </g>
         ))}
-      </div>
+      </svg>
     </div>
   );
 }
