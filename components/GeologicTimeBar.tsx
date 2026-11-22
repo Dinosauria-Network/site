@@ -147,7 +147,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           y={yPhan}
           width={xPhan(visEnd) - xPhan(visStart)}
           height={rowH}
-          fill="#e9e6de"
+          fill="#9AD9DD"
           stroke="#fff"
           strokeWidth={0.5}
         />
