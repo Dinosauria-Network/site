@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { FossilLocation } from "@/lib/genus-data";
-import { epochColorForMa } from "@/components/GeologicTimeBar";
+import { epochColorForMa } from "@/lib/geologic-time";
 
 const PERIOD_COLORS: Record<string, string> = {
   Triassic: "#812B92",

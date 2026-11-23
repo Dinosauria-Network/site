@@ -144,24 +144,7 @@ export function getGeneraByPeriod(periodSlug: string): Genus[] {
   return all.filter((g) => g.taxonomy.some((t) => t.slug === periodSlug));
 }
 
-// Geological time epoch boundaries (Mesozoic), kept in sync with
-// components/GeologicTimeBar.tsx. `start` is the older boundary, `end` the younger.
-const EPOCH_BOUNDARIES: { period: string; name: string; start: number; end: number }[] = [
-  { period: "Triassic", name: "Early", start: 252.17, end: 247.0 },
-  { period: "Triassic", name: "Middle", start: 247.0, end: 237.0 },
-  { period: "Triassic", name: "Late", start: 237.0, end: 201.4 },
-  { period: "Jurassic", name: "Early", start: 201.4, end: 174.7 },
-  { period: "Jurassic", name: "Middle", start: 174.7, end: 161.5 },
-  { period: "Jurassic", name: "Late", start: 161.5, end: 143.1 },
-  { period: "Cretaceous", name: "Early", start: 143.1, end: 100.5 },
-  { period: "Cretaceous", name: "Late", start: 100.5, end: 66.0 },
-];
-
-function epochForMa(ma: number): { period: string; name: string } | undefined {
-  const e = EPOCH_BOUNDARIES.find((x) => ma <= x.start && ma >= x.end);
-  if (!e) return undefined;
-  return { period: e.period, name: e.name };
-}
+import { epochForMa } from "@/lib/geologic-time";
 
 export function getGenusPeriodLabel(
   genus: { meta?: { fossilLocations?: FossilLocation[] }; taxonomy?: { name?: string }[] },
