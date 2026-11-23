@@ -568,18 +568,23 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                   detailText.text("detail: 110m");
                 });
               }
-              // Sub-country detail replaces the coarse country borders.
-              zoomLayer.selectAll("path.country").style("display", "none");
+              // Sub-country detail recedes the coarse country borders (kept as
+              // context, but lighter) so the finer detail stays readable.
+              zoomLayer.selectAll("path.country")
+                .attr("stroke", "#999999")
+                .attr("stroke-width", 0.35)
+                .attr("opacity", 0.55);
             } else {
               admin50Group.style("display", "none");
-              zoomLayer.selectAll("path.country").style("display", null);
+              zoomLayer.selectAll("path.country")
+                .attr("stroke", "#808080")
+                .attr("stroke-width", 0.5)
+                .attr("opacity", 1);
             }
 
             // Per-country 10m when zoomed in further: fetch visible countries only.
             if (k >= 4) {
               admin10Group.style("display", null);
-              // Finer admin-1 replaces the coarser country borders too.
-              zoomLayer.selectAll("path.country").style("display", "none");
               loadAdmin10Index().then((index) => {
                 if (cancelled) return;
                 const codes = visibleCountryCodes(projection, width, height, index, event.transform);
