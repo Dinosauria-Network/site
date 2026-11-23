@@ -87,11 +87,19 @@ function applyMarkerHighlight(markers: any, range?: [number, number]) {
     .attr("stroke-width", (d: any) => (inRange(d) ? 3 : 1));
 }
 
-function visibleCountryCodes(projection: any, width: number, height: number, index: Record<string, [number, number, number, number]>) {
+function visibleCountryCodes(
+  projection: any,
+  width: number,
+  height: number,
+  index: Record<string, [number, number, number, number]>,
+  transform?: any
+) {
   const corners = [[0, 0], [width, 0], [0, height], [width, height]];
   const lngs: number[] = [];
   const lats: number[] = [];
-  for (const [x, y] of corners) {
+  for (const [sx, sy] of corners) {
+    // Screen -> base projection coords, then base -> lon/lat.
+    const [x, y] = transform ? transform.invert([sx, sy]) : [sx, sy];
     const inv = projection.invert([x, y]);
     if (inv) { lngs.push(inv[0]); lats.push(inv[1]); }
   }
@@ -129,6 +137,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
   const svgRef = useRef<any>(null);
   const markersRef = useRef<any>(null);
   const highlightRangeRef = useRef<[number, number] | undefined>(highlightAgeRange);
+  const initialTransformRef = useRef<any>(null);
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
@@ -155,27 +164,46 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
         const width = Math.max(node.clientWidth || 640, 320);
         const height = Math.max(node.clientHeight || 380, 240);
 
+        // Base projection always draws the whole world. The initial view is a
+        // d3-zoom transform that fits the genus' fossil points, so zooming out
+        // to k=1 reveals the entire globe (and reset returns to this fit).
         const projection = d3geo.geoNaturalEarth1();
         const path = d3geo.geoPath(projection);
+        projection.fitExtent(
+          [
+            [0, 0],
+            [width, height],
+          ],
+          { type: "Sphere" } as any
+        );
 
         const pts = locations
           .map((l) => [l.lng, l.lat] as [number, number])
           .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
 
-        const distinct = new Set(pts.map((p) => p.join(",")));
-        if (pts.length && distinct.size >= 2) {
-          projection.fitExtent(
-            [
-              [16, 16],
-              [width - 16, height - 16],
-            ],
-            { type: "FeatureCollection", features: pts.map((p) => ({ type: "Feature", geometry: { type: "Point", coordinates: p }, properties: {} })) } as any
-          );
-        } else if (pts.length === 1) {
-          projection.center(pts[0]).scale(400);
-        } else {
-          projection.scale(width / 6).translate([width / 2, height / 2]);
+        let initialTransform = d3zoom.zoomIdentity;
+        const projected = pts
+          .map((p) => projection(p))
+          .filter((p): p is [number, number] => Boolean(p));
+        if (projected.length) {
+          const xs = projected.map((p) => p[0]);
+          const ys = projected.map((p) => p[1]);
+          const minX = Math.min(...xs);
+          const maxX = Math.max(...xs);
+          const minY = Math.min(...ys);
+          const maxY = Math.max(...ys);
+          const pad = 40;
+          const bboxW = Math.max(maxX - minX, 0.001);
+          const bboxH = Math.max(maxY - minY, 0.001);
+          let k = Math.min((width - 2 * pad) / bboxW, (height - 2 * pad) / bboxH);
+          k = Math.max(1, Math.min(8, k));
+          const cx = (minX + maxX) / 2;
+          const cy = (minY + maxY) / 2;
+          const tx = width / 2 - cx * k;
+          const ty = height / 2 - cy * k;
+          initialTransform = d3zoom.zoomIdentity.translate(tx, ty).scale(k);
         }
+        initialTransformRef.current = initialTransform;
 
         const svg = d3select.select(node).append("svg")
           .attr("viewBox", `0 0 ${width} ${height}`)
@@ -463,9 +491,14 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           .attr("fill", "#555")
           .text("detail: 110m");
 
-        // Pan & zoom.
+        // Pan & zoom. The translate extent is the whole-world sphere, so
+        // zooming all the way out (k=1) locks to the centered full globe.
         const zoom = d3zoom.zoom()
           .scaleExtent([1, 8])
+          .translateExtent([
+            [0, 0],
+            [width, height],
+          ])
           .on("start", hideTooltip)
           .on("zoom", (event: any) => {
             zoomLayer.attr("transform", event.transform);
@@ -511,7 +544,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
               admin10Group.style("display", null);
               loadAdmin10Index().then((index) => {
                 if (cancelled) return;
-                const codes = visibleCountryCodes(projection, width, height, index);
+                const codes = visibleCountryCodes(projection, width, height, index, event.transform);
                 const toLoad = codes.filter((c) => !loaded10.has(c));
                 if (toLoad.length) {
                   detailText.text("loading detail…");
@@ -556,6 +589,9 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
         svg.call(zoom as any);
         svgRef.current = svg;
         zoomRef.current = zoom;
+
+        // Start from the fitted view (k=1 remains the whole world).
+        (svg as any).call(zoom.transform, initialTransform);
 
         svg.append("text")
           .attr("id", "genus-fossil-map-hint")
@@ -636,13 +672,29 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
         <button
           type="button"
           className="genus-fossil-map-btn"
-          aria-label="Zoom out"
+          aria-label="Zoom out to whole world"
           disabled={scale <= 1}
           onClick={() => {
             if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1 / 1.5);
           }}
         >
           −
+        </button>
+        <button
+          type="button"
+          className="genus-fossil-map-btn genus-fossil-map-btn-reset"
+          aria-label="Reset map view"
+          title="Reset view"
+          onClick={() => {
+            if (svgRef.current && zoomRef.current && initialTransformRef.current) {
+              svgRef.current
+                .transition()
+                .duration(300)
+                .call(zoomRef.current.transform, initialTransformRef.current);
+            }
+          }}
+        >
+          ⌂
         </button>
       </div>
     </div>
