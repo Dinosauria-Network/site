@@ -99,12 +99,14 @@ function escapeXml(s: string) {
 function applyMarkerHighlight(markers: any, range?: [number, number]) {
   if (!markers) return;
   if (!range) {
-    markers.attr("stroke", "#2f271d").attr("stroke-width", 1);
+    markers.transition().duration(250).attr("stroke", "#2f271d").attr("stroke-width", 1);
     return;
   }
   const [lo, hi] = range;
   const inRange = (d: any) => d.midMa !== undefined && d.midMa >= lo && d.midMa <= hi;
   markers
+    .transition()
+    .duration(250)
     .attr("stroke", (d: any) => (inRange(d) ? "#ff6b35" : "#2f271d"))
     .attr("stroke-width", (d: any) => (inRange(d) ? 3 : 1));
 }
@@ -695,7 +697,9 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           aria-label="Zoom in"
           disabled={scale >= 8}
           onClick={() => {
-            if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1.5);
+            if (svgRef.current && zoomRef.current) {
+              svgRef.current.transition().duration(400).call(zoomRef.current.scaleBy, 1.5);
+            }
           }}
         >
           +
@@ -706,7 +710,9 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           aria-label="Zoom out to whole world"
           disabled={scale <= 1}
           onClick={() => {
-            if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1 / 1.5);
+            if (svgRef.current && zoomRef.current) {
+              svgRef.current.transition().duration(400).call(zoomRef.current.scaleBy, 1 / 1.5);
+            }
           }}
         >
           −
