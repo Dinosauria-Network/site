@@ -163,7 +163,10 @@ function epochForMa(ma: number): { period: string; name: string } | undefined {
   return { period: e.period, name: e.name };
 }
 
-export function getGenusPeriodLabel(genus: Genus, fallback?: string | null): string | undefined {
+export function getGenusPeriodLabel(
+  genus: { meta?: { fossilLocations?: FossilLocation[] }; taxonomy?: { name?: string }[] },
+  fallback?: string | null
+): string | undefined {
   const locs = genus.meta?.fossilLocations ?? [];
   let bestLabel: string | undefined;
   let bestWeight = 0;

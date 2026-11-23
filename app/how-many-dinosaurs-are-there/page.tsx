@@ -1,4 +1,5 @@
 import { getAllGenera } from "@/lib/services/data";
+import { getGenusPeriodLabel } from "@/lib/genus-data";
 import styles from "./page.module.css";
 import { pageTitle } from "@/lib/site";
 
@@ -37,7 +38,8 @@ export default async function HowManyPage() {
         <section id="listing" className={styles.listing}>
           <ul>
             {genera.map((g, i) => {
-              const tn = g.taxonomy?.[0]?.name;
+              const periodLabel = getGenusPeriodLabel(g) ?? g.taxonomy?.[0]?.name;
+              const tn = periodLabel;
               return (
                 <li key={g.post_name} className={`${styles.clearfix} ${i === 0 ? styles.firstItem : ""}`}>
                   <div className={styles.speciesName}>
