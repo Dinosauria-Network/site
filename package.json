@@ -35,7 +35,7 @@
     "source:health": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/test-jev-style.ts",
     "retraction:check": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/test-jev-style.ts",
     "enrich:locations": "npx tsx scripts/enrich-genus-locations.ts",
-    "test": "echo 'No tests configured' && exit 0",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -70,6 +70,7 @@
     "eslint-config-next": "16.4.3",
     "sass": "^1.107.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.12"
   }
 }

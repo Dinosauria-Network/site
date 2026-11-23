@@ -92,19 +92,33 @@ export const MAX_MA = 66.0;
 /** Period containing a Ma value. */
 export function periodForMa(ma: number | undefined): PeriodDef | undefined {
   if (ma === undefined) return undefined;
-  return PERIODS.find((p) => ma <= p.start && ma >= p.end);
+  // Inclusive bounds at shared boundaries mean both neighbours can match;
+  // keep the most recent (youngest) containing period.
+  let found: PeriodDef | undefined;
+  for (const p of PERIODS) {
+    if (ma <= p.start && ma >= p.end) found = p;
+  }
+  return found;
 }
 
 /** Epoch (Early/Middle/Late) containing a Ma value. */
 export function epochForMa(ma: number | undefined): EpochDef | undefined {
   if (ma === undefined) return undefined;
-  return EPOCHS.find((e) => ma <= e.start && ma >= e.end);
+  let found: EpochDef | undefined;
+  for (const e of EPOCHS) {
+    if (ma <= e.start && ma >= e.end) found = e;
+  }
+  return found;
 }
 
 /** Stage (age) containing a Ma value. */
 export function ageForMa(ma: number | undefined): AgeDef | undefined {
   if (ma === undefined) return undefined;
-  return AGES.find((a) => ma <= a.start && ma >= a.end);
+  let found: AgeDef | undefined;
+  for (const a of AGES) {
+    if (ma <= a.start && ma >= a.end) found = a;
+  }
+  return found;
 }
 
 /** Dominant era/epoch label for a genus, e.g. "Late Cretaceous". */
@@ -120,7 +134,7 @@ export function eraClassForPeriod(label?: string | null): string {
   const earlyMatch = label.match(/^(Late|Early|Middle)?\s*(Cretaceous|Jurassic|Triassic)$/i);
   if (!earlyMatch) return "era cretaceous";
   const [, prefix, period] = earlyMatch;
-  const sub = prefix ? `${prefix}-${period.toLowerCase()}` : "";
+  const sub = prefix ? `${prefix.toLowerCase()}-${period.toLowerCase()}` : "";
   return `era ${period.toLowerCase()} ${sub}`.trim();
 }
 
@@ -128,9 +142,12 @@ export function eraClassForPeriod(label?: string | null): string {
 export function epochColorForMa(ma: number): string {
   const e = epochForMa(ma);
   if (e) return e.color;
-  if (ma >= 201.4) return PERIODS[0].color;
-  if (ma >= 143.1) return PERIODS[1].color;
-  if (ma >= 66.0) return PERIODS[2].color;
+  // Fallback by period colour, bounded to the Mesozoic span.
+  if (ma >= MIN_MA && ma <= MAX_MA) {
+    if (ma >= 201.4) return PERIODS[0].color;
+    if (ma >= 143.1) return PERIODS[1].color;
+    if (ma >= 66.0) return PERIODS[2].color;
+  }
   return "#999";
 }
 
