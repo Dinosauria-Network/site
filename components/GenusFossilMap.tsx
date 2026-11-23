@@ -628,10 +628,9 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             // Per-country 10m when zoomed in further: fetch visible countries only.
             if (k >= 4) {
               admin10Group.style("display", null);
-              // At finest zoom the 10m admin-1 outer edges provide the most
-              // detailed country outline; drop the coarser 50m one.
-              country50Group.style("display", "none");
-              zoomLayer.selectAll("path.country").attr("stroke", "none");
+              // Keep the 50m country outline visible alongside the 10m admin-1
+              // detail so countries stay identifiable (admin-1 lines are finer).
+              country50Group.style("display", null);
               loadAdmin10Index().then((index) => {
                 if (cancelled) return;
                 const codes = visibleCountryCodes(projection, width, height, index, event.transform);
