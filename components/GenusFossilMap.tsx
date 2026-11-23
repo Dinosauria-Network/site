@@ -20,47 +20,68 @@ interface GenusFossilMapProps {
   onMarkerClick?: (info?: { ma?: number; period?: string; location?: FossilLocation }) => void;
 }
 
-// Bundled low-res atlas for instant first paint.
+// Bundled low-res atlas for instant first paint. Failed loads are dropped from
+// the cache slot so a later mount can retry instead of pinning a dead promise.
 let atlas110Promise: Promise<any> | null = null;
-function loadAtlas110() {
+function loadAtlas110(): Promise<any> {
   if (!atlas110Promise) {
-    atlas110Promise = import("@/lib/data/world-110m.json").then((m: any) => m.default ?? m);
+    atlas110Promise = import("@/lib/data/world-110m.json")
+      .then((m: any) => m.default ?? m)
+      .catch((e: unknown) => {
+        atlas110Promise = null;
+        throw e;
+      });
   }
   return atlas110Promise;
 }
 
-// Global 50m admin-1 (state/province) borders fetched on demand.
+// Global 50m admin-1 (state/province) borders fetched on demand. Retries on next call after failure.
 let admin50Promise: Promise<any> | null = null;
-function loadAdmin50() {
+function loadAdmin50(): Promise<any> {
   if (!admin50Promise) {
-    admin50Promise = fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces.geojson").then((r) => {
-      if (!r.ok) throw new Error(`admin-1 50m HTTP ${r.status}`);
-      return r.json();
-    });
+    admin50Promise = fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces.geojson")
+      .then((r) => {
+        if (!r.ok) throw new Error(`admin-1 50m HTTP ${r.status}`);
+        return r.json();
+      })
+      .catch((e: unknown) => {
+        admin50Promise = null;
+        throw e;
+      });
   }
   return admin50Promise;
 }
 
-// Per-country 10m admin-1 index (bounding boxes).
+// Per-country 10m admin-1 index (bounding boxes). Retries on next call after failure.
 let admin10IndexPromise: Promise<Record<string, [number, number, number, number]>> | null = null;
-function loadAdmin10Index() {
+function loadAdmin10Index(): Promise<Record<string, [number, number, number, number]>> {
   if (!admin10IndexPromise) {
-    admin10IndexPromise = fetch("/data/admin1/index.json").then((r) => {
-      if (!r.ok) throw new Error(`admin1 index HTTP ${r.status}`);
-      return r.json();
-    });
+    admin10IndexPromise = fetch("/data/admin1/index.json")
+      .then((r) => {
+        if (!r.ok) throw new Error(`admin1 index HTTP ${r.status}`);
+        return r.json();
+      })
+      .catch((e: unknown) => {
+        admin10IndexPromise = null;
+        throw e;
+      });
   }
   return admin10IndexPromise;
 }
 
-// Per-country 10m cache.
+// Per-country 10m cache. Failed loads are dropped so the country retries later.
 const admin10Cache: Record<string, Promise<any>> = {};
-function loadCountry10(code: string) {
+function loadCountry10(code: string): Promise<any> {
   if (!admin10Cache[code]) {
-    admin10Cache[code] = fetch(`/data/admin1/${code}.json`).then((r) => {
-      if (!r.ok) throw new Error(`admin1 ${code} HTTP ${r.status}`);
-      return r.json();
-    });
+    admin10Cache[code] = fetch(`/data/admin1/${code}.json`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`admin1 ${code} HTTP ${r.status}`);
+        return r.json();
+      })
+      .catch((e: unknown) => {
+        delete admin10Cache[code];
+        throw e;
+      });
   }
   return admin10Cache[code];
 }
