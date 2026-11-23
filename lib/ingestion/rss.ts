@@ -33,7 +33,7 @@ const TIMEOUT_MS = 15_000;
 const parser = new Parser({ timeout: TIMEOUT_MS, headers: { 'User-Agent': UA } });
 
 /** Feed titles arrive with raw numeric/named entities (e.g. NCYT's "B&#45;12"). */
-const decodeEntities = (s: string) =>
+export const decodeEntities = (s: string) =>
   s
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))

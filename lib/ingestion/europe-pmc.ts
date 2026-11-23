@@ -1,4 +1,4 @@
-import { SourceAdapter, IngestionRecord, IngestionResult } from './types';
+import { SourceAdapter, IngestionRecord } from './types';
 
 export const europePmcAdapter: SourceAdapter = {
   sourceName: 'Europe PMC',
@@ -15,7 +15,9 @@ export const europePmcAdapter: SourceAdapter = {
       doi: r.doi,
       title: r.title || 'Untitled',
       abstract: r.abstractText || undefined,
-      authors: (r.authorString || '').split(',').map((n: string) => ({ fullName: n.trim() })),
+      authors: Array.isArray(r.authorList?.author)
+        ? r.authorList.author.map((a: any) => ({ fullName: (a.fullName || `${a.firstName || ''} ${a.lastName || ''}`).trim(), orcid: a.authorId || undefined }))
+        : (r.authorString || '').split(',').map((n: string) => ({ fullName: n.trim() })),
       publicationDate: r.pubYear ? new Date(r.pubYear, 0, 1) : undefined,
       // Europe PMC returns the MEDLINE *abbreviated* name in journalTitle
       // (e.g. "R Soc Open Sci"); the full title lives in journalInfo.journal.title.
@@ -36,7 +38,9 @@ export const europePmcAdapter: SourceAdapter = {
       source: 'Europe PMC',
       externalId: r.id || r.doi || r.pmid || '',
       title: r.title || '',
-      authors: (r.authorString || '').split(',').map((n: string) => ({ fullName: n.trim() })),
+      authors: Array.isArray(r.authorList?.author)
+        ? r.authorList.author.map((a: any) => ({ fullName: (a.fullName || `${a.firstName || ''} ${a.lastName || ''}`).trim() }))
+        : (r.authorString || '').split(',').map((n: string) => ({ fullName: n.trim() })),
       peerReviewStatus: r.journalType === 'journal' ? 'peer_reviewed' : 'unknown',
       rawMetadata: r,
     } as IngestionRecord;

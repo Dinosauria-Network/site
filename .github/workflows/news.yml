@@ -52,6 +52,8 @@ jobs:
         run: npm run ingest:journals -- --limit 15
       - name: Ingest Europe PMC
         run: npm run ingest:europe-pmc -- --limit 10
+      - name: Ingest arXiv
+        run: npm run ingest:arxiv -- --limit 5
       - name: Ingest Crossref keyword
         run: npm run ingest:crossref
 

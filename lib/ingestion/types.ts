@@ -13,14 +13,6 @@ export interface IngestionRecord {
   rawMetadata: Record<string, unknown>;
 }
 
-export interface IngestionResult {
-  discovered: number;
-  imported: number;
-  updated: number;
-  errors: string[];
-  cursor?: string;
-}
-
 export interface SourceAdapter {
   sourceName: string;
   // fromDate/toDate are optional (YYYY-MM-DD, deposit-side filters); adapters

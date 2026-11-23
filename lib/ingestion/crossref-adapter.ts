@@ -80,7 +80,7 @@ export function normalizeCrossrefRecord(raw: unknown): IngestionRecord {
     };
 }
 
-function normalizeAuthor(a: unknown): { fullName: string; orcid?: string; institution?: string } {
+export function normalizeAuthor(a: unknown): { fullName: string; orcid?: string; institution?: string } {
   const item = a as { given?: string; family?: string; ORCID?: string; name?: string };
   const full = item.name || `${item.given || ''} ${item.family || ''}`.trim();
   return { fullName: full || 'Unknown', orcid: item.ORCID, institution: undefined };
