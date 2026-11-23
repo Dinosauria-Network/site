@@ -114,6 +114,16 @@ export function eraLabelForMa(ma: number | undefined): string | undefined {
   return `${e.name} ${e.period}`;
 }
 
+/** CSS class for a period/era label, e.g. "Late Cretaceous" -> "era cretaceous late-cretaceous". */
+export function eraClassForPeriod(label?: string | null): string {
+  if (!label) return "era";
+  const earlyMatch = label.match(/^(Late|Early|Middle)?\s*(Cretaceous|Jurassic|Triassic)$/i);
+  if (!earlyMatch) return "era cretaceous";
+  const [, prefix, period] = earlyMatch;
+  const sub = prefix ? `${prefix}-${period.toLowerCase()}` : "";
+  return `era ${period.toLowerCase()} ${sub}`.trim();
+}
+
 /** Colour for an epoch based on a Ma value. */
 export function epochColorForMa(ma: number): string {
   const e = epochForMa(ma);
