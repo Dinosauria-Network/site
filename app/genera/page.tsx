@@ -1,4 +1,4 @@
-import { getGeneraByPeriod, getAllGenera, getUniquePeriods } from "@/lib/genus-data";
+import { getAllGenera, getGenusPeriodLabel, getGeneraByPeriod, getUniquePeriods } from "@/lib/genus-data";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { SITE_NAME } from "@/lib/site";
@@ -48,7 +48,7 @@ export default async function GeneraPage({
               <Link href={`/genus/${genus.post_name}`}>{genus.post_title}</Link>
             </h3>
             <p className="genus-period">
-              {genus.taxonomy.map((t) => t.name).join(", ")}
+              {getGenusPeriodLabel(genus) ?? genus.taxonomy.map((t) => t.name).join(", ")}
             </p>
             <p className="genus-author">
               {genus.author || "Unknown author"}

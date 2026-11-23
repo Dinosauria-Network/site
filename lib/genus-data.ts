@@ -135,10 +135,60 @@ export function getGenusBySlug(slug: string): Genus | null {
 }
 
 export function getGeneraByPeriod(periodSlug: string): Genus[] {
-  const genera = getAllGenera();
-  return genera.filter((g) =>
-    g.taxonomy.some((t) => t.slug === periodSlug)
-  );
+  const label = slugToPeriodName(periodSlug).toLowerCase();
+  const all = getAllGenera();
+  const withLocations = all.filter((g) => (g.meta?.fossilLocations?.length ?? 0) > 0);
+  const byLabel = withLocations.filter((g) => (getGenusPeriodLabel(g) ?? "").toLowerCase() === label);
+  if (byLabel.length > 0) return byLabel;
+  // No fossil evidence yet for this period — fall back to the taxonomy term.
+  return all.filter((g) => g.taxonomy.some((t) => t.slug === periodSlug));
+}
+
+// Geological time epoch boundaries (Mesozoic), kept in sync with
+// components/GeologicTimeBar.tsx. `start` is the older boundary, `end` the younger.
+const EPOCH_BOUNDARIES: { period: string; name: string; start: number; end: number }[] = [
+  { period: "Triassic", name: "Early", start: 252.17, end: 247.0 },
+  { period: "Triassic", name: "Middle", start: 247.0, end: 237.0 },
+  { period: "Triassic", name: "Late", start: 237.0, end: 201.4 },
+  { period: "Jurassic", name: "Early", start: 201.4, end: 174.7 },
+  { period: "Jurassic", name: "Middle", start: 174.7, end: 161.5 },
+  { period: "Jurassic", name: "Late", start: 161.5, end: 143.1 },
+  { period: "Cretaceous", name: "Early", start: 143.1, end: 100.5 },
+  { period: "Cretaceous", name: "Late", start: 100.5, end: 66.0 },
+];
+
+function epochForMa(ma: number): { period: string; name: string } | undefined {
+  const e = EPOCH_BOUNDARIES.find((x) => ma <= x.start && ma >= x.end);
+  if (!e) return undefined;
+  return { period: e.period, name: e.name };
+}
+
+export function getGenusPeriodLabel(genus: Genus, fallback?: string | null): string | undefined {
+  const locs = genus.meta?.fossilLocations ?? [];
+  let bestLabel: string | undefined;
+  let bestWeight = 0;
+  for (const loc of locs) {
+    const lo = loc.minMa ?? loc.maxMa;
+    const hi = loc.maxMa ?? loc.minMa;
+    if (lo === undefined || hi === undefined) continue;
+    const mid = (lo + hi) / 2;
+    const e = epochForMa(mid);
+    if (!e) continue;
+    const label = e.name + " " + e.period;
+    const weight = loc.count ?? 1;
+    if (weight > bestWeight) {
+      bestWeight = weight;
+      bestLabel = label;
+    }
+  }
+  if (bestLabel) return bestLabel;
+  return fallback ?? genus.taxonomy?.[0]?.name ?? undefined;
+}
+
+function slugToPeriodName(slug: string): string {
+  const words = slug.split("-").filter(Boolean);
+  if (words.length === 0) return "";
+  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
 export function getUniquePeriods(): TaxonomyTerm[] {

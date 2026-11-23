@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getGenusBySlug, getAllGenera } from "@/lib/genus-data";
+import { getGenusBySlug, getAllGenera, getGenusPeriodLabel } from "@/lib/genus-data";
 import type { FossilLocation } from "@/lib/genus-data";
 import { pageTitle, SITE_NAME } from "@/lib/site";
 import PageHeader from "@/components/PageHeader";
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
   return {
     title: `${genus.post_title} - ${SITE_NAME}`,
-    description: `${genus.post_title} - ${genus.author || "Unknown author"}, ${genus.taxonomy.map((t) => t.name).join(", ")}`,
+    description: `${genus.post_title} - ${genus.author || "Unknown author"}, ${getGenusPeriodLabel(genus) ?? genus.taxonomy.map((t) => t.name).join(", ")}`,
   };
 }
 
@@ -79,7 +79,7 @@ export default async function GenusPage({
       <PageHeader title={genus.post_title}>
         <p className="genus-subtitle">
           {genus.author || "Unknown author"} &nbsp;|&nbsp;
-          {genus.taxonomy.map((t) => t.name).join(", ")}
+          {getGenusPeriodLabel(genus) ?? genus.taxonomy.map((t) => t.name).join(", ")}
         </p>
       </PageHeader>
 
@@ -95,7 +95,7 @@ export default async function GenusPage({
         <aside className="genus-meta">
           <dl>
             <dt>Period</dt>
-            <dd>{genus.taxonomy.map((t) => t.name).join(", ")}</dd>
+            <dd>{getGenusPeriodLabel(genus) ?? genus.taxonomy.map((t) => t.name).join(", ")}</dd>
             <dt>Authority</dt>
             <dd>{genus.author || "Unknown"}</dd>
             <dt>Description Date</dt>
