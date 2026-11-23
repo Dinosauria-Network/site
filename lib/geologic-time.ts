@@ -123,3 +123,22 @@ export function epochColorForMa(ma: number): string {
   if (ma >= 66.0) return PERIODS[2].color;
   return "#999";
 }
+
+/** Period name from a Ma value (coarse classification). */
+export function periodFromMa(ma: number | null | undefined): string {
+  if (ma === null || ma === undefined || !Number.isFinite(ma)) return "Unknown";
+  if (ma >= 201.4) return "Triassic";
+  if (ma >= 143.1) return "Jurassic";
+  if (ma >= 66.0) return "Cretaceous";
+  if (ma >= 252.0) return "Permian";
+  return "Cenozoic";
+}
+
+/** Period name from a PBDB interval label (e.g. "Late Cretaceous"). */
+export function periodFromInterval(name: string | undefined): string | undefined {
+  const n = (name ?? "").toLowerCase();
+  if (n.includes("cretaceous")) return "Cretaceous";
+  if (n.includes("jurassic")) return "Jurassic";
+  if (n.includes("triassic")) return "Triassic";
+  return undefined;
+}

@@ -27,6 +27,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { periodFromMa, periodFromInterval } from '../lib/geologic-time';
 
 interface Bubble {
   lat: number;
@@ -89,15 +90,6 @@ const countryName = (code?: string) => {
   return COUNTRY_NAMES[key] ?? code;
 };
 
-/** Derive a Mesozoic period from a PBDB interval name (e.g. "Late Cretaceous"). */
-function periodFromInterval(name: string): string | undefined {
-  const n = name.toLowerCase();
-  if (n.includes('cretaceous')) return 'Cretaceous';
-  if (n.includes('jurassic')) return 'Jurassic';
-  if (n.includes('triassic')) return 'Triassic';
-  return undefined;
-}
-
 function dominantPeriod(counts: Record<string, number>): string | undefined {
   let best: string | undefined;
   let max = 0;
@@ -105,14 +97,6 @@ function dominantPeriod(counts: Record<string, number>): string | undefined {
     if (v > max) { max = v; best = k; }
   }
   return best;
-}
-function periodFromMa(ma: number): string {
-  if (!Number.isFinite(ma)) return 'Unknown';
-  if (ma >= 201.4) return 'Triassic';
-  if (ma >= 143.1) return 'Jurassic';
-  if (ma >= 66.0) return 'Cretaceous';
-  if (ma >= 252.0) return 'Permian';
-  return 'Cenozoic';
 }
 
 function recordMa(r: PbdbRecord): number | null {
