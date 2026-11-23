@@ -411,7 +411,8 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             const area = Math.abs(path.area(f));
             return { name: String(f.properties?.name || ""), x: c[0], y: c[1], area, show: false };
           })
-          .filter((d: any) => d.name && Number.isFinite(d.x) && Number.isFinite(d.y));
+          .filter((d: any) => d.name && Number.isFinite(d.x) && Number.isFinite(d.y))
+          .sort((a: any, b: any) => b.area - a.area);
 
         const countryText = labelLayer
           .selectAll("text.country-label")
@@ -438,6 +439,8 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
 
         let lastK = 1;
         let lastTransform: { x: number; y: number } = { x: 0, y: 0 };
+        let rafPending = false;
+        let lastScaleRef = 1;
 
         function overlaps(boxes: number[][], sx: number, sy: number, w: number) {
           for (const b of boxes) {
@@ -451,8 +454,8 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           lastTransform = t;
           const boxes: number[][] = [];
 
-          // Country labels at zoom >= 2x, largest first.
-          const countries = countryLabels.slice().sort((a: any, b: any) => b.area - a.area);
+          // Country labels at zoom >= 2x, largest first (pre-sorted once).
+          const countries = countryLabels;
           for (const d of countries) {
             d.show = false;
             if (k < 2 || d.area * k * k < 700) continue;
@@ -559,11 +562,24 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             zoomLayer.attr("transform", event.transform);
             const k = event.transform.k || 1;
             markers.attr("r", (d: any) => d.r / k);
-            setScale(k);
-            updateLabels(k, event.transform);
 
-            // Global 50m admin-1 when zoomed in.
-            if (k >= 2) {
+            // Coalesce heavy work (labels, admin loading, React state) to one
+            // pass per animation frame to keep pan/zoom snappy.
+            if (rafPending) return;
+            rafPending = true;
+            const ev = event;
+            requestAnimationFrame(() => {
+              rafPending = false;
+              if (cancelled) return;
+              const k2 = ev.transform.k || 1;
+              if (Math.abs(k2 - lastScaleRef) > 0.02) {
+                lastScaleRef = k2;
+                setScale(k2);
+              }
+              updateLabels(k2, ev.transform);
+
+              // Global 50m admin-1 when zoomed in.
+              if (k2 >= 2) {
               admin50Group.style("display", null);
               if (!admin50Loaded) {
                 admin50Loaded = true;
@@ -626,7 +642,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             }
 
             // Per-country 10m when zoomed in further: fetch visible countries only.
-            if (k >= 4) {
+            if (k2 >= 4) {
               admin10Group.style("display", null);
               // Keep the 50m country outline visible alongside the 10m admin-1
               // detail so countries stay identifiable (admin-1 lines are finer).
@@ -672,8 +688,9 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
               });
             } else {
               admin10Group.style("display", "none");
-              if (k >= 2) country50Group.style("display", null);
+              if (k2 >= 2) country50Group.style("display", null);
             }
+            });
           });
 
         svg.call(zoom as any);
