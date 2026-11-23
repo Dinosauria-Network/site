@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { getGenusBySlug, getAllGenera } from "@/lib/genus-data";
+import { getGenusBySlug, getAllGenera, getGenusPeriodLabel } from "@/lib/genus-data";
 import type { FossilLocation } from "@/lib/genus-data";
 import { pageTitle, SITE_NAME } from "@/lib/site";
 import PageHeader from "@/components/PageHeader";
-import GenusFossilMap from "@/components/GenusFossilMap";
+import GenusFossilSection from "@/components/GenusFossilSection";
 
 export async function generateStaticParams() {
   const genera = getAllGenera();
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
   return {
     title: `${genus.post_title} - ${SITE_NAME}`,
-    description: `${genus.post_title} - ${genus.author || "Unknown author"}, ${genus.taxonomy.map((t) => t.name).join(", ")}`,
+    description: `${genus.post_title} - ${genus.author || "Unknown author"}, ${getGenusPeriodLabel(genus) ?? genus.taxonomy.map((t) => t.name).join(", ")}`,
   };
 }
 
@@ -57,12 +57,29 @@ export default async function GenusPage({
   const fossilLocations = genus.meta?.fossilLocations ?? [];
   const regions = fossilLocations.length ? summarizeRegions(fossilLocations) : null;
 
+  // Derive which Mesozoic periods this genus is actually found in.
+  // Primary: the `period` field on each bubble. Fallback: infer from maxMa.
+  const activePeriods = fossilLocations.length
+    ? Array.from(
+        new Set(
+          fossilLocations.map((loc) => {
+            if (loc.period) return loc.period;
+            const ma = loc.maxMa ?? loc.minMa;
+            if (ma == null) return null;
+            if (ma >= 201.4) return "Triassic";
+            if (ma >= 143.1) return "Jurassic";
+            return "Cretaceous";
+          }).filter((p): p is string => p !== null)
+        )
+      )
+    : undefined;
+
   return (
     <div className="genus-page">
       <PageHeader title={genus.post_title}>
         <p className="genus-subtitle">
           {genus.author || "Unknown author"} &nbsp;|&nbsp;
-          {genus.taxonomy.map((t) => t.name).join(", ")}
+          {getGenusPeriodLabel(genus) ?? genus.taxonomy.map((t) => t.name).join(", ")}
         </p>
       </PageHeader>
 
@@ -78,7 +95,7 @@ export default async function GenusPage({
         <aside className="genus-meta">
           <dl>
             <dt>Period</dt>
-            <dd>{genus.taxonomy.map((t) => t.name).join(", ")}</dd>
+            <dd>{getGenusPeriodLabel(genus) ?? genus.taxonomy.map((t) => t.name).join(", ")}</dd>
             <dt>Authority</dt>
             <dd>{genus.author || "Unknown"}</dd>
             <dt>Description Date</dt>
@@ -87,44 +104,12 @@ export default async function GenusPage({
         </aside>
 
         {fossilLocations.length > 0 && (
-          <section className="genus-fossil-section" aria-labelledby="fossil-heading">
-            <h2 id="fossil-heading">Where fossils have been found</h2>
-            <p className="genus-fossil-note">
-              Occurrence localities from the{" "}
-              <a
-                href={`https://paleobiodb.org/navigator/#taxa=${encodeURIComponent(genus.post_title)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Paleobiology Database
-              </a>
-              .
-            </p>
-            <GenusFossilMap locations={fossilLocations} genusName={genus.post_title} />
-            {regions && (
-              <>
-                <p className="genus-fossil-summary">
-                  {regions.totalOccurrences.toLocaleString("en-US")}{" "}
-                  {regions.totalOccurrences === 1 ? "occurrence" : "occurrences"} in
-                  the database, most reported from:
-                </p>
-                <ul className="genus-fossil-list">
-                  {regions.shown.map(([region, count]) => (
-                    <li key={region}>
-                      {region}
-                      {count > 1 ? ` (${count} occurrences)` : ""}
-                    </li>
-                  ))}
-                  {regions.hiddenRegions > 0 && (
-                    <li className="genus-fossil-more">
-                      +{regions.hiddenRegions} more{" "}
-                      {regions.hiddenRegions === 1 ? "region" : "regions"} on the map
-                    </li>
-                  )}
-                </ul>
-              </>
-            )}
-          </section>
+          <GenusFossilSection
+            locations={fossilLocations}
+            genusName={genus.post_title}
+            activePeriods={activePeriods}
+            regions={regions}
+          />
         )}
       </main>
     </div>

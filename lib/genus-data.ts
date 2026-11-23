@@ -19,6 +19,11 @@ export interface FossilLocation {
   country: string;
   state?: string;
   count?: number;
+  /** Dominant geologic period for this bubble's occurrences (Mesozoic colors). */
+  period?: string;
+  /** Age range (Ma) covered by the bubble's occurrences. */
+  minMa?: number;
+  maxMa?: number;
 }
 
 export interface GenusMeta {
@@ -89,12 +94,22 @@ interface GenusData {
 const DATA_PATH = path.join(process.cwd(), "_data", "genus-data.json");
 
 let cachedData: GenusData | null = null;
+let cachedMtimeMs = 0;
 
 function loadData(): GenusData {
-  if (cachedData) return cachedData;
+  // In dev the server process outlives `_data/genus-data.json` edits (the
+  // PBDB enrichment rewrites it), so re-read when the file's mtime changes.
+  let mtimeMs = 0;
+  try {
+    mtimeMs = fs.statSync(DATA_PATH).mtimeMs;
+  } catch {
+    // fall through to the read attempt below
+  }
+  if (cachedData && mtimeMs === cachedMtimeMs) return cachedData;
   try {
     const raw = fs.readFileSync(DATA_PATH, "utf-8");
     cachedData = JSON.parse(raw) as GenusData;
+    cachedMtimeMs = mtimeMs;
   } catch (e) {
     console.error("Failed to load data file:", DATA_PATH, e);
     cachedData = { site: { name: SITE_NAME, title: SITE_NAME, url: SITE_URL, description: SITE_DESCRIPTION, generatedAt: new Date().toISOString() }, postTypes: { genus: [] } } as unknown as GenusData;
@@ -120,10 +135,46 @@ export function getGenusBySlug(slug: string): Genus | null {
 }
 
 export function getGeneraByPeriod(periodSlug: string): Genus[] {
-  const genera = getAllGenera();
-  return genera.filter((g) =>
-    g.taxonomy.some((t) => t.slug === periodSlug)
-  );
+  const label = slugToPeriodName(periodSlug).toLowerCase();
+  const all = getAllGenera();
+  const withLocations = all.filter((g) => (g.meta?.fossilLocations?.length ?? 0) > 0);
+  const byLabel = withLocations.filter((g) => (getGenusPeriodLabel(g) ?? "").toLowerCase() === label);
+  if (byLabel.length > 0) return byLabel;
+  // No fossil evidence yet for this period — fall back to the taxonomy term.
+  return all.filter((g) => g.taxonomy.some((t) => t.slug === periodSlug));
+}
+
+import { epochForMa } from "@/lib/geologic-time";
+
+export function getGenusPeriodLabel(
+  genus: { meta?: { fossilLocations?: FossilLocation[] }; taxonomy?: { name?: string }[] },
+  fallback?: string | null
+): string | undefined {
+  const locs = genus.meta?.fossilLocations ?? [];
+  let bestLabel: string | undefined;
+  let bestWeight = 0;
+  for (const loc of locs) {
+    const lo = loc.minMa ?? loc.maxMa;
+    const hi = loc.maxMa ?? loc.minMa;
+    if (lo === undefined || hi === undefined) continue;
+    const mid = (lo + hi) / 2;
+    const e = epochForMa(mid);
+    if (!e) continue;
+    const label = e.name + " " + e.period;
+    const weight = loc.count ?? 1;
+    if (weight > bestWeight) {
+      bestWeight = weight;
+      bestLabel = label;
+    }
+  }
+  if (bestLabel) return bestLabel;
+  return fallback ?? genus.taxonomy?.[0]?.name ?? undefined;
+}
+
+function slugToPeriodName(slug: string): string {
+  const words = slug.split("-").filter(Boolean);
+  if (words.length === 0) return "";
+  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
 export function getUniquePeriods(): TaxonomyTerm[] {
