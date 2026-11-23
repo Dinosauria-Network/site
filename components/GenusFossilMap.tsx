@@ -204,6 +204,9 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
   const highlightRangeRef = useRef<[number, number] | undefined>(highlightAgeRange);
   const initialTransformRef = useRef<any>(null);
   const [scale, setScale] = useState(1);
+  const [canZoomIn, setCanZoomIn] = useState(true);
+  const [canZoomOut, setCanZoomOut] = useState(false);
+  const [atResetView, setAtResetView] = useState(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -604,6 +607,17 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                 lastScaleRef = k2;
                 setScale(k2);
               }
+              // Disabled-state flags (updated every frame but React bails out
+              // when the value is unchanged, so no extra re-renders).
+              const maxScale = 16;
+              setCanZoomIn(k2 < maxScale - 0.05);
+              setCanZoomOut(k2 > 1 + 0.05);
+              const init = initialTransformRef.current;
+              const atReset = !!init &&
+                Math.abs(k2 - init.k) < 0.05 &&
+                Math.abs(ev.transform.x - init.x) < 0.5 &&
+                Math.abs(ev.transform.y - init.y) < 0.5;
+              setAtResetView(atReset);
               updateLabels(k2, ev.transform);
 
               // Global 50m admin-1 when zoomed in.
@@ -844,7 +858,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           type="button"
           className="genus-fossil-map-btn"
           aria-label="Zoom in"
-          disabled={scale >= 16}
+          disabled={!canZoomIn}
           onClick={() => {
             if (svgRef.current && zoomRef.current) {
               svgRef.current.transition().duration(400).call(zoomRef.current.scaleBy, 1.5);
@@ -857,7 +871,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           type="button"
           className="genus-fossil-map-btn"
           aria-label="Zoom out to whole world"
-          disabled={scale <= 1}
+          disabled={!canZoomOut}
           onClick={() => {
             if (svgRef.current && zoomRef.current) {
               svgRef.current.transition().duration(400).call(zoomRef.current.scaleBy, 1 / 1.5);
@@ -877,8 +891,10 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                 .transition()
                 .duration(300)
                 .call(zoomRef.current.transform, initialTransformRef.current);
+              setAtResetView(true);
             }
           }}
+          disabled={atResetView}
         >
           ⌂
         </button>
