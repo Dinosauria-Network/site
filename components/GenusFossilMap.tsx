@@ -121,6 +121,10 @@ function visibleCountryCodes(projection: any, width: number, height: number, ind
 export default function GenusFossilMap({ locations, genusName, highlightAgeRange, onMarkerHover }: GenusFossilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgHostRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const tooltipPlaceRef = useRef<HTMLDivElement | null>(null);
+  const tooltipCountRef = useRef<HTMLDivElement | null>(null);
+  const tooltipTimeRef = useRef<HTMLDivElement | null>(null);
   const zoomRef = useRef<any>(null);
   const svgRef = useRef<any>(null);
   const markersRef = useRef<any>(null);
@@ -215,18 +219,61 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
         const admin10Group = zoomLayer.append("g").attr("class", "admin10").style("display", "none");
         const loaded10 = new Set<string>();
 
+        // Custom HTML tooltip that follows the pointer (no native title attr).
+        const tooltip = tooltipRef.current;
+        const tooltipPlace = tooltipPlaceRef.current;
+        const tooltipCount = tooltipCountRef.current;
+        const tooltipTime = tooltipTimeRef.current;
+
+        function positionTooltip(event: any) {
+          if (!tooltip || !containerRef.current) return;
+          const rect = containerRef.current.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+          tooltip.style.left = `${x}px`;
+          tooltip.style.top = `${y}px`;
+          tooltip.style.transform =
+            y < 96 ? "translate(-50%, 14px)" : "translate(-50%, calc(-100% - 14px))";
+        }
+
+        function showTooltip(event: any, d: any) {
+          if (!tooltip) return;
+          if (tooltipPlace) tooltipPlace.textContent = d.place || genusName;
+          if (tooltipCount) {
+            tooltipCount.textContent = d.count > 1 ? `${d.count} occurrences` : "";
+            tooltipCount.style.display = d.count > 1 ? "" : "none";
+          }
+          if (tooltipTime) {
+            tooltipTime.textContent = d.timeLabel || "";
+            tooltipTime.style.display = d.timeLabel ? "" : "none";
+          }
+          positionTooltip(event);
+          tooltip.style.display = "block";
+        }
+
+        function hideTooltip() {
+          if (tooltip) tooltip.style.display = "none";
+        }
+
         // Markers.
-        const markerData = locations.map((loc, i) => {
+        const markerData = locations.map((loc) => {
           const lng = loc.lng;
           const lat = loc.lat;
           const weight = loc.count ?? 1;
           const r = Math.min(8, 3 + Math.sqrt(weight) * 1.2);
           const place = [loc.state, loc.country].filter(Boolean).join(", ");
-          const title = `${genusName} — ${place}${weight > 1 ? ` (${weight} occurrences)` : ""}`;
           const lo = loc.minMa ?? loc.maxMa;
           const hi = loc.maxMa ?? loc.minMa;
           const mid = lo !== undefined && hi !== undefined ? (lo + hi) / 2 : undefined;
-          return { lng, lat, r, title, period: loc.period, midMa: mid, location: loc };
+          let timeLabel = loc.period || "";
+          if (lo !== undefined && hi !== undefined && mid !== undefined) {
+            const range =
+              Math.abs(Math.round(hi) - Math.round(lo)) > 2
+                ? `${Math.round(hi)}–${Math.round(lo)} Ma`
+                : `~${Math.round(mid)} Ma`;
+            timeLabel = loc.period ? `${loc.period} · ${range}` : range;
+          }
+          return { lng, lat, r, place, count: weight, timeLabel, period: loc.period, midMa: mid, location: loc };
         });
 
         const markers = zoomLayer.selectAll("circle.marker")
@@ -250,6 +297,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           .attr("vector-effect", "non-scaling-stroke")
           .style("cursor", "pointer")
           .on("mouseenter", (event: any, d: any) => {
+            showTooltip(event, d);
             const lo = d.location?.minMa ?? d.location?.maxMa;
             const hi = d.location?.maxMa ?? d.location?.minMa;
             onMarkerHover?.({
@@ -258,11 +306,13 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
               location: d.location,
             });
           })
+          .on("mousemove", (event: any) => {
+            positionTooltip(event);
+          })
           .on("mouseleave", () => {
+            hideTooltip();
             onMarkerHover?.(undefined);
           });
-
-        markers.append("title").text((d: any) => d.title);
 
         markersRef.current = markers;
         applyMarkerHighlight(markers, highlightRangeRef.current);
@@ -416,6 +466,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
         // Pan & zoom.
         const zoom = d3zoom.zoom()
           .scaleExtent([1, 8])
+          .on("start", hideTooltip)
           .on("zoom", (event: any) => {
             zoomLayer.attr("transform", event.transform);
             const k = event.transform.k || 1;
@@ -541,6 +592,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
       if (resizeTimer) clearTimeout(resizeTimer);
       if (cleanupZoom) cleanupZoom();
       markersRef.current = null;
+      if (tooltipRef.current) tooltipRef.current.style.display = "none";
       if (svgHostRef.current) svgHostRef.current.innerHTML = "";
     };
   }, [locations, genusName]);
@@ -559,6 +611,16 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
       aria-label={`Map of fossil find locations for ${genusName}`}
     >
       <div ref={svgHostRef} style={{ width: "100%", height: "100%" }} />
+      <div
+        ref={tooltipRef}
+        className="genus-fossil-map-tooltip"
+        style={{ display: "none" }}
+        aria-hidden="true"
+      >
+        <div ref={tooltipPlaceRef} className="genus-fossil-map-tooltip-place" />
+        <div ref={tooltipCountRef} className="genus-fossil-map-tooltip-count" />
+        <div ref={tooltipTimeRef} className="genus-fossil-map-tooltip-time" />
+      </div>
       <div className="genus-fossil-map-controls">
         <button
           type="button"

@@ -332,28 +332,6 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
           stroke="#444"
           strokeWidth={1}
         />
-        {highlightMa !== undefined && highlightMa >= visEnd && highlightMa <= visStart && (
-          <g style={{ pointerEvents: "none" }}>
-            <line
-              x1={xMeso(highlightMa)}
-              y1={topPad}
-              x2={xMeso(highlightMa)}
-              y2={axisY + 58}
-              stroke="#2f271d"
-              strokeWidth={2}
-              strokeDasharray="4 2"
-            />
-            <text
-              x={xMeso(highlightMa)}
-              y={topPad / 2}
-              textAnchor="middle"
-              fontSize={10}
-              fill="#2f271d"
-            >
-              {Math.round(highlightMa)} Ma
-            </text>
-          </g>
-        )}
         {ticks.map((t, idx) => (
           <g key={idx}>
             <line
