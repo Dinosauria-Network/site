@@ -132,7 +132,6 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
   );
 
   const xMeso = (ma: number) => ((visStart - ma) / visRange) * 800;
-  const xPhan = (ma: number) => ((541 - ma) / 541) * 800;
 
   const labelPos = (center: number, text: string, fontSize: number) => {
     const half = (text.length * fontSize * 0.55) / 2;
@@ -174,18 +173,18 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
         role="img"
         aria-label="Mesozoic geologic time scale showing periods, epochs, and ages"
       >
-        {/* Row 0: Phanerozoic (full width context bar) */}
+        {/* Row 0: Phanerozoic — full width, since it spans far beyond the Mesozoic shown below */}
         <rect
-          x={xPhan(visStart)}
+          x={0}
           y={yPhan}
-          width={xPhan(visEnd) - xPhan(visStart)}
+          width={800}
           height={rowH}
           fill="#9AD9DD"
           stroke="#fff"
           strokeWidth={0.5}
         />
         <text
-          x={(xPhan(visStart) + xPhan(visEnd)) / 2}
+          x={400}
           y={yPhan + rowH / 2 + 4}
           textAnchor="middle"
           fontSize={12}

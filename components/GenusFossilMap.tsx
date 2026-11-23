@@ -73,6 +73,20 @@ function escapeXml(s: string) {
     .replace(/'/g, "&apos;");
 }
 
+// Colour markers whose age (midpoint Ma) falls inside the highlighted range.
+function applyMarkerHighlight(markers: any, range?: [number, number]) {
+  if (!markers) return;
+  if (!range) {
+    markers.attr("stroke", "#2f271d").attr("stroke-width", 1);
+    return;
+  }
+  const [lo, hi] = range;
+  const inRange = (d: any) => d.midMa !== undefined && d.midMa >= lo && d.midMa <= hi;
+  markers
+    .attr("stroke", (d: any) => (inRange(d) ? "#ff6b35" : "#2f271d"))
+    .attr("stroke-width", (d: any) => (inRange(d) ? 3 : 1));
+}
+
 function visibleCountryCodes(projection: any, width: number, height: number, index: Record<string, [number, number, number, number]>) {
   const corners = [[0, 0], [width, 0], [0, height], [width, height]];
   const lngs: number[] = [];
@@ -109,6 +123,8 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
   const svgHostRef = useRef<HTMLDivElement | null>(null);
   const zoomRef = useRef<any>(null);
   const svgRef = useRef<any>(null);
+  const markersRef = useRef<any>(null);
+  const highlightRangeRef = useRef<[number, number] | undefined>(highlightAgeRange);
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
@@ -248,14 +264,8 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
 
         markers.append("title").text((d: any) => d.title);
 
-        // Highlight markers whose Ma range falls within the highlighted age range.
-        if (highlightAgeRange) {
-          const [lo, hi] = highlightAgeRange;
-          markers
-            .filter((d: any) => d.midMa !== undefined && d.midMa >= lo && d.midMa <= hi)
-            .attr("stroke", "#ff6b35")
-            .attr("stroke-width", 3);
-        }
+        markersRef.current = markers;
+        applyMarkerHighlight(markers, highlightRangeRef.current);
 
         // Labels — country names from the bundled 110m atlas; lazy-loaded cities at 4x.
         const labelLayer = zoomLayer.append("g").attr("class", "map-labels").style("pointer-events", "none");
@@ -530,9 +540,16 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
       ro.disconnect();
       if (resizeTimer) clearTimeout(resizeTimer);
       if (cleanupZoom) cleanupZoom();
+      markersRef.current = null;
       if (svgHostRef.current) svgHostRef.current.innerHTML = "";
     };
   }, [locations, genusName]);
+
+  // Keep the map in sync when the time bar highlights an age range.
+  useEffect(() => {
+    highlightRangeRef.current = highlightAgeRange;
+    applyMarkerHighlight(markersRef.current, highlightAgeRange);
+  }, [highlightAgeRange]);
 
   return (
     <div
