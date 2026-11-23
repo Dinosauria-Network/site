@@ -549,7 +549,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
         // Pan & zoom. The translate extent is the whole-world sphere, so
         // zooming all the way out (k=1) locks to the centered full globe.
         const zoom = d3zoom.zoom()
-          .scaleExtent([1, 8])
+          .scaleExtent([1, 16])
           .translateExtent([
             [0, 0],
             [width, height],
@@ -753,7 +753,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           type="button"
           className="genus-fossil-map-btn"
           aria-label="Zoom in"
-          disabled={scale >= 8}
+          disabled={scale >= 16}
           onClick={() => {
             if (svgRef.current && zoomRef.current) {
               svgRef.current.transition().duration(400).call(zoomRef.current.scaleBy, 1.5);
