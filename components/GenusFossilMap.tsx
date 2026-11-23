@@ -548,7 +548,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                 detailText.text("loading regions…");
                 loadAdmin50().then((geo) => {
                   if (cancelled) return;
-                  const features = geo.features;
+                  const features = (geo.features as any[]).filter((d: any) => path.area(d) > 2);
                   admin50Group.selectAll("path.region50")
                     .data(features)
                     .enter()
@@ -556,10 +556,10 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                     .attr("class", "region50")
                     .attr("d", (d: any) => path(d) || "")
                     .attr("fill", "none")
-                    .attr("stroke", "#808080")
-                    .attr("stroke-width", 0.4)
+                    .attr("stroke", "#a8a8a8")
+                    .attr("stroke-width", 0.3)
                     .attr("vector-effect", "non-scaling-stroke")
-                    .attr("opacity", 0.6)
+                    .attr("opacity", 0.75)
                     .attr("data-country", (d: any) => String(d.properties?.iso_a2 || "").toLowerCase());
                   detailText.text("detail: 50m");
                 }).catch(() => {
@@ -568,12 +568,13 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                   detailText.text("detail: 110m");
                 });
               }
-              // Sub-country detail recedes the coarse country borders (kept as
-              // context, but lighter) so the finer detail stays readable.
+              // Sub-country detail takes over: keep the country borders as a
+              // bold, dark outline so countries stay discernible, but recede
+              // the admin-1 lines (light grey, thin) so detail stays readable.
               zoomLayer.selectAll("path.country")
-                .attr("stroke", "#999999")
-                .attr("stroke-width", 0.35)
-                .attr("opacity", 0.55);
+                .attr("stroke", "#333333")
+                .attr("stroke-width", 0.6)
+                .attr("opacity", 1);
             } else {
               admin50Group.style("display", "none");
               zoomLayer.selectAll("path.country")
@@ -596,7 +597,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                   loaded10.add(code);
                   loadCountry10(code).then((geo) => {
                     if (cancelled) return;
-                    const features = geo.features;
+                    const features = (geo.features as any[]).filter((d: any) => path.area(d) > 2);
                     admin10Group.selectAll(`path.region10-${code}`)
                       .data(features)
                       .enter()
@@ -604,10 +605,10 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                       .attr("class", `region10-${code}`)
                       .attr("d", (d: any) => path(d) || "")
                       .attr("fill", "none")
-                      .attr("stroke", "#808080")
-                      .attr("stroke-width", 0.3)
+                      .attr("stroke", "#a8a8a8")
+                      .attr("stroke-width", 0.25)
                       .attr("vector-effect", "non-scaling-stroke")
-                      .attr("opacity", 0.8)
+                      .attr("opacity", 0.7)
                       .attr("data-country", code);
                     // Hide the coarser 50m paths for this country.
                     admin50Group.selectAll("path.region50")
