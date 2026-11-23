@@ -35,11 +35,11 @@ jobs:
       JEVSTYLE_API_KEY: ${{ secrets.JEVSTYLE_API_KEY }}
       ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
