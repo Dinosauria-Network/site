@@ -226,7 +226,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           const lo = loc.minMa ?? loc.maxMa;
           const hi = loc.maxMa ?? loc.minMa;
           const mid = lo !== undefined && hi !== undefined ? (lo + hi) / 2 : undefined;
-          return { lng, lat, r, title, period: loc.period, midMa: mid };
+          return { lng, lat, r, title, period: loc.period, midMa: mid, location: loc };
         });
 
         const markers = zoomLayer.selectAll("circle.marker")

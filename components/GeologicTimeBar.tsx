@@ -255,7 +255,9 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
         {activeEpochs.map((e) => {
           const w = xMeso(e.end) - xMeso(e.start);
           const lp = labelPos((xMeso(e.start) + xMeso(e.end)) / 2, e.name, 9);
-          const isHighlighted = epochForMa(highlightMa)?.period === e.period;
+          const highlightedEpoch = epochForMa(highlightMa);
+          const isHighlighted =
+            highlightedEpoch?.name === e.name && highlightedEpoch?.period === e.period;
           return (
             <g key={`${e.period}-${e.name}`}>
               <rect
