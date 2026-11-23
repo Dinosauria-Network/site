@@ -224,6 +224,25 @@ export function ageColorForMa(ma: number): string {
   return "#999";
 }
 
+/** Colour for a fossil location based on the smallest time division its age
+ *  range actually supports: stage colour only when the range falls within a
+ *  single stage, otherwise the (coarser) epoch colour. */
+export function colorForAgeRange(minMa?: number, maxMa?: number): string | undefined {
+  const lo = minMa ?? maxMa;
+  const hi = maxMa ?? minMa;
+  if (lo !== undefined && hi !== undefined) {
+    const ageLo = ageForMa(lo);
+    const ageHi = ageForMa(hi);
+    if (ageLo && ageHi && ageLo.name === ageHi.name) {
+      return ageLo.color;
+    }
+    const mid = (lo + hi) / 2;
+    const e = epochForMa(mid);
+    if (e) return e.color;
+  }
+  return undefined;
+}
+
 /** Period name from a Ma value (coarse classification). */
 export function periodFromMa(ma: number | null | undefined): string {
   if (ma === null || ma === undefined || !Number.isFinite(ma)) return "Unknown";

@@ -71,16 +71,21 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
     return { x: center, anchor: "middle" as const };
   };
 
-  const ticks: { x: number; label: string; anchor: "start" | "middle" | "end" }[] = [
-    { x: 0, label: `${Math.round(visStart)} Ma`, anchor: "start" },
-  ];
-  const candidates = [237, 201, 175, 143, 100];
-  for (const c of candidates) {
-    if (c < visStart - 18 && c > visEnd + 18) {
-      ticks.push({ x: xMeso(c), label: `${c} Ma`, anchor: "middle" });
-    }
+  // Ticks land on the actual epoch (and thus age) boundaries within the
+  // visible window, so the number axis aligns with the colour-bar divisions.
+  const boundarySet = new Set<number>();
+  boundarySet.add(visStart);
+  boundarySet.add(visEnd);
+  for (const e of activeEpochs) {
+    if (e.start <= visStart + 1e-9 && e.start >= visEnd - 1e-9) boundarySet.add(e.start);
+    if (e.end <= visStart + 1e-9 && e.end >= visEnd - 1e-9) boundarySet.add(e.end);
   }
-  ticks.push({ x: 800, label: `${Math.round(visEnd)} Ma`, anchor: "end" });
+  const sortedBoundaries = [...boundarySet].sort((a, b) => b - a);
+  const ticks: { x: number; label: string; anchor: "start" | "middle" | "end" }[] = sortedBoundaries.map((ma) => ({
+    x: xMeso(ma),
+    label: `${ma} Ma`,
+    anchor: ma === visStart ? "start" : (ma === visEnd ? "end" : "middle"),
+  }));
 
   const topPad = 6;
   const rowH = 20;
