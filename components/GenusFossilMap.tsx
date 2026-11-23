@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { FossilLocation } from "@/lib/genus-data";
-import { epochColorForMa } from "@/lib/geologic-time";
+import { ageColorForMa } from "@/lib/geologic-time";
 
 const PERIOD_COLORS: Record<string, string> = {
   Triassic: "#812B92",
@@ -388,7 +388,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             return xy ? xy[1] : 0;
           })
           .attr("r", (d: any) => d.r)
-          .attr("fill", (d: any) => (d.midMa !== undefined ? epochColorForMa(d.midMa) : (PERIOD_COLORS[d.period] || "#999")))
+          .attr("fill", (d: any) => (d.midMa !== undefined ? ageColorForMa(d.midMa) : (PERIOD_COLORS[d.period] || "#999")))
           .attr("fill-opacity", 0.85)
           .attr("stroke", "#2f271d")
           .attr("stroke-width", 1)

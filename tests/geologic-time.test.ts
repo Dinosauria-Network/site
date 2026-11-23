@@ -6,6 +6,7 @@ import {
   MAX_MA,
   MIN_MA,
   PERIODS,
+  ageColorForMa,
   ageForMa,
   eraClassForPeriod,
   eraLabelForMa,
@@ -74,6 +75,17 @@ describe("lib/geologic-time — ages (stages)", () => {
     expect(names).toContain("Campanian");
     expect(names).toContain("Maastrichtian");
     expect(names).toContain("Norian");
+  });
+});
+
+describe("lib/geologic-time — age colour", () => {
+  it("colours an age by its stage colour", () => {
+    // Campanian colour
+    expect(ageColorForMa(80)).toBe("#ebec9e");
+    // Maastrichtian colour
+    expect(ageColorForMa(70)).toBe("#f9f1a8");
+    // Fallback for out-of-range
+    expect(ageColorForMa(300)).toBe("#999");
   });
 });
 

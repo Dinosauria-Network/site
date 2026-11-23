@@ -210,6 +210,20 @@ export function epochColorForMa(ma: number): string {
   return "#999";
 }
 
+/** Colour for an age (stage) based on a Ma value, falling back to epoch/period. */
+export function ageColorForMa(ma: number): string {
+  const a = ageForMa(ma);
+  if (a) return a.color;
+  const e = epochForMa(ma);
+  if (e) return e.color;
+  if (ma >= MIN_MA && ma <= MAX_MA) {
+    if (ma >= 201.4) return PERIODS[0].color;
+    if (ma >= 143.1) return PERIODS[1].color;
+    if (ma >= 66.0) return PERIODS[2].color;
+  }
+  return "#999";
+}
+
 /** Period name from a Ma value (coarse classification). */
 export function periodFromMa(ma: number | null | undefined): string {
   if (ma === null || ma === undefined || !Number.isFinite(ma)) return "Unknown";

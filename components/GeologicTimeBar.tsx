@@ -19,16 +19,7 @@ interface GeologicTimeBarProps {
 }
 
 // Eras/periods/ages now live in @/lib/geologic-time (single source of truth).
-
-export function epochColorForMa(ma: number): string {
-  const e = epochForMa(ma);
-  if (e) return e.color;
-  // fallback by period color
-  if (ma >= 201.4) return PERIODS[0].color;
-  if (ma >= 143.1) return PERIODS[1].color;
-  if (ma >= 66.0) return PERIODS[2].color;
-  return "#999";
-}
+// (epochColorForMa is re-exported from @/lib/geologic-time if needed.)
 
 
 // Which periods are represented by the genus' fossil locations.
