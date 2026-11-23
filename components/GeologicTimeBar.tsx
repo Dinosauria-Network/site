@@ -3,6 +3,9 @@ import type { FossilLocation } from "@/lib/genus-data";
 
 interface GeologicTimeBarProps {
   locations: FossilLocation[];
+  highlightMa?: number | undefined;
+  onHighlightAge?: (range?: [number, number] | undefined) => void;
+  periods?: string[] | undefined;
 }
 
 // Colors and boundaries from app/mesozoic/page.tsx.
@@ -70,35 +73,66 @@ export function epochColorForMa(ma: number): string {
 const MIN_MA = 252.17;
 const MAX_MA = 66.0;
 
-function getDomainFromLocations(locations: FossilLocation[]): { visStart: number; visEnd: number } {
-  const presentPeriods = new Set<string>();
+// Which periods are represented by the genus' fossil locations.
+function presentPeriods(locations: FossilLocation[]): Set<string> {
+  const out = new Set<string>();
   for (const loc of locations) {
     const lo = loc.minMa ?? loc.maxMa;
     const hi = loc.maxMa ?? loc.minMa;
     if (lo !== undefined && hi !== undefined) {
       for (const p of PERIODS) {
-        if (hi >= p.end && lo <= p.start) {
-          presentPeriods.add(p.name);
-        }
+        if (hi >= p.end && lo <= p.start) out.add(p.name);
       }
     } else if (loc.period) {
-      presentPeriods.add(loc.period);
+      out.add(loc.period);
     }
   }
-  if (presentPeriods.size === 0) {
-    return { visStart: 252.17, visEnd: 66.0 };
-  }
-  const visStart = Math.max(...Array.from(presentPeriods).map(p => PERIODS.find(p => p.name === p)!.start));
-  const visEnd = Math.min(...Array.from(presentPeriods).map(p => PERIODS.find(p => p.name === p)!.end));
+  return out;
+}
+
+function clampDomain(locations: FossilLocation[]): { visStart: number; visEnd: number } {
+  const present = presentPeriods(locations);
+  if (present.size === 0) return { visStart: MIN_MA, visEnd: MAX_MA };
+  const visStart = Math.max(...Array.from(present).map((n) => PERIODS.find((p) => p.name === n)!.start)); // oldest boundary
+  const visEnd = Math.min(...Array.from(present).map((n) => PERIODS.find((p) => p.name === n)!.end)); // youngest boundary
   return { visStart, visEnd };
 }
 
-export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
-  const { visStart, visEnd } = getDomainFromLocations(locations);
+// Find the period containing a Ma value.
+function periodForMa(ma: number | undefined): { name: string; start: number; end: number } | undefined {
+  if (ma === undefined) return undefined;
+  return PERIODS.find((p) => ma <= p.start && ma >= p.end);
+}
+
+// Find the epoch containing a Ma value.
+function epochForMa(ma: number | undefined): { name: string; period: string; start: number; end: number } | undefined {
+  if (ma === undefined) return undefined;
+  return EPOCHS.find((e) => ma <= e.start && ma >= e.end);
+}
+
+// Find the age containing a Ma value.
+function ageForMa(ma: number | undefined): { name: string; start: number; end: number } | undefined {
+  if (ma === undefined) return undefined;
+  return AGES.find((a) => ma <= a.start && ma >= a.end);
+}
+
+export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge, periods }: GeologicTimeBarProps) {
+  const { visStart, visEnd } = clampDomain(locations);
   const visRange = visStart - visEnd;
 
+  // Use passed periods if provided, otherwise derive from locations
+  const periodSet = periods ? new Set(periods) : presentPeriods(locations);
+  const activePeriods = PERIODS.filter((p) => periodSet.has(p.name));
+
+  const activeEpochs = EPOCHS.filter((e) =>
+    activePeriods.some((p) => p.name === e.period)
+  );
+  const activeAges = AGES.filter((a) =>
+    activePeriods.some((p) => a.start > p.end && a.end < p.start)
+  );
+
   const xMeso = (ma: number) => ((visStart - ma) / visRange) * 800;
-  const xPhan = (ma: number) => ((541 - ma) / (541 - 0)) * 800;
+  const xPhan = (ma: number) => ((541 - ma) / 541) * 800;
 
   const labelPos = (center: number, text: string, fontSize: number) => {
     const half = (text.length * fontSize * 0.55) / 2;
@@ -121,14 +155,13 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
   const topPad = 6;
   const rowH = 20;
   const gap = 0;
-  const rows = 5;
-  const height = topPad + rows * rowH + (rows - 1) * gap + 4 + 58 + 20;
+  const height = topPad + 5 * rowH + 4 + 58 + 20;
 
   const yPhan = topPad;
-  const yMesoEra = yPhan + rowH + gap;
-  const yPeriod = yMesoEra + rowH + gap;
-  const yEpoch = yPeriod + rowH + gap;
-  const yAge = yEpoch + rowH + gap;
+  const yMesoEra = yPhan + rowH;
+  const yPeriod = yMesoEra + rowH;
+  const yEpoch = yPeriod + rowH;
+  const yAge = yEpoch + rowH;
   const ageLabelY = yAge + rowH + 4;
   const axisY = ageLabelY + 58;
 
@@ -141,7 +174,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         role="img"
         aria-label="Mesozoic geologic time scale showing periods, epochs, and ages"
       >
-        {/* Row 0: Phanerozoic (full width) */}
+        {/* Row 0: Phanerozoic (full width context bar) */}
         <rect
           x={xPhan(visStart)}
           y={yPhan}
@@ -162,7 +195,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           Phanerozoic
         </text>
 
-        {/* Row 1: Mesozoic (clamped to visible window) */}
+        {/* Row 1: Mesozoic era (clamped to visible window) */}
         <rect
           x={xMeso(visStart)}
           y={yMesoEra}
@@ -188,6 +221,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         {activePeriods.map((p) => {
           const w = xMeso(p.end) - xMeso(p.start);
           const lp = labelPos((xMeso(p.start) + xMeso(p.end)) / 2, p.name, 11);
+          const isHighlighted = periodForMa(highlightMa)?.name === p.name;
           return (
             <g key={p.name}>
               <rect
@@ -196,8 +230,11 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
                 width={w}
                 height={rowH}
                 fill={p.color}
-                stroke="#fff"
-                strokeWidth={0.5}
+                stroke={isHighlighted ? "#2f271d" : "#fff"}
+                strokeWidth={isHighlighted ? 2 : 0.5}
+                onMouseEnter={() => onHighlightAge?.([p.start, p.end])}
+                onMouseLeave={() => onHighlightAge?.(undefined)}
+                style={{ cursor: "pointer" }}
               />
               {w > 30 && (
                 <text
@@ -219,6 +256,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
         {activeEpochs.map((e) => {
           const w = xMeso(e.end) - xMeso(e.start);
           const lp = labelPos((xMeso(e.start) + xMeso(e.end)) / 2, e.name, 9);
+          const isHighlighted = epochForMa(highlightMa)?.period === e.period;
           return (
             <g key={`${e.period}-${e.name}`}>
               <rect
@@ -227,8 +265,11 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
                 width={w}
                 height={rowH}
                 fill={e.color}
-                stroke="#fff"
-                strokeWidth={0.5}
+                stroke={isHighlighted ? "#2f271d" : "#fff"}
+                strokeWidth={isHighlighted ? 2 : 0.5}
+                onMouseEnter={() => onHighlightAge?.([e.start, e.end])}
+                onMouseLeave={() => onHighlightAge?.(undefined)}
+                style={{ cursor: "pointer" }}
               />
               {w > 20 && (
                 <text
@@ -250,6 +291,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           const x0 = xMeso(a.start);
           const x1 = xMeso(a.end);
           const w = Math.max(1, x1 - x0);
+          const isHighlighted = ageForMa(highlightMa)?.name === a.name;
           return (
             <g key={a.name}>
               <rect
@@ -258,8 +300,11 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
                 width={w}
                 height={rowH}
                 fill={a.color}
-                stroke="#fff"
-                strokeWidth={0.3}
+                stroke={isHighlighted ? "#2f271d" : "#fff"}
+                strokeWidth={isHighlighted ? 2 : 0.3}
+                onMouseEnter={() => onHighlightAge?.([a.start, a.end])}
+                onMouseLeave={() => onHighlightAge?.(undefined)}
+                style={{ cursor: "pointer" }}
               />
               {w >= 5 && (
                 <text
@@ -267,8 +312,7 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
                   y={ageLabelY}
                   transform={`rotate(-90 ${(x0 + x1) / 2 + 2.5} ${ageLabelY})`}
                   textAnchor="end"
-                  fontSize={isAgeActive ? 8 : 7}
-                  fontWeight={isAgeActive ? 700 : 400}
+                  fontSize={7}
                   fill="#000"
                 >
                   {a.name}
@@ -287,6 +331,28 @@ export default function GeologicTimeBar({ locations }: GeologicTimeBarProps) {
           stroke="#444"
           strokeWidth={1}
         />
+        {highlightMa !== undefined && highlightMa >= visEnd && highlightMa <= visStart && (
+          <g style={{ pointerEvents: "none" }}>
+            <line
+              x1={xMeso(highlightMa)}
+              y1={topPad}
+              x2={xMeso(highlightMa)}
+              y2={axisY + 58}
+              stroke="#2f271d"
+              strokeWidth={2}
+              strokeDasharray="4 2"
+            />
+            <text
+              x={xMeso(highlightMa)}
+              y={topPad / 2}
+              textAnchor="middle"
+              fontSize={10}
+              fill="#2f271d"
+            >
+              {Math.round(highlightMa)} Ma
+            </text>
+          </g>
+        )}
         {ticks.map((t, idx) => (
           <g key={idx}>
             <line

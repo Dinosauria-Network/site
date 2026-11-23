@@ -15,6 +15,8 @@ const PERIOD_COLORS: Record<string, string> = {
 interface GenusFossilMapProps {
   locations: FossilLocation[];
   genusName: string;
+  highlightAgeRange?: [number, number] | undefined;
+  onMarkerHover?: (info?: { ma?: number; period?: string; location?: FossilLocation }) => void;
 }
 
 // Bundled low-res atlas for instant first paint.
@@ -102,7 +104,7 @@ function visibleCountryCodes(projection: any, width: number, height: number, ind
  * Sub-country borders: global 50m (on zoom >=2x), then per-country 10m
  * (on zoom >=4x, fetched in chunks for visible countries only).
  */
-export default function GenusFossilMap({ locations, genusName }: GenusFossilMapProps) {
+export default function GenusFossilMap({ locations, genusName, highlightAgeRange, onMarkerHover }: GenusFossilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgHostRef = useRef<HTMLDivElement | null>(null);
   const zoomRef = useRef<any>(null);
@@ -230,11 +232,169 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
           .attr("stroke", "#2f271d")
           .attr("stroke-width", 1)
           .attr("vector-effect", "non-scaling-stroke")
-          .style("cursor", "pointer");
+          .style("cursor", "pointer")
+          .on("mouseenter", (event: any, d: any) => {
+            const lo = d.location?.minMa ?? d.location?.maxMa;
+            const hi = d.location?.maxMa ?? d.location?.minMa;
+            onMarkerHover?.({
+              ma: (lo !== undefined && hi !== undefined ? (lo + hi) / 2 : d.midMa) as number,
+              period: d.location?.period || d.period,
+              location: d.location,
+            });
+          })
+          .on("mouseleave", () => {
+            onMarkerHover?.(undefined);
+          });
 
         markers.append("title").text((d: any) => d.title);
 
-        // Detail indicator.
+        // Highlight markers whose Ma range falls within the highlighted age range.
+        if (highlightAgeRange) {
+          const [lo, hi] = highlightAgeRange;
+          markers
+            .filter((d: any) => d.midMa !== undefined && d.midMa >= lo && d.midMa <= hi)
+            .attr("stroke", "#ff6b35")
+            .attr("stroke-width", 3);
+        }
+
+        // Labels — country names from the bundled 110m atlas; lazy-loaded cities at 4x.
+        const labelLayer = zoomLayer.append("g").attr("class", "map-labels").style("pointer-events", "none");
+        const cityLayer = zoomLayer.append("g").attr("class", "map-cities").style("pointer-events", "none");
+
+        const countryFeatures = (topo as any).feature(atlas110, atlas110.objects.countries).features;
+        const countryLabels = countryFeatures
+          .map((f: any) => {
+            const c = path.centroid(f);
+            const area = Math.abs(path.area(f));
+            return { name: String(f.properties?.name || ""), x: c[0], y: c[1], area, show: false };
+          })
+          .filter((d: any) => d.name && Number.isFinite(d.x) && Number.isFinite(d.y));
+
+        const countryText = labelLayer
+          .selectAll("text.country-label")
+          .data(countryLabels)
+          .enter()
+          .append("text")
+          .attr("class", "country-label")
+          .attr("x", (d: any) => d.x)
+          .attr("y", (d: any) => d.y)
+          .attr("text-anchor", "middle")
+          .attr("font-size", 11)
+          .attr("font-weight", 600)
+          .attr("fill", "#2f271d")
+          .attr("stroke", "#f4f1e8")
+          .attr("stroke-width", 3)
+          .attr("stroke-linejoin", "round")
+          .attr("paint-order", "stroke")
+          .style("display", "none")
+          .text((d: any) => d.name);
+
+        let cityText: any = null;
+        let cityData: any[] = [];
+        let citiesRequested = false;
+
+        let lastK = 1;
+        let lastTransform: { x: number; y: number } = { x: 0, y: 0 };
+
+        function overlaps(boxes: number[][], sx: number, sy: number, w: number) {
+          for (const b of boxes) {
+            if (!(sx + w < b[0] || sx > b[2] || sy - 6 > b[3] || sy < b[1])) return true;
+          }
+          return false;
+        }
+
+        function updateLabels(k: number, t: any) {
+          lastK = k;
+          lastTransform = t;
+          const boxes: number[][] = [];
+
+          // Country labels at zoom >= 2x, largest first.
+          const countries = countryLabels.slice().sort((a: any, b: any) => b.area - a.area);
+          for (const d of countries) {
+            d.show = false;
+            if (k < 2 || d.area * k * k < 700) continue;
+            const sx = t.x + d.x * k;
+            const sy = t.y + d.y * k;
+            if (sx < 10 || sx > width - 10 || sy < 10 || sy > height - 6) continue;
+            const tw = d.name.length * 5.6;
+            if (overlaps(boxes, sx, sy, tw)) continue;
+            boxes.push([sx - tw / 2, sy - 6, sx + tw / 2, sy + 6]);
+            d.show = true;
+          }
+          countryText.style("display", (d: any) => (d.show ? null : "none"))
+            .attr("font-size", 11 / k)
+            .attr("stroke-width", 3 / k);
+
+          // Cities at zoom >= 4x, lazy load.
+          if (k >= 4 && !citiesRequested) {
+            citiesRequested = true;
+            fetch("/data/cities.json")
+              .then((r) => {
+                if (!r.ok) throw new Error(`cities HTTP ${r.status}`);
+                return r.json();
+              })
+              .then((cities: any[]) => {
+                if (cancelled) return;
+                cityData = cities
+                  .map((c: any) => {
+                    const xy = projection([c.lng, c.lat]);
+                    return xy ? { name: c.name, x: xy[0], y: xy[1], pop: c.pop, show: false } : null;
+                  })
+                  .filter(Boolean);
+                cityText = cityLayer
+                  .selectAll("text.city-label")
+                  .data(cityData)
+                  .enter()
+                  .append("g")
+                  .attr("class", "city")
+                  .style("display", "none");
+                cityText.append("circle")
+                  .attr("r", 2.5)
+                  .attr("fill", "#2f271d")
+                  .attr("stroke", "#f4f1e8")
+                  .attr("stroke-width", 1);
+                cityText.append("text")
+                  .attr("x", 5)
+                  .attr("y", 3.5)
+                  .attr("font-size", 10)
+                  .attr("font-weight", 500)
+                  .attr("fill", "#2f271d")
+                  .attr("stroke", "#f4f1e8")
+                  .attr("stroke-width", 3)
+                  .attr("stroke-linejoin", "round")
+                  .attr("paint-order", "stroke")
+                  .text((d: any) => d.name);
+                updateLabels(lastK, lastTransform);
+              })
+              .catch(() => { citiesRequested = false; });
+          } else if (cityText) {
+            const k = lastK;
+            const t = lastTransform;
+            const minPop = k >= 6.5 ? 800_000 : k >= 5 ? 2_500_000 : 5_000_000;
+            const boxes: number[][] = [];
+            const cities = cityData.slice().sort((a: any, b: any) => b.pop - a.pop);
+            for (const c of cities) {
+              c.show = false;
+              if (c.pop < minPop) continue;
+              const sx = t.x + c.x * k;
+              const sy = t.y + c.y * k;
+              if (sx < 10 || sx > width - 10 || sy < 8 || sy > height - 8) continue;
+              const tw = 8 + c.name.length * 5.2;
+              if (overlaps(boxes, sx, sy, tw)) continue;
+              boxes.push([sx - 4, sy - 6, sx + tw, sy + 6]);
+              c.show = true;
+            }
+            cityText.style("display", (d: any) => (d.show ? null : "none"));
+            cityText.select("text")
+              .attr("font-size", 10 / k)
+              .attr("x", 5 / k)
+              .attr("y", 3.5 / k)
+              .attr("stroke-width", 3 / k);
+            cityText.select("circle")
+              .attr("r", 2.5 / k)
+              .attr("stroke-width", 1 / k);
+          }
+        }
         const detailText = svg.append("text")
           .attr("x", width - 8)
           .attr("y", height - 8)
@@ -251,6 +411,7 @@ export default function GenusFossilMap({ locations, genusName }: GenusFossilMapP
             const k = event.transform.k || 1;
             markers.attr("r", (d: any) => d.r / k);
             setScale(k);
+            updateLabels(k, event.transform);
 
             // Global 50m admin-1 when zoomed in.
             if (k >= 2) {
