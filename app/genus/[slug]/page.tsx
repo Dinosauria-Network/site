@@ -44,10 +44,16 @@ function summarizeRegions(locations: FossilLocation[]) {
 
 export default async function GenusPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { slug } = await params;
+  const sp = (await searchParams) as { ma?: string | string[] };
+  const maParam = Array.isArray(sp?.ma) ? sp?.ma[0] : sp?.ma;
+  const initialHighlightMa = maParam ? Number(maParam) : NaN;
+  const initialMa = Number.isFinite(initialHighlightMa) ? (initialHighlightMa as number) : undefined;
   const genus = getGenusBySlug(slug);
 
   if (!genus) {
@@ -109,6 +115,7 @@ export default async function GenusPage({
             genusName={genus.post_title}
             activePeriods={activePeriods}
             regions={regions}
+            initialHighlightMa={initialMa}
           />
         )}
       </main>

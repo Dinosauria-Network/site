@@ -17,6 +17,7 @@ interface GenusFossilMapProps {
   genusName: string;
   highlightAgeRange?: [number, number] | undefined;
   onMarkerHover?: (info?: { ma?: number; period?: string; location?: FossilLocation }) => void;
+  onMarkerClick?: (info?: { ma?: number; period?: string; location?: FossilLocation }) => void;
 }
 
 // Bundled low-res atlas for instant first paint.
@@ -126,7 +127,7 @@ function visibleCountryCodes(
  * Sub-country borders: global 50m (on zoom >=2x), then per-country 10m
  * (on zoom >=4x, fetched in chunks for visible countries only).
  */
-export default function GenusFossilMap({ locations, genusName, highlightAgeRange, onMarkerHover }: GenusFossilMapProps) {
+export default function GenusFossilMap({ locations, genusName, highlightAgeRange, onMarkerHover, onMarkerClick }: GenusFossilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgHostRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -340,6 +341,15 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           .on("mouseleave", () => {
             hideTooltip();
             onMarkerHover?.(undefined);
+          })
+          .on("click", (event: any, d: any) => {
+            const lo = d.location?.minMa ?? d.location?.maxMa;
+            const hi = d.location?.maxMa ?? d.location?.minMa;
+            onMarkerClick?.({
+              ma: (lo !== undefined && hi !== undefined ? (lo + hi) / 2 : d.midMa) as number,
+              period: d.location?.period || d.period,
+              location: d.location,
+            });
           });
 
         markersRef.current = markers;

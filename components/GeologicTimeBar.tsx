@@ -173,6 +173,7 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
                 strokeWidth={isHighlighted ? 2 : 0.5}
                 onMouseEnter={() => onHighlightAge?.([p.start, p.end])}
                 onMouseLeave={() => onHighlightAge?.(undefined)}
+                onClick={() => onHighlightAge?.([p.start, p.end])}
                 style={{ cursor: "pointer" }}
               />
               {w > 30 && (
@@ -210,6 +211,7 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
                 strokeWidth={isHighlighted ? 2 : 0.5}
                 onMouseEnter={() => onHighlightAge?.([e.start, e.end])}
                 onMouseLeave={() => onHighlightAge?.(undefined)}
+                onClick={() => onHighlightAge?.([e.start, e.end])}
                 style={{ cursor: "pointer" }}
               />
               {w > 20 && (
@@ -245,6 +247,7 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
                 strokeWidth={isHighlighted ? 2 : 0.3}
                 onMouseEnter={() => onHighlightAge?.([a.start, a.end])}
                 onMouseLeave={() => onHighlightAge?.(undefined)}
+                onClick={() => onHighlightAge?.([a.start, a.end])}
                 style={{ cursor: "pointer" }}
               />
               {w >= 5 && (
