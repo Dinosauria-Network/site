@@ -134,7 +134,8 @@ function visibleCountryCodes(
   width: number,
   height: number,
   index: Record<string, [number, number, number, number]>,
-  transform?: any
+  transform?: any,
+  minScreenArea = 0
 ) {
   const corners = [[0, 0], [width, 0], [0, height], [width, height]];
   const lngs: number[] = [];
@@ -157,6 +158,28 @@ function visibleCountryCodes(
   for (const [code, [cMinLng, cMinLat, cMaxLng, cMaxLat]] of Object.entries(index)) {
     if (cMaxLng < minLng || cMinLng > maxLng) continue;
     if (cMaxLat < minLat || cMinLat > maxLat) continue;
+    // Skip countries whose projected screen area is too small to benefit
+    // from (or even show) 10m detail at the current scale.
+    if (minScreenArea > 0) {
+      const pts = [
+        [cMinLng, cMinLat], [cMaxLng, cMinLat],
+        [cMaxLng, cMaxLat], [cMinLng, cMaxLat],
+      ].map(([lng, lat]) => {
+        const base = projection([lng, lat]);
+        if (!base) return null;
+        return transform ? transform.apply(base) : base;
+      });
+      if (pts.some((p) => !p)) continue;
+      // Shoelace area.
+      let area = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const [x1, y1] = pts[i] as [number, number];
+        const [x2, y2] = pts[(i + 1) % pts.length] as [number, number];
+        area += x1 * y2 - x2 * y1;
+      }
+      area = Math.abs(area) / 2;
+      if (area < minScreenArea) continue;
+    }
     result.push(code);
   }
   return result;
@@ -288,6 +311,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
         // Per-country 10m admin-1 (loaded on zoom >=4).
         const admin10Group = zoomLayer.append("g").attr("class", "admin10").style("display", "none");
         const loaded10 = new Set<string>();
+        let admin10PreWarmed = false;
 
         // 50m country outlines (more detailed than the bundled 110m atlas).
         const country50Group = zoomLayer.append("g").attr("class", "country50").style("display", "none");
@@ -665,6 +689,19 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                   }
                 }
                 zoomLayer.selectAll("path.country").attr("stroke", "none");
+
+                // Pre-warm 10m data ahead of the 4x threshold so the transition
+                // is effectively instant when the user reaches it.
+                if (k2 >= 3 && !admin10PreWarmed) {
+                  admin10PreWarmed = true;
+                  loadAdmin10Index().then((index) => {
+                    if (cancelled) return;
+                    const codes = visibleCountryCodes(projection, width, height, index, ev.transform, 500);
+                    for (const code of codes) {
+                      if (!loaded10.has(code)) loadCountry10(code).catch(() => {});
+                    }
+                  }).catch(() => { admin10PreWarmed = false; });
+                }
               } else {
                 admin50Group.style("display", "none");
                 country50Group.style("display", "none");
@@ -679,7 +716,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
               country50Group.style("display", null);
               loadAdmin10Index().then((index) => {
                 if (cancelled) return;
-                const codes = visibleCountryCodes(projection, width, height, index, event.transform);
+                const codes = visibleCountryCodes(projection, width, height, index, event.transform, 200);
                 const toLoad = codes.filter((c) => !loaded10.has(c));
                 if (toLoad.length) {
                   detailText.text("loading detail…");
