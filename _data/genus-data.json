@@ -54511,8 +54511,8 @@
               "state": "Omnogov",
               "count": 4,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 43.66,
@@ -54521,8 +54521,8 @@
               "state": "Omnogov",
               "count": 3,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 44,
@@ -54531,8 +54531,8 @@
               "state": "Omngov",
               "count": 2,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 50.73,
@@ -54541,8 +54541,8 @@
               "state": "Alberta",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 44.25,
@@ -54551,8 +54551,8 @@
               "state": "Omnogov",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 41.5,
@@ -54561,8 +54561,8 @@
               "state": "Nei Mongol",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 74.8,
-              "maxMa": 74.8
+              "minMa": 66,
+              "maxMa": 83.6
             },
             {
               "lat": 42.76,
@@ -54571,8 +54571,8 @@
               "state": "Turkistan",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 86.69999999999999,
-              "maxMa": 86.69999999999999
+              "minMa": 83.6,
+              "maxMa": 89.8
             },
             {
               "lat": 44.13,
@@ -54581,8 +54581,8 @@
               "state": "Omnogov",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 40.04,
@@ -54591,8 +54591,8 @@
               "state": "Shanxi",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 83.25,
-              "maxMa": 83.25
+              "minMa": 66,
+              "maxMa": 100.5
             },
             {
               "lat": 41.79,
@@ -54601,8 +54601,8 @@
               "state": "Nei Mongol",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 44.15,
@@ -54611,8 +54611,8 @@
               "state": "Omnogov",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 44.09,
@@ -54621,8 +54621,8 @@
               "state": "Omnogov",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 43.66,
@@ -54631,8 +54631,8 @@
               "state": "Dornogov",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             },
             {
               "lat": 43.3,
@@ -54641,8 +54641,8 @@
               "state": "Omnogov",
               "count": 1,
               "period": "Cretaceous",
-              "minMa": 77.9,
-              "maxMa": 77.9
+              "minMa": 72.2,
+              "maxMa": 83.6
             }
           ],
           "fossilSource": "Paleobiology Database"

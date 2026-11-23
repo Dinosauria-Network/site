@@ -49,7 +49,7 @@ interface CacheEntry {
 }
 
 /** 1 = taxon_name; 2 = base_name; 3 = + geologic period/age per bubble. */
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 
 type Cache = Record<string, CacheEntry>;
 
@@ -121,6 +121,18 @@ function recordMa(r: PbdbRecord): number | null {
   if (Number.isFinite(eag) && Number.isFinite(lag)) return (eag + lag) / 2;
   if (Number.isFinite(eag)) return eag;
   if (Number.isFinite(lag)) return lag;
+  return null;
+}
+
+/** Age range for one occurrence: lo = younger, hi = older (Ma). */
+function recordAgeRange(r: PbdbRecord): { lo: number; hi: number } | null {
+  const eag = Number(r.eag);
+  const lag = Number(r.lag);
+  if (Number.isFinite(eag) && Number.isFinite(lag) && lag < eag) {
+    return { lo: lag, hi: eag };
+  }
+  if (Number.isFinite(eag)) return { lo: eag, hi: eag };
+  if (Number.isFinite(lag)) return { lo: lag, hi: lag };
   return null;
 }
 
@@ -220,12 +232,13 @@ async function fetchLocations(taxon: string): Promise<Bubble[]> {
     const key = `${lat.toFixed(1)},${lng.toFixed(1)}`;
     const ma = recordMa(r);
     const period = ma !== null ? periodFromMa(ma) : (r.oei ? periodFromInterval(r.oei) : undefined);
+    const rng = recordAgeRange(r);
     const existing = buckets.get(key);
     if (existing) {
       existing.count += 1;
-      if (ma !== null) {
-        if (existing.minMa === undefined || ma < existing.minMa) existing.minMa = ma;
-        if (existing.maxMa === undefined || ma > existing.maxMa) existing.maxMa = ma;
+      if (rng) {
+        if (existing.minMa === undefined || rng.lo < existing.minMa) existing.minMa = rng.lo;
+        if (existing.maxMa === undefined || rng.hi > existing.maxMa) existing.maxMa = rng.hi;
       }
       // Keep the most common period: track counts.
       if (period) {
@@ -243,8 +256,8 @@ async function fetchLocations(taxon: string): Promise<Bubble[]> {
         state: r.stp && r.stp !== '__' ? String(r.stp) : undefined,
         count: 1,
         period,
-        minMa: ma !== null ? ma : undefined,
-        maxMa: ma !== null ? ma : undefined,
+        minMa: rng ? rng.lo : (ma !== null ? ma : undefined),
+        maxMa: rng ? rng.hi : (ma !== null ? ma : undefined),
       };
       (bubble as any)._periodCounts = pc;
       buckets.set(key, bubble);
