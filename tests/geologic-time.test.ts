@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   AGES,
+  buildMesozoicTree,
   EPOCHS,
   MAX_MA,
   MIN_MA,
@@ -123,5 +124,33 @@ describe("lib/genus-data — getGenusPeriodLabel", () => {
       taxonomy: [{ name: "Triceratops", taxonomy: "geological_time" }],
     };
     expect(getGenusPeriodLabel(genus as never)).toBe("Triceratops");
+  });
+});
+
+describe("lib/geologic-time — buildMesozoicTree", () => {
+  it("builds the nested era -> period -> epoch -> age tree", () => {
+    const tree = buildMesozoicTree();
+    expect(tree.name).toBe("Mesozoic");
+    expect(tree.type).toBe("era");
+    expect(tree.contains).toHaveLength(3);
+    const [cretaceous, jurassic, triassic] = tree.contains ?? [];
+    expect(cretaceous?.name).toBe("Cretaceous");
+    expect(jurassic?.name).toBe("Jurassic");
+    expect(triassic?.name).toBe("Triassic");
+  });
+
+  it("nests periods -> epochs -> ages with newest entries first", () => {
+    const tree = buildMesozoicTree();
+    const cretaceous = tree.contains?.[0];
+    expect(cretaceous?.type).toBe("period");
+    const late = cretaceous?.contains?.[0];
+    expect(late?.name).toBe("Late");
+    expect(late?.type).toBe("epoch");
+    const ages = late?.contains ?? [];
+    expect(ages).toHaveLength(6);
+    expect(ages[0]?.name).toBe("Maastrichtian");
+    expect(ages[0]?.type).toBe("age");
+    expect(ages[0]?.end).toBe(66);
+    expect(ages[0]?.endText).toBe("66.00");
   });
 });
