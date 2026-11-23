@@ -580,66 +580,96 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
 
               // Global 50m admin-1 when zoomed in.
               if (k2 >= 2) {
-              admin50Group.style("display", null);
-              if (!admin50Loaded) {
-                admin50Loaded = true;
-                detailText.text("loading regions…");
-                loadAdmin50().then((geo) => {
-                  if (cancelled) return;
-                  const features = (geo.features as any[]).filter((d: any) => path.area(d) > 2);
-                  admin50Group.selectAll("path.region50")
-                    .data(features)
-                    .enter()
-                    .append("path")
-                    .attr("class", "region50")
-                    .attr("d", (d: any) => path(d) || "")
-                    .attr("fill", "none")
-                    .attr("stroke", "#a8a8a8")
-                    .attr("stroke-width", 0.3)
-                    .attr("vector-effect", "non-scaling-stroke")
-                    .attr("opacity", 0.75)
-                    .attr("data-country", (d: any) => String(d.properties?.iso_a2 || "").toLowerCase());
-                  detailText.text("detail: 50m");
-                }).catch(() => {
-                  admin50Group.style("display", "none");
-                  admin50Loaded = false;
-                  detailText.text("detail: 110m");
-                });
+                // Country outlines load FIRST (more detailed than the 110m atlas),
+                // then the sub-country (admin-1) detail, so context appears first.
+                country50Group.style("display", null);
+                if (!country50Loaded) {
+                  country50Loaded = true;
+                  loadCountries50().then((geo) => {
+                    if (cancelled) return;
+                    country50Group.selectAll("path.country50")
+                      .data(geo.features)
+                      .enter()
+                      .append("path")
+                      .attr("class", "country50")
+                      .attr("d", (d: any) => path(d) || "")
+                      .attr("fill", "none")
+                      .attr("stroke", "#333333")
+                      .attr("stroke-width", 0.5)
+                      .attr("vector-effect", "non-scaling-stroke")
+                      .attr("opacity", 0.9);
+                    // 50m outline available: drop the crude 110m border.
+                    zoomLayer.selectAll("path.country").attr("stroke", "none");
+                    detailText.text("detail: 50m (outlines)");
+                    // Then load the sub-country detail.
+                    admin50Group.style("display", null);
+                    if (!admin50Loaded) {
+                      admin50Loaded = true;
+                      detailText.text("loading regions…");
+                      loadAdmin50().then((geo2) => {
+                        if (cancelled) return;
+                        const features = (geo2.features as any[]).filter((d: any) => path.area(d) > 2);
+                        admin50Group.selectAll("path.region50")
+                          .data(features)
+                          .enter()
+                          .append("path")
+                          .attr("class", "region50")
+                          .attr("d", (d: any) => path(d) || "")
+                          .attr("fill", "none")
+                          .attr("stroke", "#a8a8a8")
+                          .attr("stroke-width", 0.3)
+                          .attr("vector-effect", "non-scaling-stroke")
+                          .attr("opacity", 0.75)
+                          .attr("data-country", (d: any) => String(d.properties?.iso_a2 || "").toLowerCase());
+                        detailText.text("detail: 50m");
+                      }).catch(() => {
+                        admin50Group.style("display", "none");
+                        admin50Loaded = false;
+                        detailText.text("detail: 50m (outlines)");
+                      });
+                    }
+                  }).catch(() => {
+                    country50Group.style("display", "none");
+                    country50Loaded = false;
+                    // Fall back to the 110m country border.
+                    zoomLayer.selectAll("path.country").attr("stroke", "#808080").attr("stroke-width", 0.5);
+                    detailText.text("detail: 110m");
+                  });
+                } else {
+                  // Outlines already loaded: ensure sub-country detail loads.
+                  admin50Group.style("display", null);
+                  if (!admin50Loaded) {
+                    admin50Loaded = true;
+                    detailText.text("loading regions…");
+                    loadAdmin50().then((geo2) => {
+                      if (cancelled) return;
+                      const features = (geo2.features as any[]).filter((d: any) => path.area(d) > 2);
+                      admin50Group.selectAll("path.region50")
+                        .data(features)
+                        .enter()
+                        .append("path")
+                        .attr("class", "region50")
+                        .attr("d", (d: any) => path(d) || "")
+                        .attr("fill", "none")
+                        .attr("stroke", "#a8a8a8")
+                        .attr("stroke-width", 0.3)
+                        .attr("vector-effect", "non-scaling-stroke")
+                        .attr("opacity", 0.75)
+                        .attr("data-country", (d: any) => String(d.properties?.iso_a2 || "").toLowerCase());
+                      detailText.text("detail: 50m");
+                    }).catch(() => {
+                      admin50Group.style("display", "none");
+                      admin50Loaded = false;
+                      detailText.text("detail: 50m (outlines)");
+                    });
+                  }
+                }
+                zoomLayer.selectAll("path.country").attr("stroke", "none");
+              } else {
+                admin50Group.style("display", "none");
+                country50Group.style("display", "none");
+                zoomLayer.selectAll("path.country").attr("stroke", "#808080").attr("stroke-width", 0.5);
               }
-              // 50m country outline (more detailed than the 110m atlas) takes
-              // over from the crude country border; admin-1 detail shows too.
-              country50Group.style("display", null);
-              if (!country50Loaded) {
-                country50Loaded = true;
-                loadCountries50().then((geo) => {
-                  if (cancelled) return;
-                  country50Group.selectAll("path.country50")
-                    .data(geo.features)
-                    .enter()
-                    .append("path")
-                    .attr("class", "country50")
-                    .attr("d", (d: any) => path(d) || "")
-                    .attr("fill", "none")
-                    .attr("stroke", "#333333")
-                    .attr("stroke-width", 0.5)
-                    .attr("vector-effect", "non-scaling-stroke")
-                    .attr("opacity", 0.9);
-                  // 50m outline available: drop the crude 110m border.
-                  zoomLayer.selectAll("path.country").attr("stroke", "none");
-                  detailText.text("detail: 50m");
-                }).catch(() => {
-                  country50Group.style("display", "none");
-                  country50Loaded = false;
-                  // Fall back to the 110m country border.
-                  zoomLayer.selectAll("path.country").attr("stroke", "#808080").attr("stroke-width", 0.5);
-                });
-              }
-              zoomLayer.selectAll("path.country").attr("stroke", "none");
-            } else {
-              admin50Group.style("display", "none");
-              country50Group.style("display", "none");
-              zoomLayer.selectAll("path.country").attr("stroke", "#808080").attr("stroke-width", 0.5);
-            }
 
             // Per-country 10m when zoomed in further: fetch visible countries only.
             if (k2 >= 4) {
@@ -699,6 +729,10 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
 
         // Start from the fitted view (k=1 remains the whole world).
         (svg as any).call(zoom.transform, initialTransform);
+
+        // Warm the country-outline cache in the background so outlines are
+        // ready (and render first) when the user zooms in.
+        loadCountries50().catch(() => {});
 
         svg.append("text")
           .attr("id", "genus-fossil-map-hint")
