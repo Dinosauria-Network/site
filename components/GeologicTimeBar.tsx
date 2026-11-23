@@ -20,8 +20,10 @@ const EPOCHS = [
   { name: "Late", period: "Cretaceous", start: 100.5, end: 66.0, color: "#abd671" },
 ];
 
-// Ages, oldest -> youngest. `start` is the older boundary in Ma.
+// Ages/stages, oldest -> youngest. `start` is the older boundary in Ma.
+// Boundaries mirror app/mesozoic/page.tsx (ICS). Keep the two in sync.
 const AGES = [
+  // Triassic
   { name: "Induan", start: 252.17, end: 250.8, color: "#A4469F" },
   { name: "Olenekian", start: 250.8, end: 247.0, color: "#B051A5" },
   { name: "Anisian", start: 247.0, end: 241.464, color: "#BC75B7" },
@@ -29,28 +31,31 @@ const AGES = [
   { name: "Carnian", start: 237.0, end: 227.3, color: "#C99BCB" },
   { name: "Norian", start: 227.3, end: 205.7, color: "#D6AAD3" },
   { name: "Rhaetian", start: 205.7, end: 201.4, color: "#D6AAD3" },
-  { name: "Hettangian", start: 201.4, end: 192.9, color: "#67BCD8" },
-  { name: "Sinemurian", start: 192.9, end: 184.2, color: "#80CFD8" },
-  { name: "Pliensbachian", start: 184.2, end: 174.7, color: "#99CEE3" },
-  { name: "Toarcian", start: 174.7, end: 168.2, color: "#99CEE3" },
-  { name: "Aalenian", start: 168.2, end: 165.3, color: "#9AD9DD" },
-  { name: "Bajocian", start: 165.3, end: 161.5, color: "#A6DDE0" },
-  { name: "Bathonian", start: 161.5, end: 154.8, color: "#B3E2E3" },
-  { name: "Callovian", start: 154.8, end: 149.2, color: "#BFE7E5" },
-  { name: "Oxfordian", start: 149.2, end: 143.1, color: "#CCECF4" },
-  { name: "Kimmeridgian", start: 143.1, end: 137.05, color: "#8ed184" },
-  { name: "Tithonian", start: 137.05, end: 132.6, color: "#9ad58d" },
-  { name: "Valanginian", start: 132.6, end: 137.05, color: "#9ad58d" },
-  { name: "Hauterivian", start: 137.05, end: 139.5, color: "#9ad58d" },
-  { name: "Barremian", start: 139.5, end: 143.1, color: "#d2e38c" },
-  { name: "Aptian", start: 143.1, end: 145.5, color: "#d2e38c" },
-  { name: "Albian", start: 145.5, end: 154.8, color: "#d2e38c" },
-  { name: "Cenomanian", start: 154.8, end: 100.5, color: "#b8da7a" },
-  { name: "Turonian", start: 100.5, end: 89.8, color: "#c5df83" },
-  { name: "Coniacian", start: 89.8, end: 83.6, color: "#d2e38c" },
-  { name: "Santonian", start: 83.6, end: 72.2, color: "#ebec9e" },
-  { name: "Campanian", start: 72.2, end: 70.7, color: "#ebec9e" },
-  { name: "Maastrichtian", start: 70.7, end: 66.0, color: "#f9f1a8" },
+  // Jurassic
+  { name: "Hettangian", start: 201.4, end: 199.5, color: "#4EB3D3" },
+  { name: "Sinemurian", start: 199.5, end: 192.9, color: "#67BCD8" },
+  { name: "Pliensbachian", start: 192.9, end: 184.2, color: "#80C5DD" },
+  { name: "Toarcian", start: 184.2, end: 174.7, color: "#99CEE3" },
+  { name: "Aalenian", start: 174.7, end: 170.9, color: "#9AD9DD" },
+  { name: "Bajocian", start: 170.9, end: 168.2, color: "#A6DDE0" },
+  { name: "Bathonian", start: 168.2, end: 165.3, color: "#B3E2E3" },
+  { name: "Callovian", start: 165.3, end: 161.5, color: "#BFE7E5" },
+  { name: "Oxfordian", start: 161.5, end: 154.8, color: "#BFE7F1" },
+  { name: "Kimmeridgian", start: 154.8, end: 149.2, color: "#CCECF4" },
+  { name: "Tithonian", start: 149.2, end: 143.1, color: "#D9F1F7" },
+  // Cretaceous
+  { name: "Berriasian", start: 143.1, end: 137.05, color: "#8ed184" },
+  { name: "Valanginian", start: 137.05, end: 132.6, color: "#9ad58d" },
+  { name: "Hauterivian", start: 132.6, end: 125.77, color: "#a7d996" },
+  { name: "Barremian", start: 125.77, end: 121.4, color: "#b4de9f" },
+  { name: "Aptian", start: 121.4, end: 113.2, color: "#c1e2a8" },
+  { name: "Albian", start: 113.2, end: 100.5, color: "#cee7b1" },
+  { name: "Cenomanian", start: 100.5, end: 93.9, color: "#b8da7a" },
+  { name: "Turonian", start: 93.9, end: 89.8, color: "#c5df83" },
+  { name: "Coniacian", start: 89.8, end: 85.7, color: "#d2e38c" },
+  { name: "Santonian", start: 85.7, end: 83.6, color: "#dfe895" },
+  { name: "Campanian", start: 83.6, end: 72.2, color: "#ebec9e" },
+  { name: "Maastrichtian", start: 72.2, end: 66.0, color: "#f9f1a8" },
 ];
 
 const PERIODS = [
