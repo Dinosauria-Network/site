@@ -8,6 +8,7 @@ import {
   PERIODS,
   ageColorForMa,
   ageForMa,
+  colorForAgeRange,
   eraClassForPeriod,
   eraLabelForMa,
   epochColorForMa,
@@ -86,6 +87,21 @@ describe("lib/geologic-time — age colour", () => {
     expect(ageColorForMa(70)).toBe("#f9f1a8");
     // Fallback for out-of-range
     expect(ageColorForMa(300)).toBe("#999");
+  });
+});
+
+describe("lib/geologic-time — colorForAgeRange", () => {
+  it("uses stage colour when the range fits one stage", () => {
+    // Campanian range
+    expect(colorForAgeRange(72.2, 83.6)).toBe("#ebec9e");
+    // Single precise point
+    expect(colorForAgeRange(77.9, 77.9)).toBe("#ebec9e");
+  });
+  it("falls back to epoch colour for coarse ranges", () => {
+    // Spans multiple stages -> Late Cretaceous epoch colour
+    expect(colorForAgeRange(66, 83.6)).toBe("#abd671");
+    expect(colorForAgeRange(83.6, 89.8)).toBe("#abd671");
+    expect(colorForAgeRange(66, 100.5)).toBe("#abd671");
   });
 });
 

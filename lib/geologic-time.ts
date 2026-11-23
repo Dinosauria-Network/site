@@ -230,16 +230,25 @@ export function ageColorForMa(ma: number): string {
 export function colorForAgeRange(minMa?: number, maxMa?: number): string | undefined {
   const lo = minMa ?? maxMa;
   const hi = maxMa ?? minMa;
-  if (lo !== undefined && hi !== undefined) {
-    const ageLo = ageForMa(lo);
-    const ageHi = ageForMa(hi);
-    if (ageLo && ageHi && ageLo.name === ageHi.name) {
-      return ageLo.color;
-    }
-    const mid = (lo + hi) / 2;
-    const e = epochForMa(mid);
-    if (e) return e.color;
+  if (lo === undefined || hi === undefined) return undefined;
+  // A single, precise point gets its stage colour (consistent with ageForMa).
+  if (lo === hi) {
+    const a = ageForMa(lo);
+    if (a) return a.color;
   }
+  // A range gets a stage colour only when the whole range fits inside one
+  // stage (i.e. the data actually supports that level of specificity).
+  const containing: AgeDef[] = [];
+  for (const a of AGES) {
+    if (a.start >= hi && a.end <= lo) containing.push(a);
+  }
+  if (containing.length === 1) {
+    return containing[0].color;
+  }
+  // Otherwise fall back to the coarser epoch colour.
+  const mid = (lo + hi) / 2;
+  const e = epochForMa(mid);
+  if (e) return e.color;
   return undefined;
 }
 
