@@ -20,7 +20,7 @@ const STATUS_OPTIONS: { value: string; label: string; confirm?: string }[] = [
   { value: "draft", label: "Unpublish to draft", confirm: "Revert to draft (hidden publicly)?" },
 ];
 
-import { setStoryStatus, updateStoryFields } from "@/lib/admin/articles";
+import { setStoryStatus, updateStoryFields, deleteStory } from "@/lib/admin/articles";
 import { notifySuccess, notifyError } from "@/lib/admin/notices";
 
 interface Props {
@@ -88,6 +88,16 @@ export default function ArticleEditor({ story }: Props) {
             {o.label}
           </button>
         ))}
+        <button
+          type="button"
+          className="admin-btn admin-btn-danger"
+          onClick={() => {
+            if (!window.confirm(`Permanently delete "${story.headline}"? This cannot be undone.`)) return;
+            run(() => deleteStory(story.id), "Story deleted");
+          }}
+        >
+          Delete story
+        </button>
       </div>
       {message && <p style={{ margin: "0.75rem 0 0", color: "#2e8b57", fontSize: "0.875rem" }}>{message}</p>}
     </form>

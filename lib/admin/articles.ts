@@ -50,6 +50,16 @@ export async function setStoryStatus(storyId: string, status: "draft" | "publish
   return { ok: true as const, previousStatus, newStatus: status, editor };
 }
 
+/** Hard-delete a story (cascades to its publication_events). */
+export async function deleteStory(storyId: string) {
+  const editor = await requireEditor();
+  const story = await db.select().from(editorialStories).where(eq(editorialStories.id, storyId)).limit(1);
+  if (!story.length) return { ok: false as const, error: "Story not found" };
+  const headline = story[0].headline;
+  await db.delete(editorialStories).where(eq(editorialStories.id, storyId));
+  return { ok: true as const, deletedStoryId: storyId, headline, editor };
+}
+
 /** Toggle featured on/off for a story. */
 export async function setStoryFeatured(storyId: string, featured: boolean) {
   await db
