@@ -252,3 +252,9 @@
 .login-btn:disabled { opacity: 0.6; cursor: progress; }
 
 .login-btn-secondary { margin-top: 0.75rem; }
+
+/* /login is standalone — neutralize the site-shell right margin (the 240px
+   reserve applied at ≥1280px by globals.scss). */
+body:has(.login-page) .wrap.container { margin-right: 0 !important; }
+body:has(.login-page) .site-footer { display: none; }
+body:has(.login-page) .banner { display: none; }
