@@ -199,3 +199,55 @@
   color: var(--admin-muted);
   border-top: 1px solid var(--admin-border);
 }
+
+/* ==== Login page (Phase 1b) — mirrors the admin theme ==== */
+.login-page {
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-fg);
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  background: var(--admin-content);
+  border: 1px solid var(--admin-border);
+  padding: 1.5rem 2rem;
+  max-width: 28rem;
+  width: 100%;
+  text-align: center;
+}
+
+.login-card-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem;
+  color: var(--admin-fg);
+}
+
+.login-card-note {
+  color: var(--admin-muted);
+  font-size: 0.875rem;
+  margin: 0 0 1.25rem;
+}
+
+.login-btn {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-content);
+  color: var(--admin-fg);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+}
+
+.login-btn:hover { background: var(--admin-surface); }
+.login-btn:disabled { opacity: 0.6; cursor: progress; }
+
+.login-btn-secondary { margin-top: 0.75rem; }
