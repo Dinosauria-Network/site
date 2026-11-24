@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import StatusBadge from "@/components/admin/StatusBadge";
 
 interface StoryFields {
@@ -21,18 +22,23 @@ interface Props {
 }
 
 export default function ArticleEditor({ story }: Props) {
+  const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [headline, setHeadline] = useState(story.headline);
   const [description, setDescription] = useState(story.description ?? "");
   const [saving, setSaving] = useState(false);
 
-  const run = async (fn: () => Promise<unknown>, okMsg: string) => {
+  const run = async (fn: () => Promise<unknown>, okMsg: string, redirectTo?: string) => {
     setSaving(true);
     setMessage(null);
     try {
       await fn();
       setMessage(okMsg);
       notifySuccess(okMsg);
+      if (redirectTo) {
+        router.push(redirectTo);
+        return;
+      }
       window.location.reload();
     } catch (e) {
       setMessage("Error: " + (e as Error)?.message);
@@ -91,7 +97,7 @@ export default function ArticleEditor({ story }: Props) {
             Reject
           </button>
         )}
-        <button type="button" className="admin-btn admin-btn-danger" disabled={saving} onClick={() => { if (window.confirm(`Permanently delete "${story.headline}"? This cannot be undone.`)) run(() => deleteStory(story.id), "Story deleted"); }}>
+        <button type="button" className="admin-btn admin-btn-danger" disabled={saving} onClick={() => { if (window.confirm(`Permanently delete "${story.headline}"? This cannot be undone.`)) run(async () => { const res = await deleteStory(story.id); if (!res.ok) throw new Error(res.error); }, "Story deleted", "/admin/articles"); }}>
           Delete story
         </button>
       </div>

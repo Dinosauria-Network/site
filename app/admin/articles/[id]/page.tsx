@@ -36,7 +36,21 @@ export default async function AdminArticleEditorPage({
     .limit(1);
 
   if (!story.length) {
-    return <div className="admin-section">Story not found.</div>;
+    return (
+      <>
+        <AdminHeader />
+        <AdminNav />
+        <AdminBreadcrumbs items={[{ label: "Admin", href: "/admin" }, { label: "Articles", href: "/admin/articles" }, { label: "Not found" }]} />
+        <main className="admin-main">
+          <section className="admin-section">
+            <h2 className="admin-section-title">Story not found</h2>
+            <p style={{ margin: "0 0 1rem", color: "#66594F" }}>The article you are trying to edit does not exist (or was deleted).</p>
+            <a className="admin-btn" href="/admin/articles">Back to articles</a>
+          </section>
+        </main>
+        <AdminFooter />
+      </>
+    );
   }
 
   return (
