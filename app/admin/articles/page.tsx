@@ -72,7 +72,7 @@ export default async function AdminArticlesPage({
         <section className="admin-section">
           <h2 className="admin-section-title">Articles</h2>
           <p style={{ margin: "0 0 1rem", color: "#66594F" }}>
-            {total} story(ies) · role: {role}
+            {total} {total === 1 ? "story" : "stories"} · role: {role}
           </p>
           <ArticlesListClient stories={rows as never} query={q} status={status} page={page} />
           <Pagination
