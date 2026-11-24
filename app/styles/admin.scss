@@ -148,8 +148,9 @@
   margin-bottom: 1rem;
 }
 
-.admin-search-bar .admin-input { flex: 1 1 240px; max-width: 100%; }
-.admin-search-bar .admin-select { width: auto; }
+.admin-search-bar .admin-input { flex: 1 1 240px; max-width: 100%; height: 2.5rem; }
+.admin-search-bar .admin-select { width: auto; height: 2.5rem; }
+.admin-search-bar .admin-btn { height: 2.5rem; }
 
 /* ==== Forms ==== */
 .admin-field {
