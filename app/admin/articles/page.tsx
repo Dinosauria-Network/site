@@ -1,7 +1,7 @@
 import { requireRole } from "@/lib/supabase/roles";
 import { db } from "@/lib/db/client";
-import { editorialStories } from "@/lib/db/schema";
-import { desc, eq, ilike, sql, and } from "drizzle-orm";
+import { editorialStories, mediaAssets } from "@/lib/db/schema";
+import { desc, eq, ilike, sql, and, inArray } from "drizzle-orm";
 import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminNav from "@/components/admin/AdminNav";
@@ -44,12 +44,25 @@ export default async function AdminArticlesPage({
       status: editorialStories.status,
       publishedAt: editorialStories.publishedAt,
       updatedAt: editorialStories.updatedAt,
+      paperId: editorialStories.paperId,
     })
     .from(editorialStories)
     .where(where)
     .orderBy(desc(editorialStories.updatedAt ?? editorialStories.createdAt))
     .limit(PAGE_SIZE)
     .offset((page - 1) * PAGE_SIZE);
+
+  const paperIds = rows.map((r) => r.paperId).filter((p): p is string => Boolean(p));
+  const imageRows = paperIds.length > 0
+    ? await db
+        .select({ paperId: mediaAssets.paperId, src: mediaAssets.storagePath ?? mediaAssets.originalUrl })
+        .from(mediaAssets)
+        .where(inArray(mediaAssets.paperId, paperIds))
+    : [];
+  const imagesByPaper: Record<string, string> = {};
+  for (const a of imageRows) {
+    if (a.paperId && a.src) imagesByPaper[a.paperId] = a.src;
+  }
 
   const [{ value: total }] = await db
     .select({ value: sql<number>`count(*)`.mapWith(Number) })
@@ -74,7 +87,7 @@ export default async function AdminArticlesPage({
           <p style={{ margin: "0 0 1rem", color: "#66594F" }}>
             {total} {total === 1 ? "story" : "stories"} · role: {role}
           </p>
-          <ArticlesListClient stories={rows as never} query={q} status={status} page={page} />
+          <ArticlesListClient stories={rows as never} query={q} status={status} page={page} imagesByPaper={imagesByPaper} />
           <Pagination
             page={page}
             pageCount={pageCount}

@@ -11,6 +11,7 @@ interface StoryLite {
   status: string;
   publishedAt: Date | null;
   updatedAt: Date | null;
+  paperId?: string | null;
 }
 
 interface ArticlesListClientProps {
@@ -18,13 +19,14 @@ interface ArticlesListClientProps {
   query: string;
   status: string;
   page: number;
+  imagesByPaper: Record<string, string>;
 }
 
 const STATUSES = ["draft", "pending_review", "published", "rejected"];
 
 const fmt = (d: Date | null) => (d ? new Date(d).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—");
 
-export default function ArticlesListClient({ stories, query, status, page }: ArticlesListClientProps) {
+export default function ArticlesListClient({ stories, query, status, page, imagesByPaper }: ArticlesListClientProps) {
   const [draftQuery, setDraftQuery] = useState(query);
   const [draftStatus, setDraftStatus] = useState(status);
   const [draftPage, setDraftPage] = useState(page);
@@ -84,7 +86,7 @@ export default function ArticlesListClient({ stories, query, status, page }: Art
       <caption className="visually-hidden">Editorial stories</caption>
       <thead>
         <tr>
-          <th scope="col" style={{ width: 60 }}>ID</th>
+          <th scope="col">Image</th>
           <th scope="col">Headline</th>
           <th scope="col" style={{ width: 110 }}>Status</th>
           <th scope="col" style={{ width: 130 }}>Published</th>
@@ -99,19 +101,28 @@ export default function ArticlesListClient({ stories, query, status, page }: Art
             </td>
           </tr>
         ) : (
-          stories.map((s) => (
-            <tr key={s.id}>
-              <td>
-                <a href={`/admin/articles/${s.id}`} style={{ fontWeight: 600, color: "#4F362A" }}>
-                  {s.id.slice(0, 8)}
-                </a>
-              </td>
-              <td style={{ maxWidth: "80vw" }}>{s.headline}</td>
-              <td><StatusBadge status={s.status} /></td>
-              <td>{fmt(s.publishedAt)}</td>
-              <td>{fmt(s.updatedAt)}</td>
-            </tr>
-          ))
+          stories.map((s) => {
+            const imgSrc = s.paperId ? imagesByPaper[s.paperId] : undefined;
+            return (
+              <tr key={s.id}>
+                <td>
+                  {imgSrc ? (
+                    <img src={imgSrc} alt="" style={{ width: 56, height: 35, objectFit: "cover", border: "1px solid #a9a397", display: "block" }} />
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td style={{ maxWidth: "80vw" }}>
+                  <a href={`/admin/articles/${s.id}`} style={{ fontWeight: 600, color: "#4F362A" }}>
+                    {s.headline}
+                  </a>
+                </td>
+                <td><StatusBadge status={s.status} /></td>
+                <td>{fmt(s.publishedAt)}</td>
+                <td>{fmt(s.updatedAt)}</td>
+              </tr>
+            );
+          })
         )}
       </tbody>
     </table>
