@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import StatusBadge from "@/components/admin/StatusBadge";
+import type { StoryImageStatus } from "@/lib/admin/story-image";
 
 interface StoryLite {
   id: string;
@@ -11,7 +12,8 @@ interface StoryLite {
   status: string;
   publishedAt: Date | null;
   updatedAt: Date | null;
-  paperId?: string | null;
+  imageSrc?: string | null;
+  imageStatus?: StoryImageStatus;
 }
 
 interface ArticlesListClientProps {
@@ -19,17 +21,19 @@ interface ArticlesListClientProps {
   query: string;
   status: string;
   page: number;
-  imagesByPaper: Record<string, string>;
 }
 
 const STATUSES = ["draft", "pending_review", "published", "rejected"];
 
 const fmt = (d: Date | null) => (d ? new Date(d).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—");
 
-export default function ArticlesListClient({ stories, query, status, page, imagesByPaper }: ArticlesListClientProps) {
+export default function ArticlesListClient({ stories, query, status, page }: ArticlesListClientProps) {
   const [draftQuery, setDraftQuery] = useState(query);
   const [draftStatus, setDraftStatus] = useState(status);
   const [draftPage, setDraftPage] = useState(page);
+  // Thumbnails that 404 at runtime (e.g. referenced file was deleted) drop to the marker.
+  const [failed, setFailed] = useState<Record<string, true>>({});
+  const markFailed = (id: string) => setFailed((f) => (f[id] ? f : { ...f, [id]: true }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +90,7 @@ export default function ArticlesListClient({ stories, query, status, page, image
       <caption className="visually-hidden">Editorial stories</caption>
       <thead>
         <tr>
-          <th scope="col">Image</th>
+          <th scope="col" style={{ width: 72 }}>Image</th>
           <th scope="col">Headline</th>
           <th scope="col" style={{ width: 110 }}>Status</th>
           <th scope="col" style={{ width: 130 }}>Published</th>
@@ -102,14 +106,33 @@ export default function ArticlesListClient({ stories, query, status, page, image
           </tr>
         ) : (
           stories.map((s) => {
-            const imgSrc = s.paperId ? imagesByPaper[s.paperId] : undefined;
+            const broken = failed[s.id] || s.imageStatus === "missing";
             return (
               <tr key={s.id}>
                 <td>
-                  {imgSrc ? (
-                    <img src={imgSrc} alt="" style={{ width: 56, height: 35, objectFit: "cover", border: "1px solid #a9a397", display: "block" }} />
+                  {s.imageSrc && !broken ? (
+                    <img
+                      src={s.imageSrc}
+                      alt=""
+                      width={56}
+                      height={35}
+                      loading="lazy"
+                      className="admin-thumb"
+                      onError={() => markFailed(s.id)}
+                    />
+                  ) : broken ? (
+                    <span
+                      className="admin-thumb admin-thumb-missing"
+                      role="img"
+                      aria-label="Image file missing"
+                      title={`Image file missing${s.imageSrc ? `: ${s.imageSrc}` : ""}`}
+                    >
+                      !
+                    </span>
                   ) : (
-                    "—"
+                    <span className="admin-thumb-empty" title="No image" aria-label="No image">
+                      —
+                    </span>
                   )}
                 </td>
                 <td style={{ maxWidth: "80vw" }}>

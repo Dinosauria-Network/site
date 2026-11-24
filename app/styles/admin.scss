@@ -217,6 +217,76 @@ fieldset.admin-field {
   border: 1px solid var(--admin-border);
 }
 
+/* ==== Article list thumbnails ==== */
+.admin-thumb {
+  display: block;
+  width: 56px;
+  height: 35px;
+  object-fit: cover;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+}
+
+.admin-thumb-missing,
+.admin-thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--admin-muted);
+}
+
+.admin-thumb-missing {
+  color: #fff;
+  background: var(--admin-gold);
+  border-color: #9c7c28;
+  font-weight: 700;
+}
+
+/* ==== Article editor image panel ==== */
+.admin-editor-split {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.admin-editor-main { flex: 1 1 480px; max-width: 720px; }
+
+.admin-editor-aside {
+  flex: 0 0 300px;
+  max-width: 100%;
+  padding: 0.75rem;
+}
+
+.admin-editor-aside img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--admin-border);
+}
+
+.admin-image-meta {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--admin-muted);
+}
+
+.admin-image-meta li { margin-top: 0.15rem; }
+
+.admin-image-warning {
+  margin: 0.5rem 0 0;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  color: #6b4a00;
+  background: #fdf3d4;
+  border: 1px solid var(--admin-gold);
+  overflow-wrap: anywhere;
+}
+
 /* ==== Pagination ==== */
 .admin-pager {
   display: flex;

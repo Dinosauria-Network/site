@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/supabase/roles";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { editorialStories } from "@/lib/db/schema";
+import { editorialStories, mediaAssets } from "@/lib/db/schema";
+import { readStoryImage } from "@/lib/admin/story-image";
 import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminNav from "@/components/admin/AdminNav";
@@ -30,6 +31,8 @@ export default async function AdminArticleEditorPage({
       deck: editorialStories.deck,
       status: editorialStories.status,
       publishedAt: editorialStories.publishedAt,
+      paperId: editorialStories.paperId,
+      body: editorialStories.body,
     })
     .from(editorialStories)
     .where(eq(editorialStories.id, id))
@@ -52,6 +55,43 @@ export default async function AdminArticleEditorPage({
       </>
     );
   }
+
+  // The reader-facing image is `body.image`; media_assets supplies the
+  // provenance (licence, credit, verification) that the public page doesn't show.
+  const bodyImage = readStoryImage(story[0].body);
+  const asset = story[0].paperId
+    ? (
+        await db
+          .select({
+            storagePath: mediaAssets.storagePath,
+            caption: mediaAssets.caption,
+            licenseName: mediaAssets.licenseName,
+            licenseUrl: mediaAssets.licenseUrl,
+            copyrightHolder: mediaAssets.copyrightHolder,
+            reuseStatus: mediaAssets.reuseStatus,
+          })
+          .from(mediaAssets)
+          .where(eq(mediaAssets.paperId, story[0].paperId))
+          .limit(1)
+      )[0]
+    : undefined;
+
+  const assetImage = readStoryImage({ image: asset?.storagePath });
+  // Only fall back to the asset ledger when the story never got an image at all;
+  // a *broken* body.image is a real problem the editor should surface, not mask.
+  const fallbackSrc = bodyImage.status === "none" ? assetImage.src : null;
+  const imageSrc = bodyImage.src ?? fallbackSrc;
+  const imageReferenced = bodyImage.referenced ?? (fallbackSrc ? assetImage.referenced : null);
+  const image = {
+    src: imageSrc,
+    referenced: imageReferenced,
+    status: imageSrc ? ("ok" as const) : imageReferenced ? ("missing" as const) : ("none" as const),
+    caption: asset?.caption ?? null,
+    licenseName: asset?.licenseName ?? null,
+    licenseUrl: asset?.licenseUrl ?? null,
+    credit: asset?.copyrightHolder ?? null,
+    reuseStatus: asset?.reuseStatus ?? null,
+  };
 
   return (
     <>
@@ -76,6 +116,7 @@ export default async function AdminArticleEditorPage({
             status: story[0].status ?? 'draft',
             publishedAt: story[0].publishedAt ? story[0].publishedAt.toISOString() : null,
           }}
+          image={image}
         />
       </main>
       <AdminFooter />
