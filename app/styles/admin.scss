@@ -146,6 +146,11 @@
   margin-bottom: 0.75rem;
 }
 
+fieldset.admin-field {
+  border: 0;
+  padding: 0;
+}
+
 .admin-field-label {
   font-size: 0.875rem;
   font-weight: 600;
@@ -295,4 +300,28 @@ body:has(.login-page) .banner { display: none; }
 body:has(.admin-layout) .wrap.container { margin-right: 0 !important; }
 body:has(.admin-layout) .site-footer { display: none; }
 body:has(.admin-layout) .banner { display: none; }
-body:has(.admin-layout) .skip-link { display: none; }
+
+/* ==== Accessibility ==== */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Visible focus for admin controls (editorial theme often drops outlines). */
+.admin-layout button:focus-visible,
+.admin-layout a:focus-visible,
+.admin-layout input:focus-visible,
+.admin-layout select:focus-visible,
+.admin-layout textarea:focus-visible,
+.admin-layout [tabindex]:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}

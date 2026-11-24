@@ -8,12 +8,16 @@ interface PaginationProps {
 export default function Pagination({ page, pageCount, buildHref }: PaginationProps) {
   const pages = Array.from({ length: pageCount }, (_, i) => i + 1);
   return (
-    <nav className="admin-pager">
+    <nav className="admin-pager" aria-label="Pagination">
       {pages.map((p) =>
         p === page ? (
-          <span key={p} style={{ fontWeight: 600 }}>{p}</span>
+          <span key={p} style={{ fontWeight: 600 }} aria-current="page">
+            {p}
+          </span>
         ) : (
-          <a key={p} href={buildHref(p)}>{p}</a>
+          <a key={p} href={buildHref(p)} aria-label={`Go to page ${p}`}>
+            {p}
+          </a>
         )
       )}
     </nav>

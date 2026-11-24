@@ -16,10 +16,11 @@ export default function AdminTable({ columns, rows, title }: AdminTableProps) {
     <section className="admin-section">
       {title && <h2 className="admin-section-title">{title}</h2>}
       <table className="admin-table">
+        <caption className="visually-hidden">{title ?? "Records"}</caption>
         <thead>
           <tr>
             {columns.map((c) => (
-              <th key={c.key} style={c.width ? { width: c.width } : undefined}>
+              <th key={c.key} scope="col" style={c.width ? { width: c.width } : undefined}>
                 {c.label}
               </th>
             ))}

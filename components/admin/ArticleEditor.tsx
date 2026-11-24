@@ -50,26 +50,26 @@ export default function ArticleEditor({ story }: Props) {
   };
 
   return (
-    <form className="admin-section" onSubmit={(e) => e.preventDefault()} style={{ maxWidth: "720px" }}>
+    <form className="admin-section" onSubmit={(e) => e.preventDefault()} style={{ maxWidth: "720px" }} aria-label="Article editor">
       <div className="admin-field">
         <label className="admin-field-label" htmlFor="slug">Slug</label>
-        <input id="slug" className="admin-input" defaultValue={story.slug} readOnly aria-label="Slug" />
+        <input id="slug" className="admin-input" defaultValue={story.slug} readOnly />
       </div>
       <div className="admin-field">
         <label className="admin-field-label" htmlFor="headline">Headline</label>
-        <input id="headline" className="admin-input" value={headline} onChange={(e) => setHeadline(e.target.value)} aria-label="Headline" />
+        <input id="headline" className="admin-input" value={headline} onChange={(e) => setHeadline(e.target.value)} />
       </div>
       <div className="admin-field">
         <label className="admin-field-label" htmlFor="description">Description / deck</label>
-        <textarea id="description" className="admin-textarea" value={description} onChange={(e) => setDescription(e.target.value)} aria-label="Description" />
+        <textarea id="description" className="admin-textarea" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
-      <div className="admin-field">
-        <label className="admin-field-label">Status</label>
+      <fieldset className="admin-field">
+        <legend className="admin-field-label">Status</legend>
         <span style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <StatusBadge status={story.status} />
           {story.publishedAt && <span style={{ fontSize: "0.75rem", color: "#66594F" }}>Published: {new Date(story.publishedAt).toLocaleString("en-US")}</span>}
         </span>
-      </div>
+      </fieldset>
       <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
         <button type="submit" className="admin-btn admin-btn-primary" disabled={saving} onClick={() => run(() => updateStoryFields(story.id, { headline, description }), "Saved")}>
           Save changes

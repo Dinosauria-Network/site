@@ -48,7 +48,7 @@ export default function ArticlesListClient({ stories, query, status, page }: Art
 
   return (
     <>
-    <form className="admin-field" style={{ marginBottom: "1rem" }} onSubmit={handleSubmit}>
+    <form className="admin-field" style={{ marginBottom: "1rem" }} onSubmit={handleSubmit} aria-label="Article search">
       <input
         type="search"
         value={draftQuery}
@@ -81,13 +81,14 @@ export default function ArticlesListClient({ stories, query, status, page }: Art
     </form>
 
     <table className="admin-table">
+      <caption className="visually-hidden">Editorial stories</caption>
       <thead>
         <tr>
-          <th style={{ width: 60 }}>ID</th>
-          <th>Headline</th>
-          <th style={{ width: 110 }}>Status</th>
-          <th style={{ width: 130 }}>Published</th>
-          <th style={{ width: 130 }}>Updated</th>
+          <th scope="col" style={{ width: 60 }}>ID</th>
+          <th scope="col">Headline</th>
+          <th scope="col" style={{ width: 110 }}>Status</th>
+          <th scope="col" style={{ width: 130 }}>Published</th>
+          <th scope="col" style={{ width: 130 }}>Updated</th>
         </tr>
       </thead>
       <tbody>

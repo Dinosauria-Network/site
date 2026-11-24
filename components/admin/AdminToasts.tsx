@@ -33,7 +33,11 @@ export default function AdminToasts() {
       aria-label="Notifications"
     >
       {items.map((n) => (
-        <div key={n.id} style={{ border: "1px solid #000", background: "#fff", padding: "0.5rem 0.75rem", fontSize: "0.875rem", ...LEVEL_STYLE[n.level] }}>
+        <div
+          key={n.id}
+          style={{ border: "1px solid #000", background: "#fff", padding: "0.5rem 0.75rem", fontSize: "0.875rem", ...LEVEL_STYLE[n.level] }}
+          role={n.level === "error" ? "alert" : "status"}
+        >
           {n.message}
         </div>
       ))}
