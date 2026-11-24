@@ -21,6 +21,7 @@ const STATUS_OPTIONS: { value: string; label: string; confirm?: string }[] = [
 ];
 
 import { setStoryStatus, updateStoryFields } from "@/lib/admin/articles";
+import { notifySuccess, notifyError } from "@/lib/admin/notices";
 
 interface Props {
   story: StoryFields;
@@ -38,9 +39,11 @@ export default function ArticleEditor({ story }: Props) {
     try {
       await fn();
       setMessage(okMsg);
+      notifySuccess(okMsg);
       window.location.reload();
     } catch (e) {
       setMessage("Error: " + (e as Error)?.message);
+      notifyError("Error: " + (e as Error)?.message);
     } finally {
       setSaving(false);
     }

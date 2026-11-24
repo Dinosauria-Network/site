@@ -3,6 +3,7 @@
 import { useState } from "react";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { setAssetReuseStatus } from "@/lib/admin/assets";
+import { notifySuccess } from "@/lib/admin/notices";
 
 interface Props {
   assetId: string;
@@ -19,6 +20,7 @@ export default function AssetReuseControl({ assetId, status }: Props) {
     await setAssetReuseStatus(assetId, next);
     setPending(next);
     setBusy(false);
+    notifySuccess(`Asset marked ${next}.`);
   };
 
   return (
