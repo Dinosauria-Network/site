@@ -2,7 +2,6 @@ import { requireRole } from "@/lib/supabase/roles";
 import { db } from "@/lib/db/client";
 import { editorialStories } from "@/lib/db/schema";
 import { desc, eq, ilike, sql, and } from "drizzle-orm";
-import AdminLayout from "@/components/admin/AdminLayout";
 import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminNav from "@/components/admin/AdminNav";
@@ -65,7 +64,7 @@ export default async function AdminArticlesPage({
   ];
 
   return (
-    <AdminLayout>
+    <>
       <AdminHeader />
       <AdminNav />
       <AdminBreadcrumbs items={breadcrumbs} />
@@ -84,6 +83,6 @@ export default async function AdminArticlesPage({
         </section>
       </main>
       <AdminFooter />
-    </AdminLayout>
+    </>
   );
 }

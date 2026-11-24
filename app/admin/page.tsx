@@ -1,6 +1,5 @@
 import { adminStats } from "@/lib/admin/stats";
 import { requireRole } from "@/lib/supabase/roles";
-import AdminLayout from "@/components/admin/AdminLayout";
 import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminNav from "@/components/admin/AdminNav";
@@ -20,7 +19,7 @@ export default async function AdminDashboardPage() {
   const stats = await adminStats();
 
   return (
-    <AdminLayout>
+    <>
       <AdminHeader />
       <AdminBreadcrumbs items={[{ label: "Admin", href: "/admin" }]} />
       <AdminNav />
@@ -56,6 +55,6 @@ export default async function AdminDashboardPage() {
         </section>
       </main>
       <AdminFooter />
-    </AdminLayout>
+    </>
   );
 }

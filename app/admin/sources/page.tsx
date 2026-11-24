@@ -2,7 +2,6 @@ import { requireRole } from "@/lib/supabase/roles";
 import { db } from "@/lib/db/client";
 import { sourceRegistry, ingestionRuns } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
-import AdminLayout from "@/components/admin/AdminLayout";
 import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminNav from "@/components/admin/AdminNav";
@@ -22,7 +21,7 @@ export default async function AdminSourcesPage() {
     .limit(10);
 
   return (
-    <AdminLayout>
+    <>
       <AdminHeader />
       <AdminNav />
       <AdminBreadcrumbs items={[{ label: "Admin", href: "/admin" }, { label: "Sources", href: "/admin/sources" }]} />
@@ -63,6 +62,6 @@ export default async function AdminSourcesPage() {
         </section>
       </main>
       <AdminFooter />
-    </AdminLayout>
+    </>
   );
 }

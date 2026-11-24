@@ -289,3 +289,10 @@
 body:has(.login-page) .wrap.container { margin-right: 0 !important; }
 body:has(.login-page) .site-footer { display: none; }
 body:has(.login-page) .banner { display: none; }
+
+/* /admin is standalone — neutralize the frontend site chrome (header/nav,
+   footer, 240px content reserve) so the admin area gets the full admin shell. */
+body:has(.admin-layout) .wrap.container { margin-right: 0 !important; }
+body:has(.admin-layout) .site-footer { display: none; }
+body:has(.admin-layout) .banner { display: none; }
+body:has(.admin-layout) .skip-link { display: none; }

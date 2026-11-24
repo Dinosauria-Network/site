@@ -2,7 +2,6 @@ import { requireRole } from "@/lib/supabase/roles";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { editorialStories } from "@/lib/db/schema";
-import AdminLayout from "@/components/admin/AdminLayout";
 import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminNav from "@/components/admin/AdminNav";
@@ -41,7 +40,7 @@ export default async function AdminArticleEditorPage({
   }
 
   return (
-    <AdminLayout>
+    <>
       <AdminHeader />
       <AdminNav />
       <AdminBreadcrumbs
@@ -66,6 +65,6 @@ export default async function AdminArticleEditorPage({
         />
       </main>
       <AdminFooter />
-    </AdminLayout>
+    </>
   );
 }

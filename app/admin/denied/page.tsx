@@ -1,5 +1,4 @@
 import { requireRole } from "@/lib/supabase/roles";
-import AdminLayout from "@/components/admin/AdminLayout";
 import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminNav from "@/components/admin/AdminNav";
@@ -9,7 +8,7 @@ import AdminFooter from "@/components/admin/AdminFooter";
 export default async function AdminDeniedPage() {
   const role = await requireRole("admin").catch(() => "none");
   return (
-    <AdminLayout>
+    <>
       <AdminHeader />
       <AdminNav />
       <AdminBreadcrumbs items={[{ label: "Admin", href: "/admin" }, { label: "Denied" }]} />
@@ -20,6 +19,6 @@ export default async function AdminDeniedPage() {
         </section>
       </main>
       <AdminFooter />
-    </AdminLayout>
+    </>
   );
 }
