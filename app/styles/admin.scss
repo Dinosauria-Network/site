@@ -200,7 +200,7 @@
   border-top: 1px solid var(--admin-border);
 }
 
-/* ==== Login page (Phase 1b) — mirrors the admin theme ==== */
+/* ==== Login page (Phase 1b) — standalone, mirrors the admin theme ==== */
 .login-page {
   min-height: 61.8vh;        /* shorter than a full screen — feels compact */
   margin: 0;                /* no admin right/left gutters on this standalone page */
@@ -217,15 +217,35 @@
 .login-card {
   background: var(--admin-content);
   border: 2px groove var(--admin-border);  /* 2px, one of inset/outset/groove */
-  padding: 1.5rem 2rem;
-  max-width: 28rem;
-  width: 100%;
+  padding: 2rem 2.25rem 1.5rem;
+  max-width: 26rem;
+  width: calc(100% - 2rem);
   text-align: center;
+}
+
+.login-brand {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 0.35rem;
+  color: var(--admin-fg);
+}
+
+.login-brand-tagline {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  margin: 0 0 1.5rem;
+  color: var(--admin-muted);
 }
 
 .login-card-title {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1.25;
   margin: 0 0 0.5rem;
   color: var(--admin-fg);
 }
@@ -233,7 +253,7 @@
 .login-card-note {
   color: var(--admin-muted);
   font-size: 0.875rem;
-  margin: 0 0 1.25rem;
+  margin: 0 0 1.5rem;
 }
 
 .login-btn {
@@ -242,8 +262,11 @@
   border: 2px groove var(--admin-border);  /* 2px, one of inset/outset/groove */
   background: var(--admin-content);
   color: var(--admin-fg);
-  padding: 0.6rem 0.9rem;
-  font-size: 0.95rem;
+  padding: 0.75rem 0.9rem;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   margin-bottom: 0.75rem;
 }
@@ -251,7 +274,15 @@
 .login-btn:hover { background: var(--admin-surface); }
 .login-btn:disabled { opacity: 0.6; cursor: progress; }
 
-.login-btn-secondary { margin-top: 0.75rem; }
+.login-btn-secondary { margin-top: 0.75rem; margin-bottom: 0; }
+
+.login-card-foot {
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--admin-border);
+  font-size: 0.7rem;
+  color: var(--admin-muted);
+}
 
 /* /login is standalone — neutralize the site-shell right margin (the 240px
    reserve applied at ≥1280px by globals.scss). */

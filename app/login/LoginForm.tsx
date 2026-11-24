@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 
 export function LoginForm() {
   const [provider, setProvider] = useState<"google" | "github" | null>(null);
@@ -19,17 +20,18 @@ export function LoginForm() {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1 className="login-card-title">Sign in to Dinosauria Admin</h1>
-        <p className="login-card-note">Use Google or GitHub to continue.</p>
-        <button type="button" className="login-btn" onClick={() => handleSignIn("google")} disabled={!!provider}>
-          {provider === "google" ? "Signing in with Google…" : "Continue with Google"}
-        </button>
-        <button type="button" className="login-btn login-btn-secondary" onClick={() => handleSignIn("github")} disabled={!!provider}>
-          {provider === "github" ? "Signing in with GitHub…" : "Continue with GitHub"}
-        </button>
-      </div>
+    <div className="login-card">
+      <p className="login-brand">{SITE_NAME}</p>
+      <h1 className="login-card-title">Sign in to the Admin</h1>
+      <p className="login-brand-tagline">{SITE_TAGLINE}</p>
+      <p className="login-card-note">Use Google or GitHub to continue.</p>
+      <button type="button" className="login-btn" onClick={() => handleSignIn("google")} disabled={!!provider}>
+        {provider === "google" ? "Signing in with Google…" : "Continue with Google"}
+      </button>
+      <button type="button" className="login-btn login-btn-secondary" onClick={() => handleSignIn("github")} disabled={!!provider}>
+        {provider === "github" ? "Signing in with GitHub…" : "Continue with GitHub"}
+      </button>
+      <p className="login-card-foot">Staff accounts only — sign-in required.</p>
     </div>
   );
 }
