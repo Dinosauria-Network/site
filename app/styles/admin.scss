@@ -139,6 +139,18 @@
 .admin-status-rejected  { border-color: #d62728; }
 .admin-status-pending_review { border-color: #b58900; }
 
+/* ==== Search bar (inline row, à la WordPress admin) ==== */
+.admin-search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.admin-search-bar .admin-input { flex: 1 1 240px; max-width: 100%; }
+.admin-search-bar .admin-select { width: auto; }
+
 /* ==== Forms ==== */
 .admin-field {
   display: flex;

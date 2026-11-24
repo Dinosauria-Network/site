@@ -48,7 +48,7 @@ export default function ArticlesListClient({ stories, query, status, page }: Art
 
   return (
     <>
-    <form className="admin-field" style={{ marginBottom: "1rem" }} onSubmit={handleSubmit} aria-label="Article search">
+    <form className="admin-search-bar" style={{ marginBottom: "1rem" }} onSubmit={handleSubmit} aria-label="Article search">
       <input
         type="search"
         value={draftQuery}
