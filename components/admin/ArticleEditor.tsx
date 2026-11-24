@@ -13,13 +13,6 @@ interface StoryFields {
   publishedAt: string | null;
 }
 
-const STATUS_OPTIONS: { value: string; label: string; confirm?: string }[] = [
-  { value: "published", label: "Publish", confirm: "Publish this article? Published stories appear publicly." },
-  { value: "pending_review", label: "Request review", confirm: "Move to pending_review (shown as a draft)?" },
-  { value: "rejected", label: "Reject" },
-  { value: "draft", label: "Unpublish to draft", confirm: "Revert to draft (hidden publicly)?" },
-];
-
 import { setStoryStatus, updateStoryFields, deleteStory } from "@/lib/admin/articles";
 import { notifySuccess, notifyError } from "@/lib/admin/notices";
 
@@ -74,28 +67,31 @@ export default function ArticleEditor({ story }: Props) {
         <button type="submit" className="admin-btn admin-btn-primary" disabled={saving} onClick={() => run(() => updateStoryFields(story.id, { headline, description }), "Saved")}>
           Save changes
         </button>
-        <span style={{ color: "#66594F", fontSize: "0.875rem" }}>Status actions:</span>
-        {STATUS_OPTIONS.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            className={o.value === "published" || o.value === "rejected" ? "admin-btn admin-btn-danger" : "admin-btn"}
-            onClick={() => {
-              if (o.confirm && !window.confirm(o.confirm)) return;
-              run(() => setStoryStatus(story.id, o.value as "draft" | "pending_review" | "published" | "rejected"), `→ ${o.label.toLowerCase()}`);
-            }}
-          >
-            {o.label}
+
+        {story.status !== "published" && (
+          <button type="button" className="admin-btn" disabled={saving} onClick={() => { if (window.confirm("Publish this article? Published stories appear publicly.")) run(() => setStoryStatus(story.id, "published" as "draft" | "pending_review" | "published" | "rejected"), "→ publish"); }}>
+            Publish
           </button>
-        ))}
-        <button
-          type="button"
-          className="admin-btn admin-btn-danger"
-          onClick={() => {
-            if (!window.confirm(`Permanently delete "${story.headline}"? This cannot be undone.`)) return;
-            run(() => deleteStory(story.id), "Story deleted");
-          }}
-        >
+        )}
+        {story.status === "draft" && (
+          <button type="button" className="admin-btn" disabled={saving} onClick={() => { if (window.confirm("Move to pending_review (shown as a draft)?")) run(() => setStoryStatus(story.id, "pending_review" as "draft" | "pending_review" | "published" | "rejected"), "→ request review"); }}>
+            Request review
+          </button>
+        )}
+        {story.status === "published" && (
+          <button type="button" className="admin-btn" disabled={saving} onClick={() => { if (window.confirm("Revert to draft (hidden publicly)?")) run(() => setStoryStatus(story.id, "draft" as "draft" | "pending_review" | "published" | "rejected"), "→ unpublish to draft"); }}>
+            Unpublish to draft
+          </button>
+        )}
+      </div>
+
+      <div className="admin-danger-zone">
+        {story.status !== "published" && (
+          <button type="button" className="admin-btn admin-btn-warning" disabled={saving} onClick={() => { if (window.confirm("Reject this article?")) run(() => setStoryStatus(story.id, "rejected" as "draft" | "pending_review" | "published" | "rejected"), "→ rejected"); }}>
+            Reject
+          </button>
+        )}
+        <button type="button" className="admin-btn admin-btn-danger" disabled={saving} onClick={() => { if (window.confirm(`Permanently delete "${story.headline}"? This cannot be undone.`)) run(() => deleteStory(story.id), "Story deleted"); }}>
           Delete story
         </button>
       </div>

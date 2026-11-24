@@ -11,6 +11,7 @@
   --admin-surface: #dad8d0;     /* spec: Secondary surface */
   --admin-content: #f0efea;     /* spec: Content backgrounds */
   --admin-accent: #4f362a;      /* editorial accent (c PARKER) */
+  --admin-gold: #cfa93d;         /* warning accent (editorial gold) */
 }
 
 /* ==== Layout ==== */
@@ -188,6 +189,20 @@ fieldset.admin-field {
 .admin-btn:hover { background: var(--admin-surface); }
 .admin-btn-primary { background: var(--admin-accent); color: #fff; border-color: var(--admin-accent); }
 .admin-btn-danger { background: #d62728; color: #fff; border-color: #8b0000; }
+
+.admin-btn-warning { background: var(--admin-gold); color: #fff; border-color: #9c7c28; }
+.admin-btn-warning:hover { background: #bfa03a; }
+
+/* ==== Danger zone (destructive actions grouped at the end of forms) ==== */
+.admin-danger-zone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--admin-border);
+}
 
 /* ==== Pagination ==== */
 .admin-pager {
