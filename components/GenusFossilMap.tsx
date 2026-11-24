@@ -308,16 +308,16 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           .attr("vector-effect", "non-scaling-stroke");
 
         // Global 50m admin-1 (loaded on zoom >=2).
-        const admin50Group = zoomLayer.append("g").attr("class", "admin50").style("display", "none");
+        const admin50Group: any = zoomLayer.append("g").attr("class", "admin50").style("display", "none");
         let admin50Loaded = false;
 
         // Per-country 10m admin-1 (loaded on zoom >=4).
-        const admin10Group = zoomLayer.append("g").attr("class", "admin10").style("display", "none");
+        const admin10Group: any = zoomLayer.append("g").attr("class", "admin10").style("display", "none");
         const loaded10 = new Set<string>();
         let admin10PreWarmed = false;
 
         // 50m country outlines (more detailed than the bundled 110m atlas).
-        const country50Group = zoomLayer.append("g").attr("class", "country50").style("display", "none");
+        const country50Group: any = zoomLayer.append("g").attr("class", "country50").style("display", "none");
         let country50Loaded = false;
 
         // Custom HTML tooltip that follows the pointer (no native title attr).
@@ -624,7 +624,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
               if (k2 >= 2) {
                 // Country outlines load FIRST (more detailed than the 110m atlas),
                 // then the sub-country (admin-1) detail, so context appears first.
-                country50Group.style("display", null);
+                country50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
                 if (!country50Loaded) {
                   country50Loaded = true;
                   loadCountries50().then((geo) => {
@@ -644,7 +644,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                     zoomLayer.selectAll("path.country").attr("stroke", "none");
                     detailText.text("detail: 50m (outlines)");
                     // Then load the sub-country detail.
-                    admin50Group.style("display", null);
+                    admin50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
                     if (!admin50Loaded) {
                       admin50Loaded = true;
                       detailText.text("loading regions…");
@@ -679,7 +679,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                   });
                 } else {
                   // Outlines already loaded: ensure sub-country detail loads.
-                  admin50Group.style("display", null);
+                  admin50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
                   if (!admin50Loaded) {
                     admin50Loaded = true;
                     detailText.text("loading regions…");
@@ -728,10 +728,10 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
 
             // Per-country 10m when zoomed in further: fetch visible countries only.
             if (k2 >= 4) {
-              admin10Group.style("display", null);
+              admin10Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
               // Keep the 50m country outline visible alongside the 10m admin-1
               // detail so countries stay identifiable (admin-1 lines are finer).
-              country50Group.style("display", null);
+              country50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
               loadAdmin10Index().then((index) => {
                 if (cancelled) return;
                 const codes = visibleCountryCodes(projection, width, height, index, event.transform, 200);
@@ -773,7 +773,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
               });
             } else {
               admin10Group.style("display", "none");
-              if (k2 >= 2) country50Group.style("display", null);
+              if (k2 >= 2) country50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
             }
             });
           });
@@ -889,7 +889,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             if (svgRef.current && zoomRef.current && initialTransformRef.current) {
               svgRef.current
                 .transition()
-                .duration(300)
+                .duration(400)
                 .call(zoomRef.current.transform, initialTransformRef.current);
               setAtResetView(true);
             }
