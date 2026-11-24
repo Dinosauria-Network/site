@@ -1,0 +1,3 @@
+[
+  { "term": "Maastrichtian", "boost": 0.15, "match": "title+abstract" }
+]

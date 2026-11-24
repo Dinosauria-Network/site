@@ -5,6 +5,7 @@ import { generateDek } from '../lib/ai/dek';
 import { writeDerivatives } from '../lib/image-derivatives';
 import { taxonQuery, findCommonsMatch } from '../lib/images/commons';
 import { extractLicense, stripTags, sentencePrefix } from '../lib/license';
+import { computeBoost } from '../lib/editorial/boost';
 import { and, count, desc, eq, gte, inArray, isNull, lt, notExists, or, sql } from 'drizzle-orm';
 import { SITE_NAME } from '../lib/site';
 import fs from 'fs';
@@ -122,8 +123,11 @@ const run = async () => {
   const notProposed = notExists(db.select({ x: editorialStories.id }).from(editorialStories).where(eq(editorialStories.paperId, researchPapers.id)));
   const doiFilter = doi?.length ? inArray(researchPapers.doi, doi) : undefined;
   const conditions: any[] = [notProposed];
+  // Boosts can raise a score by up to 0.25, so fetch papers down to
+  // (minScore - 0.25) and apply the boost gate in code below.
+  const fetchFloor = Math.max(0, minScore - 0.25);
   if (!doi) {
-    conditions.push(gte(researchPapers.editorialScore, minScore));
+    conditions.push(gte(researchPapers.editorialScore, fetchFloor));
     if (since) conditions.push(gte(researchPapers.publicationDate, since));
   } else if (doiFilter) {
     conditions.push(doiFilter);
@@ -134,7 +138,7 @@ const run = async () => {
     const [{ value: skipped }] = await db.select({ value: count() }).from(researchPapers)
       .where(and(
         notProposed,
-        gte(researchPapers.editorialScore, minScore),
+        gte(researchPapers.editorialScore, fetchFloor),
         or(isNull(researchPapers.publicationDate), lt(researchPapers.publicationDate, since)),
       ));
     if (skipped > 0) console.log(`note: skipped ${skipped} eligible paper(s) published before --since ${sinceLabel} (use --since all to include)`);
@@ -168,6 +172,8 @@ const run = async () => {
       console.log('skip (erratum-type):', cleanTitle(paper.title).slice(0, 90));
       continue;
     }
+
+    const rawScore = paper.editorialScore ?? 0;
     const headline = cleanTitle(paper.title);
     const base = slugify(headline);
     let slug = base;
@@ -184,6 +190,14 @@ const run = async () => {
     const url = paper.doi ? `https://doi.org/${paper.doi}` : (metaLink ?? meta.url ?? meta.sourceUrl ?? '');
     const rawAbstract = typeof paper.abstract === 'string' ? paper.abstract : '';
     const abstract = stripTags(rawAbstract).replace(/^abstract[:\s—–-]+/i, '');
+
+    // Apply configured boost rules (e.g. Maastrichtian +0.15) to the raw score.
+    const { effectiveScore, boosts } = computeBoost(headline, abstract, rawScore);
+    if (!doi && effectiveScore < minScore) {
+      console.log(`skip (score ${rawScore.toFixed(3)}${boosts.length ? ` +boost ${boosts.join(', ')}` : ''} = ${effectiveScore.toFixed(3)} < ${minScore}):`, headline.slice(0, 70));
+      continue;
+    }
+
     let description = sentencePrefix(abstract, 240);
     let dekGenerated = false;
     if (!description.trim()) {
@@ -280,7 +294,7 @@ const run = async () => {
         source: paper.journalName ?? 'Database',
         author: SITE_NAME,
         sourcePostId: nextPostId,
-        editorialScore: paper.editorialScore,
+        editorialScore: effectiveScore,
         ...(dekGenerated ? { dekGenerated: true } : {}),
       },
       // The story keeps its original publication date — a paper from 2025-10
@@ -317,7 +331,7 @@ const run = async () => {
       });
     }
 
-    console.log(`CREATED ${slug} | postId=${nextPostId} | ${uniqueSentence(headline, 55)} | img=${image ?? 'MISSING-NEEDS-ATTACH-IMAGE'}${autoMatch ? ` (commons:${autoMatch.genus})` : ''}${license ? ` | lic=${license.name}` : ''}`);
+    console.log(`CREATED ${slug} | postId=${nextPostId} | score=${rawScore.toFixed(3)}${boosts.length ? ` +boost ${boosts.join(', ')} = ${effectiveScore.toFixed(3)}` : ''} | ${uniqueSentence(headline, 55)} | img=${image ?? 'MISSING-NEEDS-ATTACH-IMAGE'}${autoMatch ? ` (commons:${autoMatch.genus})` : ''}${license ? ` | lic=${license.name}` : ''}`);
     nextPostId++;
     created++;
   }
