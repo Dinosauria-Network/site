@@ -202,7 +202,8 @@
 
 /* ==== Login page (Phase 1b) — mirrors the admin theme ==== */
 .login-page {
-  min-height: 100vh;
+  min-height: 61.8vh;        /* shorter than a full screen — feels compact */
+  margin: 0;                /* no admin right/left gutters on this standalone page */
   background: var(--admin-bg);
   color: var(--admin-fg);
   font-family: Verdana, Arial, sans-serif;
@@ -215,7 +216,7 @@
 
 .login-card {
   background: var(--admin-content);
-  border: 1px solid var(--admin-border);
+  border: 2px groove var(--admin-border);  /* 2px, one of inset/outset/groove */
   padding: 1.5rem 2rem;
   max-width: 28rem;
   width: 100%;
@@ -238,7 +239,7 @@
 .login-btn {
   width: 100%;
   display: block;
-  border: 1px solid var(--admin-border);
+  border: 2px groove var(--admin-border);  /* 2px, one of inset/outset/groove */
   background: var(--admin-content);
   color: var(--admin-fg);
   padding: 0.6rem 0.9rem;
