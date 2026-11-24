@@ -39,6 +39,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.109.0",
     "article-parser": "^7.2.6-rc1",
     "d3-geo": "^3.1.2",
     "d3-selection": "^3.0.1",
