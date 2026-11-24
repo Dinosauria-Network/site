@@ -13,7 +13,10 @@ export function LoginForm() {
     await supabase.auth.signInWithOAuth({
       provider: p,
       options: {
-        redirectTo: "/auth/callback?next=/admin",
+        // Absolute redirect URL — required for a deterministic post-auth landing
+        // (relative `redirectTo` values have been observed resolving to the site
+        // root, which is how users ended up on `/?code=...` instead of the callback).
+        redirectTo: `${window.location.origin}/auth/callback?next=/admin`,
         queryParams: { provider: p },
       },
     });
