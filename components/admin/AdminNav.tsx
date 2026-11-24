@@ -16,7 +16,7 @@ export default function AdminNav() {
   return (
     <nav className="admin-nav" aria-label="Admin">
       {ADMIN_LINKS.map((l) => {
-        const active = pathname === l.href || pathname.startsWith(l.href + "/");
+        const active = pathname === l.href || (l.href !== "/admin" && pathname.startsWith(l.href + "/"));
         return (
           <Link key={l.href} href={l.href} className={active ? "admin-nav-link admin-nav-link-active" : "admin-nav-link"}>
             {l.label}
