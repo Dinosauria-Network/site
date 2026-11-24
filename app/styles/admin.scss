@@ -1,0 +1,201 @@
+/*
+ * Admin UI (Phase 5) — viral-neutral, traditional editorial styling.
+ * Tokens adjusted against the public site (Vollkorn, #E9E6DE canvas, etc.).
+ */
+
+:root {
+  --admin-bg: #e9e8e2;          /* spec: Background */
+  --admin-fg: #49382f;          /* spec: Primary text */
+  --admin-muted: #66594f;       /* spec: Secondary text */
+  --admin-border: #a9a397;      /* spec: Borders */
+  --admin-surface: #dad8d0;     /* spec: Secondary surface */
+  --admin-content: #f0efea;     /* spec: Content backgrounds */
+  --admin-accent: #4f362a;      /* editorial accent (c PARKER) */
+}
+
+/* ==== Layout ==== */
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-fg);
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.admin-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-content);
+}
+
+.admin-brand {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.admin-brand-tag {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 0.75rem;
+  color: var(--admin-muted);
+}
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--admin-border);
+  font-size: 0.875rem;
+}
+
+.admin-nav-link {
+  text-decoration: none;
+  color: var(--admin-fg);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0;
+}
+
+.admin-nav-link:hover {
+  background: var(--admin-surface);
+}
+
+.admin-nav-link-active {
+  background: var(--admin-border);
+  color: var(--admin-fg);
+  font-weight: 600;
+}
+
+/* ==== Breadcrumbs ==== */
+.admin-breadcrumbs {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem 0;
+  font-size: 0.75rem;
+  color: var(--admin-muted);
+}
+
+.admin-breadcrumbs a { color: var(--admin-accent); }
+
+.admin-breadcrumb-sep::before { content: "›"; }
+
+/* ==== Content ==== */
+.admin-main {
+  flex: 1;
+  padding: 1rem 0.75rem;
+}
+
+.admin-section {
+  background: var(--admin-content);
+  border: 1px solid var(--admin-border);
+  border-radius: 0;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.admin-section-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem;
+}
+
+/* ==== Tables ==== */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-table th,
+.admin-table td {
+  border: 1px solid var(--admin-border);
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+}
+
+.admin-table thead th {
+  background: var(--admin-surface);
+  font-weight: 600;
+}
+
+.admin-status {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--admin-border);
+  font-size: 0.75rem;
+}
+
+.admin-status-published { border-color: #2e8b57; }
+.admin-status-draft     { border-color: #6c757d; }
+.admin-status-rejected  { border-color: #d62728; }
+.admin-status-pending_review { border-color: #b58900; }
+
+/* ==== Forms ==== */
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.admin-input,
+.admin-textarea,
+.admin-select {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 0.875rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-content);
+  color: var(--admin-fg);
+  border-radius: 0;
+}
+
+.admin-textarea { min-height: 120px; max-width: 98%; }
+
+/* ==== Buttons ==== */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-content);
+  color: var(--admin-fg);
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-radius: 0;
+  text-decoration: none;
+}
+
+.admin-btn:hover { background: var(--admin-surface); }
+.admin-btn-primary { background: var(--admin-accent); color: #fff; border-color: var(--admin-accent); }
+.admin-btn-danger { background: #d62728; color: #fff; border-color: #8b0000; }
+
+/* ==== Pagination ==== */
+.admin-pager {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+/* ==== Footer ==== */
+.admin-footer {
+  padding: 0.5rem 0.75rem 1rem;
+  font-size: 0.75rem;
+  color: var(--admin-muted);
+  border-top: 1px solid var(--admin-border);
+}
