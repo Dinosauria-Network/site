@@ -287,6 +287,33 @@ fieldset.admin-field {
   overflow-wrap: anywhere;
 }
 
+.admin-image-attach {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-image-attach .admin-btn { align-self: flex-start; margin-top: 0.25rem; }
+
+.admin-file {
+  font-size: 0.75rem;
+  color: var(--admin-fg);
+  max-width: 100%;
+}
+
+.admin-image-ok,
+.admin-image-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.admin-image-ok { color: #2e8b57; }
+.admin-image-error { color: #b3261e; }
+
 /* ==== Pagination ==== */
 .admin-pager {
   display: flex;

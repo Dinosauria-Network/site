@@ -17,14 +17,21 @@ When you log in and browse the admin UI, verify:
 
 ## Articles (`/admin/articles`)
 - [ ] List renders (headline, status badge, dates).
+- [ ] Image column shows a thumbnail when the story has a working image, a gold `!` when the referenced file is missing, `—` when there is none.
 - [ ] Search box works; status filter works; pagination works.
-- [ ] Click a row → `/admin/articles/[id]`.
+- [ ] Headline is the link to the editor.
 
 ## Article editor (`/admin/articles/[id]`)
 - [ ] Headline/description editable + saves.
 - [ ] Publish / Request review / Reject / Unpublish transitions work.
 - [ ] `publication_events` rows created (check via SQL).
 - [ ] Status badge reflects current status.
+- [ ] Image panel (right column on desktop, stacked when narrow) shows image + caption/licence/credit/reuse status.
+- [ ] Attach by URL: paste an image URL → Attach → preview appears, `media_assets` row created as `pending_verification`, `body.image` updated, file cropped to 1024×633 with `-1024/-640/-480.jpg` derivatives.
+- [ ] Attach by file: choose a local image → same result, `originalUrl` records the filename.
+- [ ] Rejects non-images, >5 MB, `svg`, and private/internal hosts.
+- [ ] "Clear image reference" on a missing image removes `body.image` (file stays on disk).
+- [ ] Delete → returns to `/admin/articles`.
 
 ## Sources (`/admin/sources`)
 - [ ] Lists sources + recent ingestions (query `ingestion_runs`).

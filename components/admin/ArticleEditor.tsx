@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { setStoryStatus, updateStoryFields, deleteStory } from "@/lib/admin/articles";
+import { attachStoryImage, clearStoryImage } from "@/lib/admin/images";
 import { notifySuccess, notifyError } from "@/lib/admin/notices";
 import type { StoryImageStatus } from "@/lib/admin/story-image";
 
@@ -46,6 +47,10 @@ export default function ArticleEditor({ story, image }: Props) {
   const [saving, setSaving] = useState(false);
   // A path the server couldn't verify may still 404 — recover instead of showing a broken image.
   const [imageFailed, setImageFailed] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageBusy, setImageBusy] = useState(false);
+  const [imageMsg, setImageMsg] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const hasImage = Boolean(image.src) && !imageFailed;
   const imageMissing = image.status === "missing" || imageFailed;
 
@@ -66,6 +71,56 @@ export default function ArticleEditor({ story, image }: Props) {
       notifyError("Error: " + (e as Error)?.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const attachImage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const file = fileRef.current?.files?.[0];
+    if (!file && !imageUrl.trim()) {
+      setImageMsg({ tone: "error", text: "Paste an image URL or choose a file." });
+      return;
+    }
+    setImageBusy(true);
+    setImageMsg(null);
+    try {
+      const fd = new FormData();
+      fd.set("storyId", story.id);
+      if (file) fd.set("file", file);
+      else fd.set("url", imageUrl.trim());
+      const res = await attachStoryImage(fd);
+      if (!res.ok) throw new Error(res.error);
+      setImageMsg({ tone: "ok", text: `Attached ${res.storagePath}. Licence is pending verification.` });
+      notifySuccess("Image attached");
+      setImageUrl("");
+      if (fileRef.current) fileRef.current.value = "";
+      setImageFailed(false);
+      router.refresh();
+    } catch (err) {
+      const text = (err as Error)?.message || "Could not attach that image";
+      setImageMsg({ tone: "error", text });
+      notifyError(text);
+    } finally {
+      setImageBusy(false);
+    }
+  };
+
+  const clearImage = async () => {
+    if (!window.confirm("Remove this story's image reference? The file stays on disk.")) return;
+    setImageBusy(true);
+    setImageMsg(null);
+    try {
+      const res = await clearStoryImage(story.id);
+      if (!res.ok) throw new Error(res.error);
+      setImageFailed(false);
+      notifySuccess("Image reference cleared");
+      router.refresh();
+    } catch (err) {
+      const text = (err as Error)?.message || "Could not clear the image reference";
+      setImageMsg({ tone: "error", text });
+      notifyError(text);
+    } finally {
+      setImageBusy(false);
     }
   };
 
@@ -173,11 +228,46 @@ export default function ArticleEditor({ story, image }: Props) {
           </p>
         )}
 
-        {!imageMissing && !hasImage && (
-          <p className="admin-image-meta" style={{ margin: "0.5rem 0 0" }}>
-            Attach one with <code>npm run editorial:attach-image</code>.
-          </p>
+        {imageMissing && (
+          <button type="button" className="admin-btn" disabled={imageBusy} onClick={clearImage}>
+            Clear image reference
+          </button>
         )}
+
+        <form className="admin-image-attach" onSubmit={attachImage}>
+          <label className="admin-field-label" htmlFor="image-url">
+            {hasImage ? "Replace image" : "Attach image"}
+          </label>
+          <input
+            id="image-url"
+            type="url"
+            className="admin-input"
+            placeholder="https://commons.wikimedia.org/…"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            disabled={imageBusy}
+          />
+          <label className="admin-field-label" htmlFor="image-file">or choose a file</label>
+          <input
+            id="image-file"
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            className="admin-file"
+            disabled={imageBusy}
+          />
+          <button type="submit" className="admin-btn admin-btn-primary" disabled={imageBusy}>
+            {imageBusy ? "Attaching…" : "Attach"}
+          </button>
+          <p className="admin-image-meta" style={{ margin: "0.35rem 0 0" }}>
+            Saved as <code>{story.slug}.&lt;ext&gt;</code>, cropped to 1024×633, licence left as pending verification.
+          </p>
+          {imageMsg && (
+            <p className={imageMsg.tone === "ok" ? "admin-image-ok" : "admin-image-error"} role="status">
+              {imageMsg.text}
+            </p>
+          )}
+        </form>
       </aside>
     </div>
   );

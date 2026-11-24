@@ -59,22 +59,23 @@ export default async function AdminArticleEditorPage({
   // The reader-facing image is `body.image`; media_assets supplies the
   // provenance (licence, credit, verification) that the public page doesn't show.
   const bodyImage = readStoryImage(story[0].body);
-  const asset = story[0].paperId
-    ? (
-        await db
-          .select({
-            storagePath: mediaAssets.storagePath,
-            caption: mediaAssets.caption,
-            licenseName: mediaAssets.licenseName,
-            licenseUrl: mediaAssets.licenseUrl,
-            copyrightHolder: mediaAssets.copyrightHolder,
-            reuseStatus: mediaAssets.reuseStatus,
-          })
-          .from(mediaAssets)
-          .where(eq(mediaAssets.paperId, story[0].paperId))
-          .limit(1)
-      )[0]
-    : undefined;
+  const assets = story[0].paperId
+    ? await db
+        .select({
+          storagePath: mediaAssets.storagePath,
+          caption: mediaAssets.caption,
+          licenseName: mediaAssets.licenseName,
+          licenseUrl: mediaAssets.licenseUrl,
+          copyrightHolder: mediaAssets.copyrightHolder,
+          reuseStatus: mediaAssets.reuseStatus,
+        })
+        .from(mediaAssets)
+        .where(eq(mediaAssets.paperId, story[0].paperId))
+    : [];
+  // Prefer the row describing the image the story actually uses — a paper can
+  // accumulate several assets over time, and stale ones would show a wrong licence.
+  const asset =
+    assets.find((a) => a.storagePath && a.storagePath === bodyImage.referenced) ?? assets[0];
 
   const assetImage = readStoryImage({ image: asset?.storagePath });
   // Only fall back to the asset ledger when the story never got an image at all;
