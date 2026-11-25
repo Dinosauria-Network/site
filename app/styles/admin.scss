@@ -377,22 +377,6 @@ fieldset.admin-field {
 
 .admin-dash-grid > .admin-section { margin-bottom: 0; }
 
-/* Combined "Pipeline & ingestion" block: the two charts sit side by side. */
-.admin-dash-charts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
-  gap: 1rem;
-}
-
-.admin-dash-chart h3 { margin: 0 0 0.4rem; }
-
-.admin-chart-subtitle {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0 0 0.4rem;
-}
-
 /* Horizontal bar list (status counts, score buckets) */
 .admin-bars {
   display: flex;
