@@ -14,6 +14,7 @@ When you log in and browse the admin UI, verify:
 
 ## Dashboard (`/admin`)
 - [ ] Shows role, papers/stories/images/sources counts (values match `npm run editorial:status`).
+- [ ] Pipeline + ingestion render as one combined dashboard block: the pipeline bar list and the ingestion column chart sit side by side under the heading "Pipeline & ingestion".
 - [ ] Pipeline bars list every status present, each linking to `/admin/articles?status=…`.
 - [ ] Ingestion column chart shows the last ~7 daily ingest counts (trailing empty UTC days trimmed, so a 01:00 UTC read doesn't end on a lone zero); caption states the exact date range and total.
 - [ ] Score distribution has 10 buckets summing to `papers − unscored`; the 0.7+ tail is highlighted and the note states the 0.75 auto-publish gate.

@@ -87,26 +87,32 @@ export default async function AdminDashboardPage() {
         </section>
 
         <div className="admin-dash-grid">
-          <section className="admin-section">
-            <h2 className="admin-section-title">Pipeline</h2>
-            <p className="admin-chart-note">Stories by editorial status.</p>
-            <BarList rows={pipeline} unit="stories" />
-          </section>
-
-          <section className="admin-section">
-            <h2 className="admin-section-title">Ingestion</h2>
-            <p className="admin-chart-note">Papers added per day (ingest runs overnight UTC).</p>
-            <DailyBars days={stats.ingestion.days} />
-          </section>
-
-          <section className="admin-section">
-            <h2 className="admin-section-title">Editorial score distribution</h2>
+          <section className="admin-section admin-dash-charts">
+            <h2 className="admin-section-title">Pipeline &amp; ingestion</h2>
             <p className="admin-chart-note">
-              {scored.toLocaleString("en-US")} scored papers, in tenths. Buckets from 0.7 up are shaded; the
-              auto-publish gate is {AUTOPUBLISH_GATE.toFixed(2)}.
+              Stories by editorial status, and papers added per day (ingest runs overnight UTC).
             </p>
-            <BarList rows={scores} unit="papers" />
+            <div className="admin-dash-charts-grid">
+              <div>
+                <h3 className="admin-chart-subtitle">Pipeline</h3>
+                <BarList rows={pipeline} unit="stories" />
+              </div>
+              <div>
+                <h3 className="admin-chart-subtitle">Ingestion</h3>
+                <DailyBars days={stats.ingestion.days} />
+              </div>
+            </div>
           </section>
+        </div>
+
+        <section className="admin-section">
+          <h2 className="admin-section-title">Editorial score distribution</h2>
+          <p className="admin-chart-note">
+            {scored.toLocaleString("en-US")} scored papers, in tenths. Buckets from 0.7 up are shaded; the
+            auto-publish gate is {AUTOPUBLISH_GATE.toFixed(2)}.
+          </p>
+          <BarList rows={scores} unit="papers" />
+        </section>
 
           <section className="admin-section">
             <h2 className="admin-section-title">Needs attention</h2>
@@ -133,7 +139,6 @@ export default async function AdminDashboardPage() {
               </div>
             </dl>
           </section>
-        </div>
 
         <section className="admin-section">
           <h2 className="admin-section-title">Quick links</h2>
