@@ -15,6 +15,8 @@ interface StoryFields {
   deck: string | null;
   description: string | null;
   status: string;
+  source: string | null;
+  originalUrl: string | null;
   publishedAt: string | null;
 }
 
@@ -142,6 +144,19 @@ export default function ArticleEditor({ story, image }: Props) {
         <div className="admin-field">
           <label className="admin-field-label" htmlFor="description">Description / deck</label>
           <textarea id="description" className="admin-textarea" value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+        <div className="admin-field">
+          <label className="admin-field-label" htmlFor="source">Source</label>
+          <input id="source" className="admin-input" value={story.source ?? ""} readOnly />
+        </div>
+        <div className="admin-field">
+          <label className="admin-field-label" htmlFor="original-article">Original article</label>
+          <input id="original-article" className="admin-input" type="url" value={story.originalUrl ?? ""} readOnly />
+          {story.originalUrl && (
+            <a className="admin-btn" href={story.originalUrl} target="_blank" rel="noopener noreferrer" style={{ marginTop: "0.5rem" }}>
+              Open original article ↗
+            </a>
+          )}
         </div>
         <fieldset className="admin-field">
           <legend className="admin-field-label">Status</legend>

@@ -30,6 +30,7 @@ When you log in and browse the admin UI, verify:
 
 ## Article editor (`/admin/articles/[id]`)
 - [ ] Headline/description editable + saves.
+- [ ] Source field shows the originating outlet (`body.source`) and the "Open original article" link points at the original URL (`body.url`), opening in a new tab.
 - [ ] Publish / Request review / Reject / Unpublish transitions work.
 - [ ] `publication_events` rows created (check via SQL).
 - [ ] Status badge reflects current status.

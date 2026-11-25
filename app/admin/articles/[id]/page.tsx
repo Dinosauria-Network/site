@@ -94,6 +94,9 @@ export default async function AdminArticleEditorPage({
     reuseStatus: asset?.reuseStatus ?? null,
   };
 
+  const bodySource = (story[0].body as { source?: unknown } | null)?.source;
+  const bodyUrl = (story[0].body as { url?: unknown } | null)?.url;
+
   return (
     <>
       <AdminHeader />
@@ -115,6 +118,8 @@ export default async function AdminArticleEditorPage({
             deck: story[0].deck ?? null,
             description: story[0].description ?? null,
             status: story[0].status ?? 'draft',
+            source: typeof bodySource === "string" && bodySource.trim() !== "" ? bodySource.trim() : null,
+            originalUrl: typeof bodyUrl === "string" && bodyUrl.trim() !== "" ? bodyUrl.trim() : null,
             publishedAt: story[0].publishedAt ? story[0].publishedAt.toISOString() : null,
           }}
           image={image}
