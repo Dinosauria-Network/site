@@ -23,6 +23,7 @@ When you log in and browse the admin UI, verify:
 ## Articles (`/admin/articles`)
 - [ ] List renders (headline, status badge, dates).
 - [ ] Image column shows a thumbnail when the story has a working image, a gold `!` when the referenced file is missing, `—` when there is none.
+- [ ] Source column shows the originating outlet/paper from `body.source` (falls back to `—`).
 - [ ] Search box works; status filter works; pagination works.
 - [ ] Image filter: "No image" and "Image file missing" return the same counts the dashboard reports, and the filter survives paging.
 - [ ] Headline is the link to the editor.

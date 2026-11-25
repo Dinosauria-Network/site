@@ -10,6 +10,7 @@ export interface StoryLite {
   headline: string;
   deck?: string | null;
   status: string | null;
+  source?: string | null;
   publishedAt: Date | null;
   updatedAt: Date | null;
   imageSrc?: string | null;
@@ -125,6 +126,7 @@ export default function ArticlesListClient({ stories, query, status, image, page
         <tr>
           <th scope="col" style={{ width: 72 }}>Image</th>
           <th scope="col">Headline</th>
+          <th scope="col" style={{ width: 90 }}>Source</th>
           <th scope="col" style={{ width: 110 }}>Status</th>
           <th scope="col" style={{ width: 130 }}>Published</th>
           <th scope="col" style={{ width: 130 }}>Updated</th>
@@ -133,7 +135,7 @@ export default function ArticlesListClient({ stories, query, status, image, page
       <tbody>
         {stories.length === 0 ? (
           <tr>
-            <td colSpan={5} style={{ textAlign: "center", color: "#66594F" }}>
+            <td colSpan={6} style={{ textAlign: "center", color: "#66594F" }}>
               No stories found.
             </td>
           </tr>
@@ -173,6 +175,7 @@ export default function ArticlesListClient({ stories, query, status, image, page
                     {s.headline}
                   </a>
                 </td>
+                <td>{s.source ?? "—"}</td>
                 <td><StatusBadge status={s.status} /></td>
                 <td>{fmt(s.publishedAt)}</td>
                 <td>{fmt(s.updatedAt)}</td>

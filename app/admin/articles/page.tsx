@@ -71,7 +71,13 @@ export default async function AdminArticlesPage({
   const toStory = (row: StoryRow): StoryLite => {
     const { body, ...rest } = row;
     const image = readStoryImage(body);
-    return { ...rest, imageSrc: image.src, imageStatus: image.status };
+    const source = (body as { source?: unknown } | null)?.source;
+    return {
+      ...rest,
+      source: typeof source === "string" && source.trim() !== "" ? source.trim() : null,
+      imageSrc: image.src,
+      imageStatus: image.status,
+    };
   };
 
   let stories: StoryLite[];
