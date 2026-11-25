@@ -25,18 +25,17 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const cookieStore = await cookies();
 
-  // Create the response NOW — we will attach freshly-refreshed session cookies
-  // to this SAME response object below, so the browser sees them immediately
-  // and they survive the edge redirect.
-  const supabaseResponse = new NextResponse(null, {
-    status: 200,
-    statusText: "OK",
-  });
+  // CRITICAL: create the response using NextResponse.next({ request }) so that
+  // Next.js actually renders the page/route the user requested. Returning a
+  // manual NextResponse(null, { status: 200 }) terminates the request with an
+  // empty body instead of forwarding to the Next.js page, which causes the
+  // "This page couldn't load" error and blank admin surfaces.
+  const response = NextResponse.next({ request });
 
   // Configure the Supabase server client to write cookies to BOTH the cookie
-  // store (for future requests) AND the response object (for the current
-  // request). This prevents Vercel/edge from stripping Set-Cookie headers on
-  // redirect/next, which was causing the session to appear lost on navigation.
+  // store AND the response object. This prevents Vercel/edge from stripping
+  // Set-Cookie headers on the NextResponse.next() boundary, which was causing
+  // the session to appear lost on the very next navigation.
   const supabase = createServerClient(
     supabaseConfig.url,
     supabaseConfig.key,
@@ -52,9 +51,9 @@ export async function proxy(request: NextRequest) {
             try {
               // Write to the cookie store so future requests include the cookie.
               await cookieStore.set(c.name, c.value, c.options as never);
-              // ALSO write to this SAME response object so the browser sees the
-              // cookie immediately and it survives the edge/redirect layer.
-              supabaseResponse.cookies.set(c.name, c.value, c.options as never);
+              // Also write to the response object so the browser/edge sees the
+              // cookie immediately and it survives the edge layer.
+              response.cookies.set(c.name, c.value, c.options as never);
             } catch {
               // Next.js only permits cookie mutation inside Server Actions / Route
               // Handlers. When a session refresh is attempted during a Server
@@ -87,10 +86,9 @@ export async function proxy(request: NextRequest) {
   }
 
   // Return the SAME response object that has the freshly-refreshed session
-  // cookies attached. This is the critical fix: without returning this exact
-  // response, NextResponse.next() can strip the cookies, causing the session
-  // to appear lost on the next navigation.
-  return supabaseResponse;
+  // cookies attached. This ensures the session cookie survives the
+  // NextResponse.next() boundary and appears on the very next navigation.
+  return response;
 }
 
 export const config = {
