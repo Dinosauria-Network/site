@@ -1,4 +1,4 @@
-/** Server-side admin queries — counts and dashboard aggregates. */
+/** Server-side admin queries — the dashboard module's aggregates (Phase 5). */
 import { requireRole } from "@/lib/supabase/roles";
 import { db } from "@/lib/db/client";
 import { researchPapers, editorialStories, mediaAssets, sourceRegistry } from "@/lib/db/schema";
@@ -36,7 +36,7 @@ export interface DashboardStats {
 
 const STATUS_ORDER = ['draft', 'pending_review', 'approved', 'published', 'rejected', 'archived'];
 
-/** Which stories to chase before anything else, and where to go to do it. */
+/** The dashboard's headline numbers, pipeline, ingestion series, score buckets and needs-attention counts. */
 export async function adminStats(): Promise<DashboardStats> {
   const [paperRow] = await db.select({ value: count() }).from(researchPapers);
   const [imageRow] = await db.select({ value: count() }).from(mediaAssets);

@@ -1,4 +1,4 @@
-import { adminStats } from "@/lib/admin/stats";
+import { adminStats } from "@/lib/admin/dashboard";
 import { requireRole } from "@/lib/supabase/roles";
 import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
 import AdminHeader from "@/components/admin/AdminHeader";
