@@ -1,15 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import { getMiddlewareClient } from "@/lib/supabase/middleware";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createServerClient } from "@supabase/ssr";
+import { supabaseConfig, isSupabaseConfigured } from "@/lib/supabase/config";
 
 /**
  * Root proxy (Phase 1b — server-side auth; Next.js 16 calls it 'proxy' instead of 'middleware').
  *
- * - Refreshes the auth session on every request (via `getUser()`).
+ * - Refreshes the auth session on every request (via `supabase.auth.getUser()`).
  * - Protects `/admin/*` and `/api/admin/*`: redirects unauthenticated users
  *   to `/login` with a diagnostic query param.
  * - Passes everything else through untouched (`NextResponse.next()`).
+ * - Crucial: the Supabase server client's `setAll` writes cookies to BOTH the
+ *   cookie store AND the response object, so the session cookie survives the
+ *   Vercel/edge layer and appears on the very next navigation. Without this,
+ *   `NextResponse.next()` can strip freshly-set cookies, causing the session
+ *   to appear lost on the next request.
  * - Emits a console warning with cookie state on every request to a protected
  *   path, so we can see whether the cookie is being sent and with what domain.
  */
@@ -19,24 +24,52 @@ const PROTECTED_PATTERNS = [/^\/admin(\/.*)?$/, /^\/api\/admin(\/.*)?$/];
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const cookieStore = await cookies();
-  const cookieNames = cookieStore.getAll().map((c) => c.name);
-  const host = request.headers.get("host");
-  const hasAuthCookie = cookieNames.some((n) => n.includes("auth-token") || n.startsWith("sb-"));
 
-  // Log cookie state on EVERY request to a protected path — this appears in
-  // the server console / Vercel logs and tells us whether the cookie is being
-  // sent, and with what domain/name. Critical for diagnosing cookie-domain
-  // mismatches.
-  if (PROTECTED_PATTERNS.some((re) => re.test(pathname))) {
-    console.warn(
-      `proxy: protected route ${pathname} — host: ${host}, cookieNames: [${cookieNames.join(", ")}], hasAuthCookie: ${hasAuthCookie}`
-    );
-  }
+  // Create the response NOW — we will attach freshly-refreshed session cookies
+  // to this SAME response object below, so the browser sees them immediately
+  // and they survive the edge redirect.
+  const supabaseResponse = new NextResponse(null, {
+    status: 200,
+    statusText: "OK",
+  });
 
-  const supabase = getMiddlewareClient(cookieStore as Parameters<typeof getMiddlewareClient>[0]);
+  // Configure the Supabase server client to write cookies to BOTH the cookie
+  // store (for future requests) AND the response object (for the current
+  // request). This prevents Vercel/edge from stripping Set-Cookie headers on
+  // redirect/next, which was causing the session to appear lost on navigation.
+  const supabase = createServerClient(
+    supabaseConfig.url,
+    supabaseConfig.key,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: async (cookiesToSet: {
+          name: string;
+          value: string;
+          options?: Record<string, unknown>;
+        }[]) => {
+          for (const c of cookiesToSet) {
+            try {
+              // Write to the cookie store so future requests include the cookie.
+              await cookieStore.set(c.name, c.value, c.options as never);
+              // ALSO write to this SAME response object so the browser sees the
+              // cookie immediately and it survives the edge/redirect layer.
+              supabaseResponse.cookies.set(c.name, c.value, c.options as never);
+            } catch {
+              // Next.js only permits cookie mutation inside Server Actions / Route
+              // Handlers. When a session refresh is attempted during a Server
+              // Component render, the write is rejected — that's fine: the
+              // read-only session stands for this render, and the next Server
+              // Action / Route Handler can persist a refreshed session.
+            }
+          }
+        },
+      },
+    }
+  );
 
   // Call getUser() early — it triggers a token refresh and writes updated
-  // cookies via setAll on the response.
+  // cookies via setAll on the response object we created above.
   const { data: user } = await supabase.auth.getUser();
 
   if (PROTECTED_PATTERNS.some((re) => re.test(pathname)) && !user) {
@@ -53,7 +86,11 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  return NextResponse.next();
+  // Return the SAME response object that has the freshly-refreshed session
+  // cookies attached. This is the critical fix: without returning this exact
+  // response, NextResponse.next() can strip the cookies, causing the session
+  // to appear lost on the next navigation.
+  return supabaseResponse;
 }
 
 export const config = {
