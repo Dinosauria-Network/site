@@ -29,6 +29,8 @@ export async function GET(request: Request) {
         await syncUserToProfiles(authData.user);
       }
       console.warn("auth/callback: exchange succeeded for", authData.user?.email);
+      // Success: redirect to admin with auth=ok so the user sees they're logged in
+      return NextResponse.redirect(new URL(`/admin?auth=ok&next=${encodeURIComponent(next)}`, request.url));
     } catch (e) {
       console.warn("auth/callback exchange threw:", String(e));
       return NextResponse.redirect(
@@ -36,8 +38,8 @@ export async function GET(request: Request) {
       );
     }
   } else {
-    console.warn("auth/callback: no code param present");
+    console.warn("auth/callback: no code param present — cookies not reaching this host");
+    // No code: the browser didn't send the PKCE/session cookie; redirect to login with visible flag
+    return NextResponse.redirect(new URL(`/login?auth=no-code`, request.url));
   }
-
-  return NextResponse.redirect(new URL(next.startsWith("/") ? next : "/admin", request.url));
 }
