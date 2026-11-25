@@ -4,12 +4,12 @@ import { useState } from "react";
 import StatusBadge from "@/components/admin/StatusBadge";
 import type { StoryImageStatus } from "@/lib/admin/story-image";
 
-interface StoryLite {
+export interface StoryLite {
   id: string;
   slug: string;
   headline: string;
   deck?: string | null;
-  status: string;
+  status: string | null;
   publishedAt: Date | null;
   updatedAt: Date | null;
   imageSrc?: string | null;
@@ -20,16 +20,33 @@ interface ArticlesListClientProps {
   stories: StoryLite[];
   query: string;
   status: string;
+  image: string;
   page: number;
 }
 
-const STATUSES = ["draft", "pending_review", "published", "rejected"];
+const STATUSES = ["draft", "pending_review", "approved", "published", "rejected", "archived"];
+
+const IMAGE_FILTERS: { value: string; label: string }[] = [
+  { value: "all", label: "All images" },
+  { value: "missing", label: "Image file missing" },
+  { value: "none", label: "No image" },
+];
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
+  pending_review: "Pending review",
+  approved: "Approved",
+  published: "Published",
+  rejected: "Rejected",
+  archived: "Archived",
+};
 
 const fmt = (d: Date | null) => (d ? new Date(d).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—");
 
-export default function ArticlesListClient({ stories, query, status, page }: ArticlesListClientProps) {
+export default function ArticlesListClient({ stories, query, status, image, page }: ArticlesListClientProps) {
   const [draftQuery, setDraftQuery] = useState(query);
   const [draftStatus, setDraftStatus] = useState(status);
+  const [draftImage, setDraftImage] = useState(image);
   const [draftPage, setDraftPage] = useState(page);
   // Thumbnails that 404 at runtime (e.g. referenced file was deleted) drop to the marker.
   const [failed, setFailed] = useState<Record<string, true>>({});
@@ -40,6 +57,7 @@ export default function ArticlesListClient({ stories, query, status, page }: Art
     const params = new URLSearchParams();
     if (draftQuery) params.set("q", draftQuery);
     if (draftStatus !== "all") params.set("status", draftStatus);
+    if (draftImage !== "all") params.set("image", draftImage);
     params.set("page", "1");
     window.location.href = `/admin/articles?${params.toString()}`;
   };
@@ -48,9 +66,12 @@ export default function ArticlesListClient({ stories, query, status, page }: Art
     const params = new URLSearchParams();
     if (draftQuery) params.set("q", draftQuery);
     if (draftStatus !== "all") params.set("status", draftStatus);
+    if (draftImage !== "all") params.set("image", draftImage);
     params.set("page", String(p));
     return `/admin/articles?${params.toString()}`;
   };
+
+  const filtered = draftQuery || draftStatus !== "all" || draftImage !== "all";
 
   return (
     <>
@@ -73,12 +94,24 @@ export default function ArticlesListClient({ stories, query, status, page }: Art
         <option value="all">All statuses</option>
         {STATUSES.map((s) => (
           <option key={s} value={s}>
-            {s}
+            {STATUS_LABELS[s] ?? s}
+          </option>
+        ))}
+      </select>
+      <select
+        value={draftImage}
+        onChange={(e) => setDraftImage(e.target.value)}
+        className="admin-select"
+        aria-label="Filter by image"
+      >
+        {IMAGE_FILTERS.map((f) => (
+          <option key={f.value} value={f.value}>
+            {f.label}
           </option>
         ))}
       </select>
       <button type="submit" className="admin-btn">Search</button>
-      {(draftQuery || draftStatus !== "all") && (
+      {filtered && (
         <a className="admin-btn" href="/admin/articles">Clear</a>
       )}
       <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#66594F" }}>
