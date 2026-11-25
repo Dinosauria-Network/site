@@ -10,8 +10,8 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
  * - Protects `/admin/*` and `/api/admin/*`: redirects unauthenticated users
  *   to `/login` with a diagnostic query param.
  * - Passes everything else through untouched (`NextResponse.next()`).
- * - Emits a console warning with cookie names when a protected route is
- *   accessed without an auth cookie, to help diagnose cookie-domain issues.
+ * - Emits a console warning with cookie state on every request to a protected
+ *   path, so we can see whether the cookie is being sent and with what domain.
  */
 
 const PROTECTED_PATTERNS = [/^\/admin(\/.*)?$/, /^\/api\/admin(\/.*)?$/];
@@ -20,13 +20,16 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const cookieStore = await cookies();
   const cookieNames = cookieStore.getAll().map((c) => c.name);
+  const host = request.headers.get("host");
   const hasAuthCookie = cookieNames.some((n) => n.includes("auth-token") || n.startsWith("sb-"));
 
-  // Log cookie state for every request to a protected path — this appears in
-  // the server console / Vercel logs and helps pinpoint cookie-domain mismatches.
-  if (PROTECTED_PATTERNS.some((re) => re.test(pathname)) && !hasAuthCookie) {
+  // Log cookie state on EVERY request to a protected path — this appears in
+  // the server console / Vercel logs and tells us whether the cookie is being
+  // sent, and with what domain/name. Critical for diagnosing cookie-domain
+  // mismatches.
+  if (PROTECTED_PATTERNS.some((re) => re.test(pathname))) {
     console.warn(
-      `proxy: protected route ${pathname} accessed without auth cookie. Names: [${cookieNames.join(", ")}]. Host: ${request.headers.get("host")}`
+      `proxy: protected route ${pathname} — host: ${host}, cookieNames: [${cookieNames.join(", ")}], hasAuthCookie: ${hasAuthCookie}`
     );
   }
 
