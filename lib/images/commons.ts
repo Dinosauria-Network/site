@@ -104,16 +104,24 @@ const ALIASES: Record<string, string[]> = {
   tyrannosaurine: ['Tyrannosaurus'],
 };
 
-/** Best Commons match for a taxon token, or null when nothing confident exists. */
-export async function findCommonsMatch(token: string): Promise<CommonsCandidate | null> {
+/**
+ * Alias-expanded search for a taxon token. Returns ranked candidates (best
+ * first), or [] on outage / nothing confident. Used by the CLI's discovery mode
+ * so a human can pick from the list instead of trusting the first hit.
+ */
+export async function searchCommonsForTaxon(token: string, limit = 10): Promise<CommonsCandidate[]> {
   try {
-    const hits = await searchCommons([token, ...(ALIASES[token.toLowerCase()] ?? [])], 10);
-    return hits[0] ?? null;
+    return await searchCommons([token, ...(ALIASES[token.toLowerCase()] ?? [])], limit);
   } catch (e) {
     // A Commons outage must be distinguishable from "no matching file".
-    console.warn('commons: findCommonsMatch failed for', JSON.stringify(token), '—', String(e).slice(0, 200));
-    return null;
+    console.warn('commons: search failed for', JSON.stringify(token), '—', String(e).slice(0, 200));
+    return [];
   }
+}
+
+/** Best Commons match for a taxon token, or null when nothing confident exists. */
+export async function findCommonsMatch(token: string): Promise<CommonsCandidate | null> {
+  return (await searchCommonsForTaxon(token, 10))[0] ?? null;
 }
 
 /**

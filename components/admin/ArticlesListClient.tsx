@@ -1,0 +1,190 @@
+"use client";
+
+import { useState } from "react";
+import StatusBadge from "@/components/admin/StatusBadge";
+import type { StoryImageStatus } from "@/lib/admin/story-image";
+
+export interface StoryLite {
+  id: string;
+  slug: string;
+  headline: string;
+  deck?: string | null;
+  status: string | null;
+  source?: string | null;
+  publishedAt: Date | null;
+  updatedAt: Date | null;
+  imageSrc?: string | null;
+  imageStatus?: StoryImageStatus;
+}
+
+interface ArticlesListClientProps {
+  stories: StoryLite[];
+  query: string;
+  status: string;
+  image: string;
+  page: number;
+}
+
+const STATUSES = ["draft", "pending_review", "approved", "published", "rejected", "archived"];
+
+const IMAGE_FILTERS: { value: string; label: string }[] = [
+  { value: "all", label: "All images" },
+  { value: "missing", label: "Image file missing" },
+  { value: "none", label: "No image" },
+];
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
+  pending_review: "Pending review",
+  approved: "Approved",
+  published: "Published",
+  rejected: "Rejected",
+  archived: "Archived",
+};
+
+const fmt = (d: Date | null) => (d ? new Date(d).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—");
+
+export default function ArticlesListClient({ stories, query, status, image, page }: ArticlesListClientProps) {
+  const [draftQuery, setDraftQuery] = useState(query);
+  const [draftStatus, setDraftStatus] = useState(status);
+  const [draftImage, setDraftImage] = useState(image);
+  const [draftPage, setDraftPage] = useState(page);
+  // Thumbnails that 404 at runtime (e.g. referenced file was deleted) drop to the marker.
+  const [failed, setFailed] = useState<Record<string, true>>({});
+  const markFailed = (id: string) => setFailed((f) => (f[id] ? f : { ...f, [id]: true }));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (draftQuery) params.set("q", draftQuery);
+    if (draftStatus !== "all") params.set("status", draftStatus);
+    if (draftImage !== "all") params.set("image", draftImage);
+    params.set("page", "1");
+    window.location.href = `/admin/articles?${params.toString()}`;
+  };
+
+  const pageParam = (p: number) => {
+    const params = new URLSearchParams();
+    if (draftQuery) params.set("q", draftQuery);
+    if (draftStatus !== "all") params.set("status", draftStatus);
+    if (draftImage !== "all") params.set("image", draftImage);
+    params.set("page", String(p));
+    return `/admin/articles?${params.toString()}`;
+  };
+
+  const filtered = draftQuery || draftStatus !== "all" || draftImage !== "all";
+
+  return (
+    <>
+    <form className="admin-search-bar" style={{ marginBottom: "1rem" }} onSubmit={handleSubmit} aria-label="Article search">
+      <input
+        type="search"
+        value={draftQuery}
+        onChange={(e) => setDraftQuery(e.target.value)}
+        placeholder="Search headlines…"
+        className="admin-input"
+        style={{ maxWidth: 280 }}
+        aria-label="Search articles"
+      />
+      <select
+        value={draftStatus}
+        onChange={(e) => setDraftStatus(e.target.value)}
+        className="admin-select"
+        aria-label="Filter by status"
+      >
+        <option value="all">All statuses</option>
+        {STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {STATUS_LABELS[s] ?? s}
+          </option>
+        ))}
+      </select>
+      <select
+        value={draftImage}
+        onChange={(e) => setDraftImage(e.target.value)}
+        className="admin-select"
+        aria-label="Filter by image"
+      >
+        {IMAGE_FILTERS.map((f) => (
+          <option key={f.value} value={f.value}>
+            {f.label}
+          </option>
+        ))}
+      </select>
+      <button type="submit" className="admin-btn">Search</button>
+      {filtered && (
+        <a className="admin-btn" href="/admin/articles">Clear</a>
+      )}
+      <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#66594F" }}>
+        Page {draftPage}
+      </span>
+    </form>
+
+    <table className="admin-table">
+      <caption className="visually-hidden">Editorial stories</caption>
+      <thead>
+        <tr>
+          <th scope="col" style={{ width: 72 }}>Image</th>
+          <th scope="col">Headline</th>
+          <th scope="col" style={{ width: 90 }}>Source</th>
+          <th scope="col" style={{ width: 110 }}>Status</th>
+          <th scope="col" style={{ width: 130 }}>Published</th>
+          <th scope="col" style={{ width: 130 }}>Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {stories.length === 0 ? (
+          <tr>
+            <td colSpan={6} style={{ textAlign: "center", color: "#66594F" }}>
+              No stories found.
+            </td>
+          </tr>
+        ) : (
+          stories.map((s) => {
+            const broken = failed[s.id] || s.imageStatus === "missing";
+            return (
+              <tr key={s.id}>
+                <td>
+                  {s.imageSrc && !broken ? (
+                    <img
+                      src={s.imageSrc}
+                      alt=""
+                      width={56}
+                      height={35}
+                      loading="lazy"
+                      className="admin-thumb"
+                      onError={() => markFailed(s.id)}
+                    />
+                  ) : broken ? (
+                    <span
+                      className="admin-thumb admin-thumb-missing"
+                      role="img"
+                      aria-label="Image file missing"
+                      title={`Image file missing${s.imageSrc ? `: ${s.imageSrc}` : ""}`}
+                    >
+                      !
+                    </span>
+                  ) : (
+                    <span className="admin-thumb-empty" title="No image" aria-label="No image">
+                      —
+                    </span>
+                  )}
+                </td>
+                <td style={{ maxWidth: "80vw" }}>
+                  <a href={`/admin/articles/${s.id}`} style={{ fontWeight: 600, color: "#4F362A" }}>
+                    {s.headline}
+                  </a>
+                </td>
+                <td>{s.source ?? "—"}</td>
+                <td><StatusBadge status={s.status} /></td>
+                <td>{fmt(s.publishedAt)}</td>
+                <td>{fmt(s.updatedAt)}</td>
+              </tr>
+            );
+          })
+        )}
+      </tbody>
+    </table>
+    </>
+  );
+}

@@ -14,6 +14,7 @@ interface GenusFossilSectionProps {
     hiddenRegions: number;
     totalOccurrences: number;
   } | null;
+  initialHighlightMa?: number | undefined;
 }
 
 export default function GenusFossilSection({
@@ -21,10 +22,13 @@ export default function GenusFossilSection({
   genusName,
   activePeriods,
   regions,
+  initialHighlightMa,
 }: GenusFossilSectionProps) {
   // Highlight state shared between the map and the geologic time bar.
-  const [highlightMa, setHighlightMa] = useState<number | undefined>();
-  const [highlightAgeRange, setHighlightAgeRange] = useState<[number, number] | undefined>();
+  const [highlightMa, setHighlightMa] = useState<number | undefined>(initialHighlightMa);
+  const [highlightAgeRange, setHighlightAgeRange] = useState<[number, number] | undefined>(
+    initialHighlightMa !== undefined ? [initialHighlightMa, initialHighlightMa] : undefined
+  );
 
   // Hovering a map marker -> light up the matching point on the time scale.
   const handleMarkerHover = useCallback(
@@ -35,7 +39,20 @@ export default function GenusFossilSection({
     []
   );
 
-  // Hovering a period/epoch/age bar -> highlight map markers in that age range.
+  // Clicking a map marker -> drive the time bar to that fossil find.
+  const handleMarkerClick = useCallback(
+    (info?: { ma?: number; period?: string; location?: FossilLocation }) => {
+      if (info?.ma === undefined) return;
+      setHighlightMa(info.ma);
+      const loc = info.location;
+      const lo = loc?.minMa ?? loc?.maxMa;
+      const hi = loc?.maxMa ?? loc?.minMa;
+      setHighlightAgeRange(lo !== undefined && hi !== undefined ? [lo, hi] : [info.ma, info.ma]);
+    },
+    []
+  );
+
+  // Hovering / clicking a period/epoch/age bar -> highlight map markers in that age range.
   const handleHighlightAge = useCallback((range?: [number, number]) => {
     setHighlightAgeRange(range);
     setHighlightMa(range ? (range[0] + range[1]) / 2 : undefined);
@@ -62,6 +79,7 @@ export default function GenusFossilSection({
         genusName={genusName}
         highlightAgeRange={highlightAgeRange}
         onMarkerHover={handleMarkerHover}
+        onMarkerClick={handleMarkerClick}
       />
 
       {/* Geologic Time Scale (periods derived from the locations) */}

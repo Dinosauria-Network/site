@@ -25,6 +25,17 @@ export default function ArticleCard({ post, index, preview }: ArticleCardProps) 
 
   const postHref = preview ? `/news/${post.id}?preview=${encodeURIComponent(preview)}` : `/news/${post.id}`;
 
+  // Estimated reading time from the excerpt text (~200 wpm).
+  const readMinutes = Math.max(
+    1,
+    Math.round(
+      (post.excerpt || post.title || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length / 200
+    )
+  );
+
   const rawImage = post.image || '';
   // No image on the story → render no image at all. Never substitute a
   // generic photo: a story must carry its own licensed image or none.
@@ -102,7 +113,7 @@ export default function ArticleCard({ post, index, preview }: ArticleCardProps) 
               aria-hidden="true"
             ></span>
             <span className="sr-only">Estimated reading time: </span>
-            &lt; 10 min
+            {readMinutes} min
           </button>
           <a className="btn btn-sm btn-primary" href={postHref}>
             Read more

@@ -35,10 +35,12 @@
     "source:health": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/test-jev-style.ts",
     "retraction:check": "NODE_OPTIONS=\"-r dotenv/config\" npx tsx scripts/test-jev-style.ts",
     "enrich:locations": "npx tsx scripts/enrich-genus-locations.ts",
-    "test": "echo 'No tests configured' && exit 0",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.109.0",
     "article-parser": "^7.2.6-rc1",
     "d3-geo": "^3.1.2",
     "d3-selection": "^3.0.1",
@@ -70,6 +72,7 @@
     "eslint-config-next": "16.4.3",
     "sass": "^1.107.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.12"
   }
 }

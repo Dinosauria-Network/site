@@ -68,6 +68,8 @@ const run = async () => {
   for (const { story, paperScore } of drafts) {
     const body = (story.body ?? {}) as any;
     const image: string | undefined = body.image || undefined;
+    // Boosts are intentionally NOT applied here — autopublish uses the raw
+    // Jev-Style score so a boosted paper still needs human review to publish.
     const score: number | null = paperScore ?? (typeof body.editorialScore === 'number' ? body.editorialScore : null);
     const reasons: string[] = [];
 

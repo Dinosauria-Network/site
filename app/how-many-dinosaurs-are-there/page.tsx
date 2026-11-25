@@ -1,5 +1,5 @@
-import { getAllGenera } from "@/lib/services/data";
-import { getGenusPeriodLabel } from "@/lib/genus-data";
+import { getAllGenera, getGenusPeriodLabel } from "@/lib/genus-data";
+import { eraClassForPeriod } from "@/lib/geologic-time";
 import styles from "./page.module.css";
 import { pageTitle } from "@/lib/site";
 
@@ -7,15 +7,6 @@ export const metadata = {
   title: pageTitle("How Many Dinosaurs Are There?"),
   description: "A running count of named dinosaur species and genera.",
 };
-
-function eraClass(taxonomyName?: string): string {
-  if (!taxonomyName) return "era";
-  const earlyMatch = taxonomyName.match(/^(Late|Early|Middle)?\s*(Cretaceous|Jurassic|Triassic)$/i);
-  if (!earlyMatch) return "era cretaceous";
-  const [, prefix, period] = earlyMatch;
-  const sub = prefix ? `${prefix}-${period.toLowerCase()}` : "";
-  return `era ${period.toLowerCase()} ${sub}`.trim();
-}
 
 export default async function HowManyPage() {
   const genera = getAllGenera();
@@ -46,7 +37,7 @@ export default async function HowManyPage() {
                     <h3>
                       <a href={`/genus/${g.post_name}`} title={g.post_title} rel="bookmark">{g.post_title}</a>
                     </h3>
-                    <div className={eraClass(tn)} aria-label={tn} />
+                    <div className={eraClassForPeriod(tn)} aria-label={tn} />
                     <p>{tn || 'Unknown Period'}</p>
                   </div>
                   <div className={styles.speciesDate}>

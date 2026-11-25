@@ -3,9 +3,11 @@ import pg from 'pg';
 
 const { Pool } = pg;
 
+const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/science_publication';
+const isLocal = /localhost|127\.0\.0\.1/.test(dbUrl);
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/science_publication',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionString: dbUrl,
+  ssl: isLocal ? false : { rejectUnauthorized: false },
 });
 
 import * as schema from './schema';

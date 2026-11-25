@@ -1,6 +1,7 @@
 import { getSiteMetadata } from "@/lib/genus-data";
 
 export default function Footer() {
+
   const site = getSiteMetadata();
   const year = new Date().getFullYear();
 

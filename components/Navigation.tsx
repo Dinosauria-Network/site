@@ -21,6 +21,9 @@ export default function Navigation() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
 
+  // /login is a standalone page — no site navigation there.
+  if (pathname.startsWith("/login")) return null;
+
   // Close on ESC key (dialog handles this natively, but we keep for consistency)
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {

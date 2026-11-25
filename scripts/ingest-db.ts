@@ -1,5 +1,5 @@
 import { db } from '../lib/db/client';
-import { ingestionRuns, sourceCursors, researchPapers } from '../lib/db/schema';
+import { ingestionRuns, sourceCursors, researchPapers, authors, paperAuthors } from '../lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { parseSinceArg } from '../lib/ingestion/crossref-adapter';
 import { classifyDinosaur } from '../lib/ai/jev-style';
@@ -61,7 +61,7 @@ const run = async () => {
 
       // Insert papers — DB unique on DOI prevents duplicates
       for (const r of fresh) {
-        await db.insert(researchPapers).values({
+        const inserted = await db.insert(researchPapers).values({
           title: r.title?.slice(0, 500) || 'Untitled',
           doi: r.doi || null,
           abstract: r.abstract ? r.abstract.slice(0, 4000) : null,
@@ -71,7 +71,45 @@ const run = async () => {
           peerReviewStatus: r.peerReviewStatus ?? 'unknown',
           studyType: null,
           metadata: (r.rawMetadata || {}) as any,
-        }).onConflictDoNothing();
+        }).onConflictDoNothing().returning({ id: researchPapers.id });
+
+        // Resolve the paper id (inserted now, or pre-existing on conflict).
+        let paperId = inserted[0]?.id;
+        if (!paperId && r.doi) {
+          const existing = await db.select({ id: researchPapers.id }).from(researchPapers).where(eq(researchPapers.doi, r.doi)).limit(1);
+          paperId = existing[0]?.id;
+        }
+        if (!paperId) {
+          const existing = await db.select({ id: researchPapers.id }).from(researchPapers).where(eq(researchPapers.title, (r.title || '').slice(0, 500))).limit(1);
+          paperId = existing[0]?.id;
+        }
+
+        // Persist the ordered author list (authors + paperAuthors) so authors
+        // can be looked up across papers in the future.
+        if (paperId && Array.isArray(r.authors) && r.authors.length) {
+          for (let i = 0; i < r.authors.length; i++) {
+            const a = r.authors[i];
+            if (!a?.fullName) continue;
+            const matchCond = a.orcid ? eq(authors.orcid, a.orcid) : eq(authors.fullName, a.fullName);
+            const existingAuthor = await db.select({ id: authors.id }).from(authors).where(matchCond).limit(1);
+            let authorId = existingAuthor[0]?.id;
+            if (!authorId) {
+              const ins = await db.insert(authors).values({
+                fullName: a.fullName,
+                orcid: a.orcid || null,
+                institution: a.institution || null,
+              }).returning({ id: authors.id });
+              authorId = ins[0]?.id;
+            }
+            if (authorId) {
+              await db.insert(paperAuthors).values({
+                paperId,
+                authorId,
+                authorOrder: i,
+              }).onConflictDoNothing();
+            }
+          }
+        }
         // Enrich a missing abstract — multi-provider resolver; a paywalled
         // publisher refusal (Elsevier 401/403) is recorded as
         // publisher-access-unavailable in metadata, never collapsed to "missing".

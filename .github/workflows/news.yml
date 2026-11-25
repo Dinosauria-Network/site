@@ -35,9 +35,11 @@ jobs:
       JEVSTYLE_API_KEY: ${{ secrets.JEVSTYLE_API_KEY }}
       ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
@@ -50,6 +52,8 @@ jobs:
         run: npm run ingest:journals -- --limit 15
       - name: Ingest Europe PMC
         run: npm run ingest:europe-pmc -- --limit 10
+      - name: Ingest arXiv
+        run: npm run ingest:arxiv -- --limit 5
       - name: Ingest Crossref keyword
         run: npm run ingest:crossref
 
@@ -65,18 +69,30 @@ jobs:
       - name: Editorial status
         run: npm run editorial:status | tee status.log
 
-      - name: Commit new pipeline images
+      - name: Commit new pipeline images and promote to master
         if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout development
+          git fetch origin development
+          git checkout -B development origin/development
           git add public/images/news
           if git diff --cached --quiet; then
             echo "No new images to commit."
           else
             git commit -m "chore(news): persist pipeline-attached images from $GITHUB_SHA"
             git push origin development
+          fi
+          # Promote development (with any new images) to master so the
+          # production deploy picks them up, regardless of which branch is
+          # the deploy target.
+          git fetch origin master
+          git checkout -B master origin/master
+          if git merge --no-edit development; then
+            git push origin master
+          else
+            echo "::warning::Could not merge development into master; images remain on development."
+            git merge --abort 2>/dev/null || true
           fi
 
       - name: Update digest issue

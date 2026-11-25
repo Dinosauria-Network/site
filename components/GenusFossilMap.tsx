@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { FossilLocation } from "@/lib/genus-data";
-import { epochColorForMa } from "@/lib/geologic-time";
+import { ageColorForMa, colorForAgeRange } from "@/lib/geologic-time";
 
 const PERIOD_COLORS: Record<string, string> = {
   Triassic: "#812B92",
@@ -17,49 +17,89 @@ interface GenusFossilMapProps {
   genusName: string;
   highlightAgeRange?: [number, number] | undefined;
   onMarkerHover?: (info?: { ma?: number; period?: string; location?: FossilLocation }) => void;
+  onMarkerClick?: (info?: { ma?: number; period?: string; location?: FossilLocation }) => void;
 }
 
-// Bundled low-res atlas for instant first paint.
+// Bundled low-res atlas for instant first paint. Failed loads are dropped from
+// the cache slot so a later mount can retry instead of pinning a dead promise.
 let atlas110Promise: Promise<any> | null = null;
-function loadAtlas110() {
+function loadAtlas110(): Promise<any> {
   if (!atlas110Promise) {
-    atlas110Promise = import("@/lib/data/world-110m.json").then((m: any) => m.default ?? m);
+    atlas110Promise = import("@/lib/data/world-110m.json")
+      .then((m: any) => m.default ?? m)
+      .catch((e: unknown) => {
+        atlas110Promise = null;
+        throw e;
+      });
   }
   return atlas110Promise;
 }
 
-// Global 50m admin-1 (state/province) borders fetched on demand.
+// Global 50m admin-1 (state/province) borders fetched on demand. Retries on next call after failure.
 let admin50Promise: Promise<any> | null = null;
-function loadAdmin50() {
+function loadAdmin50(): Promise<any> {
   if (!admin50Promise) {
-    admin50Promise = fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces.geojson").then((r) => {
-      if (!r.ok) throw new Error(`admin-1 50m HTTP ${r.status}`);
-      return r.json();
-    });
+    admin50Promise = fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces.geojson")
+      .then((r) => {
+        if (!r.ok) throw new Error(`admin-1 50m HTTP ${r.status}`);
+        return r.json();
+      })
+      .catch((e: unknown) => {
+        admin50Promise = null;
+        throw e;
+      });
   }
   return admin50Promise;
 }
 
-// Per-country 10m admin-1 index (bounding boxes).
+// 50m country outlines (more detailed than the bundled 110m atlas), fetched on
+// demand and cached. Retries on next call after failure.
+let countries50Promise: Promise<any> | null = null;
+function loadCountries50(): Promise<any> {
+  if (!countries50Promise) {
+    countries50Promise = fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson")
+      .then((r) => {
+        if (!r.ok) throw new Error(`countries 50m HTTP ${r.status}`);
+        return r.json();
+      })
+      .catch((e: unknown) => {
+        countries50Promise = null;
+        throw e;
+      });
+  }
+  return countries50Promise;
+}
+
+// Per-country 10m admin-1 index (bounding boxes). Retries on next call after failure.
 let admin10IndexPromise: Promise<Record<string, [number, number, number, number]>> | null = null;
-function loadAdmin10Index() {
+function loadAdmin10Index(): Promise<Record<string, [number, number, number, number]>> {
   if (!admin10IndexPromise) {
-    admin10IndexPromise = fetch("/data/admin1/index.json").then((r) => {
-      if (!r.ok) throw new Error(`admin1 index HTTP ${r.status}`);
-      return r.json();
-    });
+    admin10IndexPromise = fetch("/data/admin1/index.json")
+      .then((r) => {
+        if (!r.ok) throw new Error(`admin1 index HTTP ${r.status}`);
+        return r.json();
+      })
+      .catch((e: unknown) => {
+        admin10IndexPromise = null;
+        throw e;
+      });
   }
   return admin10IndexPromise;
 }
 
-// Per-country 10m cache.
+// Per-country 10m cache. Failed loads are dropped so the country retries later.
 const admin10Cache: Record<string, Promise<any>> = {};
-function loadCountry10(code: string) {
+function loadCountry10(code: string): Promise<any> {
   if (!admin10Cache[code]) {
-    admin10Cache[code] = fetch(`/data/admin1/${code}.json`).then((r) => {
-      if (!r.ok) throw new Error(`admin1 ${code} HTTP ${r.status}`);
-      return r.json();
-    });
+    admin10Cache[code] = fetch(`/data/admin1/${code}.json`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`admin1 ${code} HTTP ${r.status}`);
+        return r.json();
+      })
+      .catch((e: unknown) => {
+        delete admin10Cache[code];
+        throw e;
+      });
   }
   return admin10Cache[code];
 }
@@ -77,12 +117,14 @@ function escapeXml(s: string) {
 function applyMarkerHighlight(markers: any, range?: [number, number]) {
   if (!markers) return;
   if (!range) {
-    markers.attr("stroke", "#2f271d").attr("stroke-width", 1);
+    markers.transition().duration(250).attr("stroke", "#2f271d").attr("stroke-width", 1);
     return;
   }
   const [lo, hi] = range;
   const inRange = (d: any) => d.midMa !== undefined && d.midMa >= lo && d.midMa <= hi;
   markers
+    .transition()
+    .duration(250)
     .attr("stroke", (d: any) => (inRange(d) ? "#ff6b35" : "#2f271d"))
     .attr("stroke-width", (d: any) => (inRange(d) ? 3 : 1));
 }
@@ -92,7 +134,8 @@ function visibleCountryCodes(
   width: number,
   height: number,
   index: Record<string, [number, number, number, number]>,
-  transform?: any
+  transform?: any,
+  minScreenArea = 0
 ) {
   const corners = [[0, 0], [width, 0], [0, height], [width, height]];
   const lngs: number[] = [];
@@ -115,6 +158,28 @@ function visibleCountryCodes(
   for (const [code, [cMinLng, cMinLat, cMaxLng, cMaxLat]] of Object.entries(index)) {
     if (cMaxLng < minLng || cMinLng > maxLng) continue;
     if (cMaxLat < minLat || cMinLat > maxLat) continue;
+    // Skip countries whose projected screen area is too small to benefit
+    // from (or even show) 10m detail at the current scale.
+    if (minScreenArea > 0) {
+      const pts = [
+        [cMinLng, cMinLat], [cMaxLng, cMinLat],
+        [cMaxLng, cMaxLat], [cMinLng, cMaxLat],
+      ].map(([lng, lat]) => {
+        const base = projection([lng, lat]);
+        if (!base) return null;
+        return transform ? transform.apply(base) : base;
+      });
+      if (pts.some((p) => !p)) continue;
+      // Shoelace area.
+      let area = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const [x1, y1] = pts[i] as [number, number];
+        const [x2, y2] = pts[(i + 1) % pts.length] as [number, number];
+        area += x1 * y2 - x2 * y1;
+      }
+      area = Math.abs(area) / 2;
+      if (area < minScreenArea) continue;
+    }
     result.push(code);
   }
   return result;
@@ -126,7 +191,7 @@ function visibleCountryCodes(
  * Sub-country borders: global 50m (on zoom >=2x), then per-country 10m
  * (on zoom >=4x, fetched in chunks for visible countries only).
  */
-export default function GenusFossilMap({ locations, genusName, highlightAgeRange, onMarkerHover }: GenusFossilMapProps) {
+export default function GenusFossilMap({ locations, genusName, highlightAgeRange, onMarkerHover, onMarkerClick }: GenusFossilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgHostRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -139,6 +204,9 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
   const highlightRangeRef = useRef<[number, number] | undefined>(highlightAgeRange);
   const initialTransformRef = useRef<any>(null);
   const [scale, setScale] = useState(1);
+  const [canZoomIn, setCanZoomIn] = useState(true);
+  const [canZoomOut, setCanZoomOut] = useState(false);
+  const [atResetView, setAtResetView] = useState(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -240,12 +308,17 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           .attr("vector-effect", "non-scaling-stroke");
 
         // Global 50m admin-1 (loaded on zoom >=2).
-        const admin50Group = zoomLayer.append("g").attr("class", "admin50").style("display", "none");
+        const admin50Group: any = zoomLayer.append("g").attr("class", "admin50").style("display", "none");
         let admin50Loaded = false;
 
         // Per-country 10m admin-1 (loaded on zoom >=4).
-        const admin10Group = zoomLayer.append("g").attr("class", "admin10").style("display", "none");
+        const admin10Group: any = zoomLayer.append("g").attr("class", "admin10").style("display", "none");
         const loaded10 = new Set<string>();
+        let admin10PreWarmed = false;
+
+        // 50m country outlines (more detailed than the bundled 110m atlas).
+        const country50Group: any = zoomLayer.append("g").attr("class", "country50").style("display", "none");
+        let country50Loaded = false;
 
         // Custom HTML tooltip that follows the pointer (no native title attr).
         const tooltip = tooltipRef.current;
@@ -318,7 +391,11 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             return xy ? xy[1] : 0;
           })
           .attr("r", (d: any) => d.r)
-          .attr("fill", (d: any) => (d.midMa !== undefined ? epochColorForMa(d.midMa) : (PERIOD_COLORS[d.period] || "#999")))
+           .attr("fill", (d: any) => {
+            const c = colorForAgeRange(d.location?.minMa, d.location?.maxMa);
+            if (c) return c;
+            return d.midMa !== undefined ? ageColorForMa(d.midMa) : (PERIOD_COLORS[d.period] || "#999");
+          })
           .attr("fill-opacity", 0.85)
           .attr("stroke", "#2f271d")
           .attr("stroke-width", 1)
@@ -340,6 +417,15 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           .on("mouseleave", () => {
             hideTooltip();
             onMarkerHover?.(undefined);
+          })
+          .on("click", (event: any, d: any) => {
+            const lo = d.location?.minMa ?? d.location?.maxMa;
+            const hi = d.location?.maxMa ?? d.location?.minMa;
+            onMarkerClick?.({
+              ma: (lo !== undefined && hi !== undefined ? (lo + hi) / 2 : d.midMa) as number,
+              period: d.location?.period || d.period,
+              location: d.location,
+            });
           });
 
         markersRef.current = markers;
@@ -356,7 +442,8 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             const area = Math.abs(path.area(f));
             return { name: String(f.properties?.name || ""), x: c[0], y: c[1], area, show: false };
           })
-          .filter((d: any) => d.name && Number.isFinite(d.x) && Number.isFinite(d.y));
+          .filter((d: any) => d.name && Number.isFinite(d.x) && Number.isFinite(d.y))
+          .sort((a: any, b: any) => b.area - a.area);
 
         const countryText = labelLayer
           .selectAll("text.country-label")
@@ -383,6 +470,8 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
 
         let lastK = 1;
         let lastTransform: { x: number; y: number } = { x: 0, y: 0 };
+        let rafPending = false;
+        let lastScaleRef = 1;
 
         function overlaps(boxes: number[][], sx: number, sy: number, w: number) {
           for (const b of boxes) {
@@ -396,8 +485,8 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           lastTransform = t;
           const boxes: number[][] = [];
 
-          // Country labels at zoom >= 2x, largest first.
-          const countries = countryLabels.slice().sort((a: any, b: any) => b.area - a.area);
+          // Country labels at zoom >= 2x, largest first (pre-sorted once).
+          const countries = countryLabels;
           for (const d of countries) {
             d.show = false;
             if (k < 2 || d.area * k * k < 700) continue;
@@ -494,7 +583,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
         // Pan & zoom. The translate extent is the whole-world sphere, so
         // zooming all the way out (k=1) locks to the centered full globe.
         const zoom = d3zoom.zoom()
-          .scaleExtent([1, 8])
+          .scaleExtent([1, 16])
           .translateExtent([
             [0, 0],
             [width, height],
@@ -504,47 +593,148 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             zoomLayer.attr("transform", event.transform);
             const k = event.transform.k || 1;
             markers.attr("r", (d: any) => d.r / k);
-            setScale(k);
-            updateLabels(k, event.transform);
 
-            // Global 50m admin-1 when zoomed in.
-            if (k >= 2) {
-              admin50Group.style("display", null);
-              if (!admin50Loaded) {
-                admin50Loaded = true;
-                detailText.text("loading regions…");
-                loadAdmin50().then((geo) => {
-                  if (cancelled) return;
-                  const features = geo.features;
-                  admin50Group.selectAll("path.region50")
-                    .data(features)
-                    .enter()
-                    .append("path")
-                    .attr("class", "region50")
-                    .attr("d", (d: any) => path(d) || "")
-                    .attr("fill", "none")
-                    .attr("stroke", "#808080")
-                    .attr("stroke-width", 0.4)
-                    .attr("vector-effect", "non-scaling-stroke")
-                    .attr("opacity", 0.6)
-                    .attr("data-country", (d: any) => String(d.properties?.iso_a2 || "").toLowerCase());
-                  detailText.text("detail: 50m");
-                }).catch(() => {
-                  admin50Group.style("display", "none");
-                  admin50Loaded = false;
-                  detailText.text("detail: 110m");
-                });
+            // Coalesce heavy work (labels, admin loading, React state) to one
+            // pass per animation frame to keep pan/zoom snappy.
+            if (rafPending) return;
+            rafPending = true;
+            const ev = event;
+            requestAnimationFrame(() => {
+              rafPending = false;
+              if (cancelled) return;
+              const k2 = ev.transform.k || 1;
+              if (Math.abs(k2 - lastScaleRef) > 0.02) {
+                lastScaleRef = k2;
+                setScale(k2);
               }
-            } else {
-              admin50Group.style("display", "none");
-            }
+              // Disabled-state flags (updated every frame but React bails out
+              // when the value is unchanged, so no extra re-renders).
+              const maxScale = 16;
+              setCanZoomIn(k2 < maxScale - 0.05);
+              setCanZoomOut(k2 > 1 + 0.05);
+              const init = initialTransformRef.current;
+              const atReset = !!init &&
+                Math.abs(k2 - init.k) < 0.05 &&
+                Math.abs(ev.transform.x - init.x) < 0.5 &&
+                Math.abs(ev.transform.y - init.y) < 0.5;
+              setAtResetView(atReset);
+              updateLabels(k2, ev.transform);
+
+              // Global 50m admin-1 when zoomed in.
+              if (k2 >= 2) {
+                // Country outlines load FIRST (more detailed than the 110m atlas),
+                // then the sub-country (admin-1) detail, so context appears first.
+                country50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
+                if (!country50Loaded) {
+                  country50Loaded = true;
+                  loadCountries50().then((geo) => {
+                    if (cancelled) return;
+                    country50Group.selectAll("path.country50")
+                      .data(geo.features)
+                      .enter()
+                      .append("path")
+                      .attr("class", "country50")
+                      .attr("d", (d: any) => path(d) || "")
+                      .attr("fill", "none")
+                      .attr("stroke", "#333333")
+                      .attr("stroke-width", 0.5)
+                      .attr("vector-effect", "non-scaling-stroke")
+                      .attr("opacity", 0.9);
+                    // 50m outline available: drop the crude 110m border.
+                    zoomLayer.selectAll("path.country").attr("stroke", "none");
+                    detailText.text("detail: 50m (outlines)");
+                    // Then load the sub-country detail.
+                    admin50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
+                    if (!admin50Loaded) {
+                      admin50Loaded = true;
+                      detailText.text("loading regions…");
+                      loadAdmin50().then((geo2) => {
+                        if (cancelled) return;
+                        const features = (geo2.features as any[]).filter((d: any) => path.area(d) > 2);
+                        admin50Group.selectAll("path.region50")
+                          .data(features)
+                          .enter()
+                          .append("path")
+                          .attr("class", "region50")
+                          .attr("d", (d: any) => path(d) || "")
+                          .attr("fill", "none")
+                          .attr("stroke", "#a8a8a8")
+                          .attr("stroke-width", 0.3)
+                          .attr("vector-effect", "non-scaling-stroke")
+                          .attr("opacity", 0.75)
+                          .attr("data-country", (d: any) => String(d.properties?.iso_a2 || "").toLowerCase());
+                        detailText.text("detail: 50m");
+                      }).catch(() => {
+                        admin50Group.style("display", "none");
+                        admin50Loaded = false;
+                        detailText.text("detail: 50m (outlines)");
+                      });
+                    }
+                  }).catch(() => {
+                    country50Group.style("display", "none");
+                    country50Loaded = false;
+                    // Fall back to the 110m country border.
+                    zoomLayer.selectAll("path.country").attr("stroke", "#808080").attr("stroke-width", 0.5);
+                    detailText.text("detail: 110m");
+                  });
+                } else {
+                  // Outlines already loaded: ensure sub-country detail loads.
+                  admin50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
+                  if (!admin50Loaded) {
+                    admin50Loaded = true;
+                    detailText.text("loading regions…");
+                    loadAdmin50().then((geo2) => {
+                      if (cancelled) return;
+                      const features = (geo2.features as any[]).filter((d: any) => path.area(d) > 2);
+                      admin50Group.selectAll("path.region50")
+                        .data(features)
+                        .enter()
+                        .append("path")
+                        .attr("class", "region50")
+                        .attr("d", (d: any) => path(d) || "")
+                        .attr("fill", "none")
+                        .attr("stroke", "#a8a8a8")
+                        .attr("stroke-width", 0.3)
+                        .attr("vector-effect", "non-scaling-stroke")
+                        .attr("opacity", 0.75)
+                        .attr("data-country", (d: any) => String(d.properties?.iso_a2 || "").toLowerCase());
+                      detailText.text("detail: 50m");
+                    }).catch(() => {
+                      admin50Group.style("display", "none");
+                      admin50Loaded = false;
+                      detailText.text("detail: 50m (outlines)");
+                    });
+                  }
+                }
+                zoomLayer.selectAll("path.country").attr("stroke", "none");
+
+                // Pre-warm 10m data ahead of the 4x threshold so the transition
+                // is effectively instant when the user reaches it.
+                if (k2 >= 3 && !admin10PreWarmed) {
+                  admin10PreWarmed = true;
+                  loadAdmin10Index().then((index) => {
+                    if (cancelled) return;
+                    const codes = visibleCountryCodes(projection, width, height, index, ev.transform, 500);
+                    for (const code of codes) {
+                      if (!loaded10.has(code)) loadCountry10(code).catch(() => {});
+                    }
+                  }).catch(() => { admin10PreWarmed = false; });
+                }
+              } else {
+                admin50Group.style("display", "none");
+                country50Group.style("display", "none");
+                zoomLayer.selectAll("path.country").attr("stroke", "#808080").attr("stroke-width", 0.5);
+              }
 
             // Per-country 10m when zoomed in further: fetch visible countries only.
-            if (k >= 4) {
-              admin10Group.style("display", null);
+            if (k2 >= 4) {
+              admin10Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
+              // Keep the 50m country outline visible alongside the 10m admin-1
+              // detail so countries stay identifiable (admin-1 lines are finer).
+              country50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
               loadAdmin10Index().then((index) => {
                 if (cancelled) return;
-                const codes = visibleCountryCodes(projection, width, height, index, event.transform);
+                const codes = visibleCountryCodes(projection, width, height, index, event.transform, 200);
                 const toLoad = codes.filter((c) => !loaded10.has(c));
                 if (toLoad.length) {
                   detailText.text("loading detail…");
@@ -553,7 +743,7 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                   loaded10.add(code);
                   loadCountry10(code).then((geo) => {
                     if (cancelled) return;
-                    const features = geo.features;
+                    const features = (geo.features as any[]).filter((d: any) => path.area(d) > 2);
                     admin10Group.selectAll(`path.region10-${code}`)
                       .data(features)
                       .enter()
@@ -561,10 +751,10 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
                       .attr("class", `region10-${code}`)
                       .attr("d", (d: any) => path(d) || "")
                       .attr("fill", "none")
-                      .attr("stroke", "#808080")
-                      .attr("stroke-width", 0.3)
+                      .attr("stroke", "#a8a8a8")
+                      .attr("stroke-width", 0.25)
                       .attr("vector-effect", "non-scaling-stroke")
-                      .attr("opacity", 0.8)
+                      .attr("opacity", 0.7)
                       .attr("data-country", code);
                     // Hide the coarser 50m paths for this country.
                     admin50Group.selectAll("path.region50")
@@ -583,7 +773,9 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
               });
             } else {
               admin10Group.style("display", "none");
+              if (k2 >= 2) country50Group.style("display", null).style("opacity", 0).transition().duration(250).style("opacity", 1);
             }
+            });
           });
 
         svg.call(zoom as any);
@@ -592,6 +784,10 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
 
         // Start from the fitted view (k=1 remains the whole world).
         (svg as any).call(zoom.transform, initialTransform);
+
+        // Warm the country-outline cache in the background so outlines are
+        // ready (and render first) when the user zooms in.
+        loadCountries50().catch(() => {});
 
         svg.append("text")
           .attr("id", "genus-fossil-map-hint")
@@ -662,9 +858,11 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           type="button"
           className="genus-fossil-map-btn"
           aria-label="Zoom in"
-          disabled={scale >= 8}
+          disabled={!canZoomIn}
           onClick={() => {
-            if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1.5);
+            if (svgRef.current && zoomRef.current) {
+              svgRef.current.transition().duration(400).call(zoomRef.current.scaleBy, 1.5);
+            }
           }}
         >
           +
@@ -673,9 +871,11 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
           type="button"
           className="genus-fossil-map-btn"
           aria-label="Zoom out to whole world"
-          disabled={scale <= 1}
+          disabled={!canZoomOut}
           onClick={() => {
-            if (svgRef.current && zoomRef.current) zoomRef.current.scaleBy(svgRef.current, 1 / 1.5);
+            if (svgRef.current && zoomRef.current) {
+              svgRef.current.transition().duration(400).call(zoomRef.current.scaleBy, 1 / 1.5);
+            }
           }}
         >
           −
@@ -689,10 +889,12 @@ export default function GenusFossilMap({ locations, genusName, highlightAgeRange
             if (svgRef.current && zoomRef.current && initialTransformRef.current) {
               svgRef.current
                 .transition()
-                .duration(300)
+                .duration(400)
                 .call(zoomRef.current.transform, initialTransformRef.current);
+              setAtResetView(true);
             }
           }}
+          disabled={atResetView}
         >
           ⌂
         </button>

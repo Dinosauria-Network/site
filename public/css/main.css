@@ -1826,9 +1826,7 @@ picture {
 }
 
 .genus-geotime {
-  margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #d8d5ce;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }

@@ -19,16 +19,7 @@ interface GeologicTimeBarProps {
 }
 
 // Eras/periods/ages now live in @/lib/geologic-time (single source of truth).
-
-export function epochColorForMa(ma: number): string {
-  const e = epochForMa(ma);
-  if (e) return e.color;
-  // fallback by period color
-  if (ma >= 201.4) return PERIODS[0].color;
-  if (ma >= 143.1) return PERIODS[1].color;
-  if (ma >= 66.0) return PERIODS[2].color;
-  return "#999";
-}
+// (epochColorForMa is re-exported from @/lib/geologic-time if needed.)
 
 
 // Which periods are represented by the genus' fossil locations.
@@ -80,16 +71,21 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
     return { x: center, anchor: "middle" as const };
   };
 
-  const ticks: { x: number; label: string; anchor: "start" | "middle" | "end" }[] = [
-    { x: 0, label: `${Math.round(visStart)} Ma`, anchor: "start" },
-  ];
-  const candidates = [237, 201, 175, 143, 100];
-  for (const c of candidates) {
-    if (c < visStart - 18 && c > visEnd + 18) {
-      ticks.push({ x: xMeso(c), label: `${c} Ma`, anchor: "middle" });
-    }
+  // Ticks land on the actual epoch (and thus age) boundaries within the
+  // visible window, so the number axis aligns with the colour-bar divisions.
+  const boundarySet = new Set<number>();
+  boundarySet.add(visStart);
+  boundarySet.add(visEnd);
+  for (const e of activeEpochs) {
+    if (e.start <= visStart + 1e-9 && e.start >= visEnd - 1e-9) boundarySet.add(e.start);
+    if (e.end <= visStart + 1e-9 && e.end >= visEnd - 1e-9) boundarySet.add(e.end);
   }
-  ticks.push({ x: 800, label: `${Math.round(visEnd)} Ma`, anchor: "end" });
+  const sortedBoundaries = [...boundarySet].sort((a, b) => b - a);
+  const ticks: { x: number; label: string; anchor: "start" | "middle" | "end" }[] = sortedBoundaries.map((ma) => ({
+    x: xMeso(ma),
+    label: `${ma} Ma`,
+    anchor: ma === visStart ? "start" : (ma === visEnd ? "end" : "middle"),
+  }));
 
   const topPad = 6;
   const rowH = 20;
@@ -173,7 +169,8 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
                 strokeWidth={isHighlighted ? 2 : 0.5}
                 onMouseEnter={() => onHighlightAge?.([p.start, p.end])}
                 onMouseLeave={() => onHighlightAge?.(undefined)}
-                style={{ cursor: "pointer" }}
+                onClick={() => onHighlightAge?.([p.start, p.end])}
+                style={{ cursor: "pointer", transition: "stroke 220ms ease-out, stroke-width 220ms ease-out" }}
               />
               {w > 30 && (
                 <text
@@ -210,7 +207,8 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
                 strokeWidth={isHighlighted ? 2 : 0.5}
                 onMouseEnter={() => onHighlightAge?.([e.start, e.end])}
                 onMouseLeave={() => onHighlightAge?.(undefined)}
-                style={{ cursor: "pointer" }}
+                onClick={() => onHighlightAge?.([e.start, e.end])}
+                style={{ cursor: "pointer", transition: "stroke 220ms ease-out, stroke-width 220ms ease-out" }}
               />
               {w > 20 && (
                 <text
@@ -245,7 +243,8 @@ export default function GeologicTimeBar({ locations, highlightMa, onHighlightAge
                 strokeWidth={isHighlighted ? 2 : 0.3}
                 onMouseEnter={() => onHighlightAge?.([a.start, a.end])}
                 onMouseLeave={() => onHighlightAge?.(undefined)}
-                style={{ cursor: "pointer" }}
+                onClick={() => onHighlightAge?.([a.start, a.end])}
+                style={{ cursor: "pointer", transition: "stroke 220ms ease-out, stroke-width 220ms ease-out" }}
               />
               {w >= 5 && (
                 <text
