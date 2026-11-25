@@ -52,7 +52,7 @@ export async function proxy(request: NextRequest) {
   // manual NextResponse(null, { status: 200 }) terminates the request with an
   // empty body instead of forwarding to the Next.js page, which causes the
   // "This page couldn't load" error and blank admin surfaces.
-  const response = NextResponse.next({ request });
+  let response = NextResponse.next({ request });
 
   // Configure the Supabase server client using the parsed cookie store from
   // the request header. The setAll callback writes to BOTH the cookie store
@@ -63,37 +63,17 @@ export async function proxy(request: NextRequest) {
     supabaseConfig.key,
     {
       cookies: {
-        getAll: () => {
-          // Return cookie entries in the format expected by createServerClient.
-          // Each entry has { name, value, options }.
-          return Object.entries(requestCookieStore).map(([name, value]) => ({
-            name,
-            value,
-            options: {},
-          }));
+        getAll() {
+          return request.cookies.getAll();
         },
-        setAll: async (cookiesToSet: {
-          name: string;
-          value: string;
-          options?: Record<string, unknown>;
-        }[]) => {
-          for (const c of cookiesToSet) {
-            try {
-              // Write to the in-memory cookie store so future requests in this
-              // session include the cookie.
-              requestCookieStore[c.name] = c.value;
-              // CRITICAL: also write to the response object so the browser/edge
-              // sees the cookie immediately and it survives the edge layer and
-              // the NextResponse.next() boundary.
-              response.cookies.set(c.name, c.value, c.options as never);
-            } catch {
-              // Next.js only permits cookie mutation inside Server Actions / Route
-              // Handlers. When a session refresh is attempted during a Server
-              // Component render, the write is rejected — that's fine: the
-              // read-only session stands for this render, and the next Server
-              // Action / Route Handler can persist a refreshed session.
-            }
-          }
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
         },
       },
     }
@@ -130,5 +110,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Run on every route so we can guard protected paths.
-  matcher: ["/admin/:path*", "/api/admin/:path*", "/login/:path*", "/auth/callback"],
+  matcher: ["/admin/:path*", "/api/admin/:path*", "/login/:path*"],
 };
