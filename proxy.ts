@@ -3,61 +3,62 @@ import { createServerClient } from "@supabase/ssr";
 import { supabaseConfig, isSupabaseConfigured } from "@/lib/supabase/config";
 
 /**
- * Root proxy (Phase 1b — server-side auth; Next.js 16 calls it 'proxy' instead of 'middleware').
+ * Root proxy (Next.js 16 — formerly `middleware.ts`).
  *
- * - Refreshes the auth session on every request (via `supabase.auth.getUser()`).
- * - Protects `/admin/*` and `/api/admin/*`: redirects unauthenticated users
- *   to `/login` with a diagnostic query param.
- * - Passes everything else through untouched (`NextResponse.next()`).
- * - Crucial: the Supabase server client's `setAll` writes cookies to BOTH the
- *   cookie store AND the response object, so the session cookie survives the
- *   Vercel/edge layer and appears on the very next navigation. Without this,
- *   `NextResponse.next()` can strip freshly-set cookies, causing the session
- *   to appear lost on the next request.
- * - Emits a console warning with cookie state on every request to a protected
- *   path, so we can see whether the cookie is being sent and with what domain.
- * - Reads the `cookie` header from the request directly and constructs a simple
- *   cookie store object — avoids the `RequestCookies` type issues and the
- *   inconsistency of mixing `cookies()` from `next/headers` inside Edge middleware.
+ * This follows the canonical @supabase/ssr pattern exactly:
+ *   - cookies are read from `request.cookies.getAll()`
+ *   - `setAll` mutates `request.cookies` and then rebuilds the response so the
+ *     refreshed session is forwarded to the page *and* back to the browser
+ *   - a redirect response re-attaches every cookie the client wrote, so a
+ *     session refresh/clear is never silently dropped on the way to /login
+ *
+ * It only guards `/admin/*` and `/api/admin/*`. It is deliberately NOT run on
+ * `/auth/callback` — the callback must be free to exchange the code and write
+ * its own Set-Cookie headers without the proxy touching them first.
+ *
+ * Diagnostics: when an unauthenticated request hits a protected path we now
+ * distinguish the three very different causes, because they need different
+ * fixes:
+ *   no-cookie       → the browser never sent any `sb-*` cookie (storage /
+ *                     domain / SameSite problem, or the callback never ran)
+ *   invalid-session → cookies arrived but Supabase rejected them (expired
+ *                     refresh token, wrong project, revoked session)
+ *   getuser-error   → cookies arrived but the getUser() call itself failed
+ *                     (network / DNS / Supabase outage) — NOT a cookie problem
  */
 
 const PROTECTED_PATTERNS = [/^\/admin(\/.*)?$/, /^\/api\/admin(\/.*)?$/];
 
-function parseCookies(cookieHeader: string | null): Record<string, string> {
-  const result: Record<string, string> = {};
-  if (!cookieHeader) return result;
-  for (const part of cookieHeader.split(";")) {
-    const [name, ...valueParts] = part.trim().split("=");
-    if (name) {
-      result[name] = valueParts.join("=");
-    }
+/** Same fallback chain as the OAuth callback — never trust `request.url` alone. */
+function getSafeBaseUrl(request: NextRequest): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
   }
-  return result;
+
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost || request.headers.get("host");
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (host?.includes("localhost") ? "http" : "https");
+
+  if (host) return `${proto}://${host}`;
+
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+
+  return request.nextUrl.origin || "http://localhost:3000";
 }
 
 export async function proxy(request: NextRequest) {
-  // Read the cookie header directly from the request — this is the most
-  // reliable way in Edge middleware/proxy and avoids the RequestCookies type
-  // issues and the inconsistency of mixing cookies() from next/headers.
-  const cookieHeader = request.headers.get("cookie") || "";
-  const requestCookieStore = parseCookies(cookieHeader);
-  const cookieNames = Object.keys(requestCookieStore);
-  const host = request.headers.get("host") || "";
-  const hasAuthCookie = cookieNames.some(
-    (n) => n.includes("auth-token") || n.startsWith("sb-")
-  );
+  const pathname = request.nextUrl.pathname;
 
-  // CRITICAL: create the response using NextResponse.next({ request }) so that
-  // Next.js actually renders the page/route the user requested. Returning a
-  // manual NextResponse(null, { status: 200 }) terminates the request with an
-  // empty body instead of forwarding to the Next.js page, which causes the
-  // "This page couldn't load" error and blank admin surfaces.
+  // Capture this BEFORE any Supabase call — a failed getUser() can clear
+  // cookies, and we still want to know what the browser actually sent.
+  const hadSessionCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-"));
+
   let response = NextResponse.next({ request });
 
-  // Configure the Supabase server client using the parsed cookie store from
-  // the request header. The setAll callback writes to BOTH the cookie store
-  // (by updating requestCookieStore) AND the response object, so the session
-  // cookie survives the Vercel/edge layer and the NextResponse.next() boundary.
   const supabase = createServerClient(
     supabaseConfig.url,
     supabaseConfig.key,
@@ -67,9 +68,12 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          // 1. Update the request so downstream reads see the new values.
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
+          // 2. Rebuild the response from the mutated request and mirror the
+          //    cookies onto it so they reach the browser on this same response.
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
@@ -79,36 +83,53 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Call getUser() early — it triggers a token refresh and writes updated
-  // cookies via setAll on the response object we created above.
-  // Correct destructuring: supabase.auth.getUser() returns
-  // { data: { user }, error } — so we destructure { data: { user } } to get
-  // the actual user object. Without the inner braces, { data: user } makes
-  // user = the data object which is always truthy, so !user is always false
-  // and the guard never triggers.
-  const { data: { user } } = await supabase.auth.getUser();
+  // Note the destructuring: `getUser()` returns { data: { user }, error }.
+  // `{ data: user }` would make `user` the data object — always truthy — and
+  // the guard below would never fire.
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  if (PROTECTED_PATTERNS.some((re) => re.test(request.nextUrl.pathname)) && !user) {
-    const url = new URL("/login", request.url);
-    url.searchParams.set("next", request.nextUrl.pathname);
-    // Attach a diagnostic flag so the login page can surface the reason.
-    url.searchParams.set("diagnostic", "no-auth-cookie");
-    return NextResponse.redirect(url);
+  const isProtected = PROTECTED_PATTERNS.some((re) => re.test(pathname));
+  if (!isProtected || user) {
+    if (!isSupabaseConfigured) {
+      console.warn(
+        "proxy: Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL / PUBLISHABLE_KEY) — auth disabled."
+      );
+    }
+    return response;
   }
 
-  if (!isSupabaseConfigured) {
-    console.warn(
-      "supabase/middleware: Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL/KEY) — auth disabled."
-    );
+  // Unauthenticated on a protected path. Say *why*, precisely.
+  const diagnostic = !hadSessionCookie
+    ? "no-cookie"
+    : userError
+      ? "getuser-error"
+      : "invalid-session";
+
+  const url = new URL("/login", getSafeBaseUrl(request));
+  url.searchParams.set("next", pathname);
+  url.searchParams.set("diagnostic", diagnostic);
+  if (userError?.message) {
+    url.searchParams.set("detail", userError.message.slice(0, 120));
   }
 
-  // Return the SAME response object that has the freshly-refreshed session
-  // cookies attached. This ensures the session cookie survives the
-  // NextResponse.next() boundary and appears on the very next navigation.
-  return response;
+  console.warn(
+    `proxy: blocked ${pathname} (${diagnostic})` +
+      (userError?.message ? ` — ${userError.message}` : "")
+  );
+
+  const redirect = NextResponse.redirect(url);
+  // Carry over anything setAll wrote (e.g. cleared/refreshed cookies) — a
+  // redirect that drops them is how a "logged in" user gets bounced forever.
+  for (const cookie of response.cookies.getAll()) {
+    redirect.cookies.set(cookie);
+  }
+  return redirect;
 }
 
 export const config = {
-  // Run on every route so we can guard protected paths.
+  // Deliberately excludes /auth/callback and /api/debug/*.
   matcher: ["/admin/:path*", "/api/admin/:path*", "/login/:path*"],
 };

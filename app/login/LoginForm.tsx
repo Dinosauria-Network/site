@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 
-export function LoginForm() {
+export function LoginForm({ notice }: { notice?: { tone: "error" | "info"; text: string } }) {
   const [provider, setProvider] = useState<"google" | "github" | null>(null);
   const supabase = createClient();
 
@@ -27,7 +27,15 @@ export function LoginForm() {
       <p className="login-brand">{SITE_NAME}</p>
       <h1 className="login-card-title">Sign in to the Admin</h1>
       <p className="login-brand-tagline">{SITE_TAGLINE}</p>
-      <p className="login-card-note">Use Google or GitHub to continue.</p>
+
+      {notice ? (
+        <p className={`login-notice login-notice-${notice.tone}`} role="alert">
+          {notice.text}
+        </p>
+      ) : (
+        <p className="login-card-note">Use Google or GitHub to continue.</p>
+      )}
+
       <button type="button" className="login-btn" onClick={() => handleSignIn("google")} disabled={!!provider}>
         {provider === "google" ? "Signing in with Google…" : "Continue with Google"}
       </button>
