@@ -64,6 +64,11 @@ export async function GET(request: Request) {
   let user: { id: string; email: string | null } | null = null;
   let getUserError: string | null = null;
 
+  // What the OAuth callback reported last time it ran. This is the only way to
+  // tell "the callback never ran" apart from "the callback ran and its cookies
+  // were dropped" without watching the Network tab.
+  const lastCallback = all.find((c) => c.name === "din-auth-diag")?.value ?? null;
+
   if (isSupabaseConfigured) {
     try {
       const supabase = await createServerClientNow();
@@ -91,12 +96,15 @@ export async function GET(request: Request) {
       allCookieNames: all.map((c) => c.name),
       sessionCookies,
       missingChunks,
+      lastCallback,
       user,
       getUserError,
       verdict: !isSupabaseConfigured
         ? "supabase-not-configured"
         : all.length === 0
-          ? "no-cookies-at-all — the browser sent nothing for this host"
+          ? lastCallback
+            ? `no-cookies-at-all — the callback DID run (${lastCallback}) but nothing persisted, so the browser discarded the Set-Cookie`
+            : "no-cookies-at-all — the browser sent nothing for this host and the callback left no trace, so it probably never ran (check the Supabase redirect allowlist)"
           : sessionCookies.length === 0
             ? "no-session-cookie — the browser sent cookies, but no sb-* session cookie"
             : missingChunks.length > 0

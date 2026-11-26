@@ -33,6 +33,26 @@ const PROTECTED_PATTERNS = [/^\/admin(\/.*)?$/, /^\/api\/admin(\/.*)?$/];
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  // Rescue an authorization code that landed on the site root. Supabase falls
+  // back to the project's Site URL (appending `?code=...`) when `redirectTo`
+  // does not match its redirect allowlist — the code then sits on a page that
+  // cannot exchange it and the user appears logged out. Forward it to the one
+  // route that can. Restricted to "/" so no real page's query params are at risk.
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && pathname === "/") {
+    const callback = request.nextUrl.clone();
+    callback.pathname = "/auth/callback";
+    return NextResponse.redirect(callback);
+  }
+
+  const isProtected = PROTECTED_PATTERNS.some((re) => re.test(pathname));
+
+  // Public paths need no session refresh. Returning before the Supabase client
+  // is created keeps "/" (now matched, for the rescue above) as cheap as before.
+  if (!isProtected) {
+    return NextResponse.next();
+  }
+
   // Capture this BEFORE any Supabase call — a failed getUser() can clear
   // cookies, and we still want to know what the browser actually sent.
   const hadSessionCookie = request.cookies
@@ -73,8 +93,7 @@ export async function proxy(request: NextRequest) {
     error: userError,
   } = await supabase.auth.getUser();
 
-  const isProtected = PROTECTED_PATTERNS.some((re) => re.test(pathname));
-  if (!isProtected || user) {
+  if (user) {
     if (!isSupabaseConfigured) {
       console.warn(
         "proxy: Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL / PUBLISHABLE_KEY) — auth disabled."
@@ -112,6 +131,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Deliberately excludes /auth/callback and /api/debug/*.
-  matcher: ["/admin/:path*", "/api/admin/:path*", "/login/:path*"],
+  // "/" is matched only to rescue a stray `?code=` (Site URL fallback).
+  // /auth/callback is deliberately absent — it must write its own Set-Cookie.
+  matcher: ["/", "/admin/:path*", "/api/admin/:path*", "/login/:path*"],
 };
