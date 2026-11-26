@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 
 export function LoginForm({ notice }: { notice?: { tone: "error" | "info"; text: string } }) {
   const [provider, setProvider] = useState<"google" | "github" | null>(null);
+  const [sessionCookieCount, setSessionCookieCount] = useState<number | null>(null);
   const supabase = createClient();
+
+  // The one fact the server cannot observe: what the *browser* actually stored.
+  // If the server says "no session cookie" but this says 2, the cookies exist
+  // and are being stripped in transit; if it says 0, the browser rejected them
+  // when the callback's Set-Cookie arrived. Set after mount so SSR and the first
+  // client render agree.
+  useEffect(() => {
+    const names = document.cookie
+      .split(";")
+      .map((part) => part.trim().split("=")[0])
+      .filter(Boolean);
+    setSessionCookieCount(names.filter((name) => name.startsWith("sb-")).length);
+  }, []);
 
   const handleSignIn = async (p: "google" | "github") => {
     setProvider(p);
@@ -49,6 +63,16 @@ export function LoginForm({ notice }: { notice?: { tone: "error" | "info"; text:
         {provider === "github" ? "Signing in with GitHub…" : "Continue with GitHub"}
       </button>
       <p className="login-card-foot">Staff accounts only — sign-in required.</p>
+
+      {sessionCookieCount !== null && (
+        <p className="login-cookie-probe" aria-live="polite">
+          {sessionCookieCount > 0
+            ? `This browser holds ${sessionCookieCount} session cookie${
+                sessionCookieCount === 1 ? "" : "s"
+              } for this site.`
+            : "This browser holds no session cookies for this site."}
+        </p>
+      )}
     </div>
   );
 }

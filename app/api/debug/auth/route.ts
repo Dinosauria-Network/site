@@ -64,10 +64,11 @@ export async function GET(request: Request) {
   let user: { id: string; email: string | null } | null = null;
   let getUserError: string | null = null;
 
-  // What the OAuth callback reported last time it ran. This is the only way to
-  // tell "the callback never ran" apart from "the callback ran and its cookies
-  // were dropped" without watching the Network tab.
+  // What the OAuth callback reported last time it ran, and what the proxy saw
+  // on the last protected request. Together they answer "was the cookie ever
+  // issued?" and "did it arrive, and was it cleared?".
   const lastCallback = all.find((c) => c.name === "din-auth-diag")?.value ?? null;
+  const lastProxy = all.find((c) => c.name === "din-proxy-diag")?.value ?? null;
 
   if (isSupabaseConfigured) {
     try {
@@ -97,6 +98,7 @@ export async function GET(request: Request) {
       sessionCookies,
       missingChunks,
       lastCallback,
+      lastProxy,
       user,
       getUserError,
       verdict: !isSupabaseConfigured
@@ -106,7 +108,11 @@ export async function GET(request: Request) {
             ? `no-cookies-at-all — the callback DID run (${lastCallback}) but nothing persisted, so the browser discarded the Set-Cookie`
             : "no-cookies-at-all — the browser sent nothing for this host and the callback left no trace, so it probably never ran (check the Supabase redirect allowlist)"
           : sessionCookies.length === 0
-            ? "no-session-cookie — the browser sent cookies, but no sb-* session cookie"
+            ? lastProxy?.includes("in=[]")
+              ? "cookie-never-stored — the callback issued session cookies but the browser did not keep them (compare lastCallback [names:lengths] with lastProxy in=[]); usually a per-cookie size or attribute rejection"
+              : lastProxy?.includes("clear=") && !lastProxy.includes("clear=0")
+                ? "session-cleared — the cookies arrived but were cleared during getUser(); they were unreadable or the refresh failed"
+                : "no-session-cookie — the browser sent cookies, but no sb-* session cookie"
             : missingChunks.length > 0
               ? "broken-chunking — a session cookie chunk is missing, so the token cannot be reassembled"
               : getUserError
