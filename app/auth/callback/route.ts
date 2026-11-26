@@ -3,52 +3,15 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { syncUserToProfiles } from "@/lib/supabase/users";
 import { supabaseConfig } from "@/lib/supabase/config";
-
-/**
- * Safely construct the base URL for redirect URLs.
- * Prevents "null" origin issues when request.url lacks a valid scheme/host.
- * Fallback chain: NEXT_PUBLIC_SITE_URL env var → x-forwarded-host/host headers
- * → request.url origin (if valid http(s)) → VERCEL_URL env var → localhost.
- */
-function getSafeBaseUrl(request: Request): string {
-  // 1. Prefer an explicit site URL env var if configured (e.g., https://yourdomain.com)
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  }
-
-  // 2. Check Vercel/proxy headers
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const host = forwardedHost || request.headers.get("host");
-  const proto =
-    request.headers.get("x-forwarded-proto") ||
-    (host?.includes("localhost") ? "http" : "https");
-
-  if (host) {
-    return `${proto}://${host}`;
-  }
-
-  // 3. Fallback to request.url only if its origin is a real http(s) URL (not "null")
-  try {
-    const parsedOrigin = new URL(request.url).origin;
-    if (parsedOrigin && parsedOrigin !== "null" && parsedOrigin.startsWith("http")) {
-      return parsedOrigin;
-    }
-  } catch {
-    // ignore
-  }
-
-  // 4. Last-resort Vercel system env var
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  return "http://localhost:3000";
-}
+import { getSafeBaseUrl, warnOnHostMismatch } from "@/lib/supabase/base-url";
 
 export async function GET(request: Request) {
-  // Use a safe base URL for constructing redirect URLs — avoid "null" origin
-  // when request.url doesn't have a valid scheme/host.
+  // Redirect back to the host the browser actually used. Session cookies are
+  // host-only, so bouncing from www. to the apex (or back) loses the session
+  // that was just written — that was the "sign-in works, /admin says no cookie"
+  // bug. See lib/supabase/base-url.ts for the precedence rules.
   const baseUrl = getSafeBaseUrl(request);
+  warnOnHostMismatch(request);
 
   const { searchParams } = new URL(request.url, "http://localhost");
   const code = searchParams.get("code");

@@ -587,6 +587,31 @@ figure.admin-daily .admin-chart-note { margin: 0.5rem 0 0; }
   margin: 0 0 1.5rem;
 }
 
+/* Auth diagnostics — tells the user which layer bounced them here. Square
+   corners, 1px rule, warm tint; text/background pairs stay above 7:1 contrast. */
+.login-notice {
+  margin: 0 0 1.5rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-content);
+  color: var(--admin-fg);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.login-notice-error {
+  border-color: #8c2f24;
+  background: #fbeceb;
+  color: #5a1a12;
+}
+
+.login-notice-info {
+  border-color: var(--admin-border);
+  background: var(--admin-surface);
+  color: var(--admin-fg);
+}
+
 .login-btn {
   width: 100%;
   display: block;
