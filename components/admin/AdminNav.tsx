@@ -23,9 +23,13 @@ export default function AdminNav() {
           </Link>
         );
       })}
-      <Link href="/logout" className="admin-btn admin-btn-danger" style={{ marginLeft: "auto" }}>
-        Sign out
-      </Link>
+      {/* A form, not a Link: Next.js prefetches every <Link> in the viewport,
+          so a GET /logout link signed the user out seconds after login. */}
+      <form action="/logout" method="post" className="admin-nav-signout">
+        <button type="submit" className="admin-btn admin-btn-danger">
+          Sign out
+        </button>
+      </form>
     </nav>
   );
 }
