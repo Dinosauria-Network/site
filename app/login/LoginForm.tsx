@@ -13,10 +13,16 @@ export function LoginForm({ notice }: { notice?: { tone: "error" | "info"; text:
     await supabase.auth.signInWithOAuth({
       provider: p,
       options: {
-        // Absolute redirect URL — required for a deterministic post-auth landing
-        // (relative `redirectTo` values have been observed resolving to the site
-        // root, which is how users ended up on `/?code=...` instead of the callback).
-        redirectTo: `${window.location.origin}/auth/callback?next=/admin`,
+        // Absolute, query-string-free redirect URL.
+        //
+        // Query strings are the reason this flow kept landing on the site root
+        // with `?code=...` instead of reaching /auth/callback: Supabase matches
+        // `redirectTo` against the project's redirect allowlist, and a URL with
+        // a query string does not match an allowlist entry without one. It then
+        // falls back to the project's Site URL and the code is dropped on a
+        // page that cannot exchange it. `next` therefore defaults to /admin in
+        // the callback rather than travelling in the URL.
+        redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: { provider: p },
       },
     });
