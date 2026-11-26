@@ -34,7 +34,14 @@ function safeNextPath(next: string | null): string {
 
 /** Cookie values may not contain control chars, `;`, `,` or spaces. */
 function sanitize(text: string): string {
-  return text.replace(/[^A-Za-z0-9._~:/?=@|+-]/g, "_").slice(0, 200);
+  return text.replace(/[^A-Za-z0-9._~:/?=@|+\-[\]]/g, "_").slice(0, 200);
+}
+
+/** `auth-token.0:3180|auth-token.1:1024` — short, and comparable with the proxy. */
+function describeCookies(cookies: { name: string; value: string }[]): string {
+  return cookies
+    .map((c) => `${c.name.replace(/^sb-[a-z0-9]+-/, "")}:${c.value.length}`)
+    .join("|");
 }
 
 /**
@@ -186,7 +193,7 @@ export async function GET(request: Request) {
 
   return finish(
     NextResponse.redirect(finalUrl),
-    `ok cookies=${sessionCookies.length}/${written.length} -> ${finalUrl.host}${finalUrl.pathname}${syncNote}`,
+    `ok c=${sessionCookies.length}/${written.length} [${describeCookies(written)}] -> ${finalUrl.host}${finalUrl.pathname}${syncNote}`,
     sink
   );
 }

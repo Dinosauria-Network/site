@@ -59,6 +59,19 @@ export async function proxy(request: NextRequest) {
     .getAll()
     .some((c) => c.name.startsWith("sb-"));
 
+  // Instrumentation for the "callback issues 3 cookies, browser has none" case.
+  // Records what arrived, whether getUser() worked, and whether the client
+  // cleared anything — the three states that need completely different fixes.
+  // Written to `din-proxy-diag` and reported by /api/debug/auth.
+  const shortName = (name: string) => name.replace(/^sb-[a-z0-9]+-/, "");
+  const inbound = request.cookies
+    .getAll()
+    .filter((c) => c.name.startsWith("sb-"))
+    .map((c) => `${shortName(c.name)}:${c.value.length}`)
+    .join(",");
+  let outbound = "";
+  let cleared = 0;
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -77,9 +90,13 @@ export async function proxy(request: NextRequest) {
           // 2. Rebuild the response from the mutated request and mirror the
           //    cookies onto it so they reach the browser on this same response.
           response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            if (value === "") cleared += 1;
+            response.cookies.set(name, value, options);
+          });
+          outbound = cookiesToSet
+            .map((c) => `${shortName(c.name)}:${c.value.length}`)
+            .join(",");
         },
       },
     }
@@ -93,13 +110,28 @@ export async function proxy(request: NextRequest) {
     error: userError,
   } = await supabase.auth.getUser();
 
+  const proxyDiag = `in=[${inbound}] user=${user ? "y" : "n"} clear=${cleared} out=[${outbound}]${
+    userError ? ` err=${userError.message.slice(0, 70)}` : ""
+  }`.slice(0, 900);
+
+  const stampDiag = (res: NextResponse) => {
+    res.cookies.set("din-proxy-diag", proxyDiag.replace(/[^A-Za-z0-9._~:/?=@|+-]/g, "_"), {
+      path: "/",
+      maxAge: 600,
+      sameSite: "lax",
+      httpOnly: false,
+    });
+    return res;
+  };
+
   if (user) {
     if (!isSupabaseConfigured) {
       console.warn(
         "proxy: Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL / PUBLISHABLE_KEY) — auth disabled."
       );
     }
-    return response;
+    console.warn(`proxy: allow ${pathname} (${proxyDiag})`);
+    return stampDiag(response);
   }
 
   // Unauthenticated on a protected path. Say *why*, precisely.
@@ -116,10 +148,7 @@ export async function proxy(request: NextRequest) {
     url.searchParams.set("detail", userError.message.slice(0, 120));
   }
 
-  console.warn(
-    `proxy: blocked ${pathname} (${diagnostic})` +
-      (userError?.message ? ` — ${userError.message}` : "")
-  );
+  console.warn(`proxy: blocked ${pathname} (${diagnostic}) (${proxyDiag})`);
 
   const redirect = NextResponse.redirect(url);
   // Carry over anything setAll wrote (e.g. cleared/refreshed cookies) — a
@@ -127,7 +156,7 @@ export async function proxy(request: NextRequest) {
   for (const cookie of response.cookies.getAll()) {
     redirect.cookies.set(cookie);
   }
-  return redirect;
+  return stampDiag(redirect);
 }
 
 export const config = {
