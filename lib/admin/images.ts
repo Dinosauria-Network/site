@@ -2,22 +2,104 @@
 
 /**
  * Server actions for attaching imagery to a single story from the admin editor.
- * Same pipeline as `npm run editorial:attach-image` (fetch/read → sharp validate
- * → center-crop to 1024×633 → derivatives → media_assets → body.image), but
- * scoped to the signed-in editor and to one story.
+ * Uses Supabase Storage instead of the local filesystem (required on Vercel).
+ * Same pipeline as `npm run editorial:attach-image` (fetch/read → sharp crop
+ * to 1024×633 → derivatives → media_assets → body.image), but scoped to the
+ * signed-in editor and to one story.
  */
-import fs from "node:fs/promises";
-import path from "node:path";
-import sharp from "sharp";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { editorialStories, mediaAssets } from "@/lib/db/schema";
 import { normalizeCardImage } from "@/lib/image-derivatives";
 import { requireEditor } from "@/lib/admin/articles";
 import { MAX_IMAGE_BYTES, extensionForFormat, parseImageUrl } from "@/lib/images/attach-source";
+import sharp from "sharp";
 
-const NEWS_DIR = path.join(process.cwd(), "public", "images", "news");
+/** Supabase Storage bucket for story images. */
+const BUCKET = "news-images";
 const USER_AGENT = "DinosauriaNetwork/1.0 (mailto:research@dinosauria.net)";
+
+/** Card render box is <img width=1024 height=633> (1.618:1). */
+const CARD_RATIO = 1024 / 633;
+const CARD_WIDTH = 1024;
+
+/** Backwards-compatible alias used by attach/propose. */
+export async function writeDerivatives(storagePath: string): Promise<string[]> {
+  return (await normalizeCardImage(storagePath)).derivatives;
+}
+
+/**
+ * Get a Supabase server client for storage operations.
+ * Uses the request cookies to maintain the user's session.
+ */
+async function getSupabaseClient() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: async (cookiesToSet) => {
+          for (const c of cookiesToSet) {
+            try {
+              await cookieStore.set(c.name, c.value, c.options as never);
+            } catch {
+              // Read-only context
+            }
+          }
+        },
+      },
+    }
+  );
+}
+
+/**
+ * Upload a buffer to Supabase Storage and make it public.
+ *
+ * Returns { ok: true, publicUrl } where publicUrl is the storage object's public URL,
+ * or { ok: false, error: str } on failure.
+ */
+async function uploadToSupabase(bytes: Buffer, filename: string, mimeType: string): Promise<{ ok: true; publicUrl: string } | { ok: false; error: string }> {
+  const supabase = await getSupabaseClient();
+
+  // Upload the base image
+  const { data: baseData, error: baseErr } = await supabase.storage.from(BUCKET).upload(
+    filename,
+    bytes,
+    { contentType: mimeType, upsert: true }
+  );
+
+  if (baseErr) return { ok: false, error: baseErr.message };
+
+  // Get the public URL of the base image
+  const { data: basePublic } = supabase.storage.from(BUCKET).getPublicUrl(baseData.path);
+  const basePublicUrl = basePublic?.publicUrl ?? `https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace("https://", "")}/storage/v1/object/public/${BUCKET}/${baseData.path}`;
+
+  // Generate derivatives with sharp and upload each one
+  const widths = [1024, 640, 480];
+
+  for (const width of widths) {
+    const stem = `${filename}-${width}`;
+    const processed = await sharp(bytes).resize({
+      width,
+      height: Math.round(width / CARD_RATIO),
+      fit: "fill",
+    }).toFormat("jpeg", { quality: 80 }).toBuffer();
+
+    const { error: derivErr } = await supabase.storage.from(BUCKET).upload(
+      stem + ".jpg",
+      processed,
+      { contentType: "image/jpeg", upsert: true }
+    );
+
+    if (derivErr) return { ok: false, error: derivErr.message };
+  }
+
+  return { ok: true, publicUrl: basePublicUrl };
+}
 
 export type AttachImageResult =
   | { ok: true; storagePath: string; source: string }
@@ -46,9 +128,7 @@ async function loadStory(storyId: string): Promise<StoryRow | null> {
 }
 
 /** Read the image bytes from an uploaded file or a remote URL. */
-async function readSource(
-  formData: FormData
-): Promise<{ bytes: Buffer; source: string; remoteHost: string | null } | { error: string }> {
+async function readSource(formData: FormData): Promise<{ bytes: Buffer; source: string; remoteHost: string | null } | { error: string }> {
   const rawFile = formData.get("file");
   const file =
     typeof rawFile === "object" && rawFile !== null && "arrayBuffer" in rawFile
@@ -118,24 +198,20 @@ export async function attachStoryImage(formData: FormData): Promise<AttachImageR
   if (!ext) return { ok: false, error: `Unsupported image format: ${format ?? "unknown"}` };
 
   const file = `${story.slug}.${ext}`;
-  const target = path.join(NEWS_DIR, file);
-  if (!target.startsWith(NEWS_DIR + path.sep)) {
-    return { ok: false, error: "Refusing to write outside public/images/news" };
-  }
+  const mimeType = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
 
-  try {
-    await fs.mkdir(NEWS_DIR, { recursive: true });
-    await fs.writeFile(target, source.bytes);
-  } catch {
-    return { ok: false, error: "Could not save the image file" };
-  }
+  // Process with sharp: crop to card ratio, generate derivatives
+  const baseBuffer = await sharp(source.bytes).resize({
+    width: CARD_WIDTH,
+    height: Math.round(CARD_WIDTH / CARD_RATIO),
+    fit: "fill",
+  }).jpeg({ quality: 80 }).toBuffer();
 
-  const storagePath = `/images/news/${file}`;
-  try {
-    await normalizeCardImage(storagePath);
-  } catch {
-    return { ok: false, error: "Could not crop the image to the card ratio (is it too small?)" };
-  }
+  // Upload base + derivatives to Supabase Storage
+  const result = await uploadToSupabase(baseBuffer, file, mimeType);
+  if (!result.ok) return { ok: false, error: result.error };
+
+  const storagePath = result.publicUrl;
 
   // Keep one ledger row per (paper, file), like the CLI does.
   const assetWhere = story.paperId
@@ -168,7 +244,7 @@ export async function attachStoryImage(formData: FormData): Promise<AttachImageR
   return { ok: true, storagePath, source: source.source };
 }
 
-/** Remove a dead/incorrect image reference from a story (leaves files on disk). */
+/** Remove a dead/incorrect image reference from a story (leaves files on Supabase Storage). */
 export async function clearStoryImage(storyId: string) {
   const editor = await requireEditor();
   if (!editor) return { ok: false as const, error: "Not signed in" };
