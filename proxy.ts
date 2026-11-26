@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { supabaseConfig, isSupabaseConfigured } from "@/lib/supabase/config";
+import { getSafeBaseUrl } from "@/lib/supabase/base-url";
 
 /**
  * Root proxy (Next.js 16 — formerly `middleware.ts`).
@@ -28,25 +29,6 @@ import { supabaseConfig, isSupabaseConfigured } from "@/lib/supabase/config";
  */
 
 const PROTECTED_PATTERNS = [/^\/admin(\/.*)?$/, /^\/api\/admin(\/.*)?$/];
-
-/** Same fallback chain as the OAuth callback — never trust `request.url` alone. */
-function getSafeBaseUrl(request: NextRequest): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  }
-
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const host = forwardedHost || request.headers.get("host");
-  const proto =
-    request.headers.get("x-forwarded-proto") ||
-    (host?.includes("localhost") ? "http" : "https");
-
-  if (host) return `${proto}://${host}`;
-
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-
-  return request.nextUrl.origin || "http://localhost:3000";
-}
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;

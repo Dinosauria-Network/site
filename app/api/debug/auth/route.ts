@@ -22,6 +22,23 @@ export async function GET(request: Request) {
   const cookieStore = await cookies();
   const all = cookieStore.getAll();
 
+  const hostMismatch = () => {
+    const configured = process.env.NEXT_PUBLIC_SITE_URL;
+    const host =
+      request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+    if (!configured || !host) return null;
+    try {
+      const configuredHost = new URL(configured).host;
+      return configuredHost === host
+        ? null
+        : `NEXT_PUBLIC_SITE_URL is ${configuredHost} but this request is on ${host}. ` +
+            `Auth redirects follow the request host (cookies are host-only), so ` +
+            `set NEXT_PUBLIC_SITE_URL=https://${host} in Vercel if that is the real domain.`;
+    } catch {
+      return "NEXT_PUBLIC_SITE_URL is not a valid URL";
+    }
+  };
+
   const sessionCookies = all
     .filter((c) => c.name.startsWith("sb-"))
     .map((c) => ({
@@ -64,6 +81,10 @@ export async function GET(request: Request) {
       forwardedHost: request.headers.get("x-forwarded-host"),
       forwardedProto: request.headers.get("x-forwarded-proto"),
       siteUrlEnv: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+      // The usual culprit: the configured site URL is a different host from the
+      // one serving the request, so a redirect lands where the host-only
+      // session cookie is not sent.
+      hostMismatch: hostMismatch(),
       vercelUrlEnv: process.env.VERCEL_URL ?? null,
       supabaseConfigured: isSupabaseConfigured,
       supabaseHost: supabaseConfig.url ? new URL(supabaseConfig.url).host : null,
