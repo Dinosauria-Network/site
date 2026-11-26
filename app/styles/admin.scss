@@ -193,7 +193,9 @@ fieldset.admin-field {
   border: 1px solid var(--admin-border);
   background: var(--admin-content);
   color: var(--admin-fg);
+  font-family: inherit;
   font-size: 0.875rem;
+  line-height: inherit;
   cursor: pointer;
   border-radius: 0;
   text-decoration: none;
